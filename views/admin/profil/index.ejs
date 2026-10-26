@@ -1,0 +1,2182 @@
+<% 
+    const listStruktur = (typeof strukturList !== 'undefined' && Array.isArray(strukturList)) ? strukturList : [];
+    const dataProfil = (typeof profil !== 'undefined' && profil) ? profil : {};
+    const listHierarchy = (typeof flatHierarchy !== 'undefined' && Array.isArray(flatHierarchy) && flatHierarchy.length > 0) ? flatHierarchy : listStruktur;
+    const treeStatistics = (typeof treeStats !== 'undefined' && treeStats) ? treeStats : { totalNodes: listStruktur.length, totalRoots: 0, totalParents: 0, totalLeaves: 0, maxDepth: 0 };
+    const treeData = (typeof orgTree !== 'undefined' && Array.isArray(orgTree)) ? orgTree : [];
+%>
+
+<!-- HEADER ATAS -->
+<header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div>
+        <div class="flex items-center gap-2 mb-1">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200">
+                SOTK Hierarki Ultra Dinamis
+            </span>
+            <span class="text-xs text-slate-400">• Adjacency List Tree Database</span>
+        </div>
+        <h2 class="text-2xl font-bold text-navy-900 mb-1">Profil Dinas & Struktur Organisasi</h2>
+        <p class="text-slate-500 text-sm">Kelola visi, misi, kontak, peta kantor, dan bagan hierarki pohon (Tree) kedinasan.</p>
+    </div>
+    <div class="flex items-center gap-2.5">
+        <button type="button" onclick="openModalResetProfil()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm" title="Kosongkan data profil atau bagan">
+            <i data-lucide="rotate-ccw" class="w-4 h-4 text-slate-500"></i> Atur Ulang / Kosongkan
+        </button>
+        <button onclick="openModalTambahBaru()" class="bg-orange-500 hover:bg-orange-600 transition-all text-white font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-orange-500/25 text-sm">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i> Tambah Jabatan
+        </button>
+    </div>
+</header>
+
+<!-- TAB KONTROL ADMIN -->
+<div class="flex items-center gap-2 border-b border-slate-200 mb-6 pb-2 overflow-x-auto">
+    <button onclick="switchProfilSubTab('profil', this)" data-subtab="profil" class="btn-profil-tab px-4 py-2 text-sm font-bold text-orange-600 border-b-2 border-orange-500 transition-all flex items-center gap-2 whitespace-nowrap">
+        <i data-lucide="building" class="w-4 h-4"></i> Visi, Misi & Lokasi Peta
+    </button>
+    <button onclick="switchProfilSubTab('struktur', this)" data-subtab="struktur" class="btn-profil-tab px-4 py-2 text-sm font-bold text-slate-500 hover:text-navy-900 border-b-2 border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <i data-lucide="network" class="w-4 h-4"></i> Bagan Struktur (<%= listStruktur.length %>)
+    </button>
+    <button onclick="switchProfilSubTab('preview', this)" data-subtab="preview" class="btn-profil-tab px-4 py-2 text-sm font-bold text-slate-500 hover:text-navy-900 border-b-2 border-transparent transition-all flex items-center gap-2 whitespace-nowrap">
+        <i data-lucide="eye" class="w-4 h-4"></i> 👁️ Pratinjau Bagan
+    </button>
+</div>
+
+<!-- ============================================================== -->
+<!-- SUB-TAB 1: FORM VISI, MISI, KONTAK & GOOGLE MAPS -->
+<!-- ============================================================== -->
+<div id="subtab-profil" class="profil-subtab-pane">
+    <div class="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
+        <form action="/admin-diskominfo/profil/update" method="POST" class="space-y-6 max-w-3xl">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Nama Instansi Resmi</label>
+                <input type="text" name="nama_instansi" value="<%= dataProfil.nama_instansi || '' %>" placeholder="Contoh: DISKOMINFOSANTIK KABUPATEN BEKASI" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold text-navy-900">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Visi Daerah / Instansi</label>
+                <textarea id="editor-visi" name="visi" rows="3" placeholder="Ketikkan visi resmi di sini..." class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500 outline-none"><%= dataProfil.visi || '' %></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Misi Pembangunan</label>
+                <textarea id="editor-misi" name="misi" rows="6" placeholder="Ketikkan butir-butir misi pembangunan di sini..." class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500 outline-none"><%= dataProfil.misi || '' %></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Nomor Telepon Kantor / Hotline</label>
+                    <input type="text" name="telepon" value="<%= dataProfil.telepon || '' %>" placeholder="Contoh: (021) 89970000" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Alamat Surel Resmi Kedinasan</label>
+                    <input type="email" name="email" value="<%= dataProfil.email || '' %>" placeholder="Contoh: diskominfo@bekasikab.go.id" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Alamat Fisik Kantor</label>
+                <textarea name="alamat" rows="2" placeholder="Contoh: Komplek Perkantoran Pemkab Bekasi, Cikarang Pusat..." class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none"><%= dataProfil.alamat || '' %></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Tautan Embed Google Maps (URL pada src iframe)</label>
+                <input type="text" name="gmaps_iframe" value="<%= dataProfil.gmaps_iframe || '' %>" placeholder="https://www.google.com/maps/embed?pb=..." class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                <p class="text-[11px] text-slate-400 mt-1">Salin hanya URL di dalam <code>src="..."</code> dari menu Bagikan ➔ Sematkan Peta di Google Maps.</p>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <button type="button" onclick="openModalResetProfil()" class="px-4 py-2.5 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 rounded-xl transition-all flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Kosongkan Data Profil
+                </button>
+                <button type="submit" class="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Simpan Profil Dinas & Lokasi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SUB-TAB 2: DAFTAR JABATAN STRUKTUR ORGANISASI (SESUAI DATABASE) -->
+<!-- ============================================================== -->
+<div id="subtab-struktur" class="profil-subtab-pane hidden space-y-4">
+    
+    <!-- STATISTIK RINGKAS 5 KOMPONEN TREE -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 text-navy-900 flex items-center justify-center font-bold text-sm shrink-0">
+                <i data-lucide="layers" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">Jumlah Posisi</span>
+                <span class="text-lg font-extrabold text-navy-900"><%= listStruktur.length %></span>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-amber-100 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center font-bold text-base shrink-0">
+                👑
+            </div>
+            <div>
+                <span class="text-[11px] text-amber-700 font-bold uppercase tracking-wider block">Puncak (Akar)</span>
+                <span class="text-lg font-extrabold text-amber-800"><%= treeStatistics.totalRoots %></span>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-base shrink-0">
+                👔
+            </div>
+            <div>
+                <span class="text-[11px] text-blue-700 font-bold uppercase tracking-wider block">Induk (Atasan)</span>
+                <span class="text-lg font-extrabold text-blue-800"><%= treeStatistics.totalParents %></span>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-base shrink-0">
+                🌿
+            </div>
+            <div>
+                <span class="text-[11px] text-emerald-700 font-bold uppercase tracking-wider block">Pelaksana (Daun)</span>
+                <span class="text-lg font-extrabold text-emerald-800"><%= treeStatistics.totalLeaves %></span>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 col-span-2 sm:col-span-1">
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center font-bold text-base shrink-0">
+                ⚡
+            </div>
+            <div>
+                <span class="text-[11px] text-purple-700 font-bold uppercase tracking-wider block">Tingkat Hirarki</span>
+                <span class="text-lg font-extrabold text-purple-800"><%= treeStatistics.maxDepth %></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANDUAN 5 KOMPONEN UTAMA STRUKTUR HIERARKI -->
+    <div class="bg-gradient-to-r from-slate-900 to-navy-900 text-white rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="font-bold text-amber-400 flex items-center gap-1">
+                <i data-lucide="info" class="w-4 h-4"></i> 5 Komponen Struktur Hierarki:
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium" title="Posisi teratas / pimpinan tertinggi">
+                👑 Puncak (Akar)
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-medium" title="Pimpinan unit kerja">
+                👔 Induk (Pimpinan / Koordinator)
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-medium" title="Sub-jabatan yang terhubung di bawah pimpinan">
+                👶 Cabang (Sub-Jabatan)
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium" title="Posisi yang memiliki atasan yang sama">
+                👥 Sejawat (Tingkat Sejajar)
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium" title="Posisi pelaksana teknis">
+                🌿 Pelaksana (Ujung Cabang)
+            </span>
+        </div>
+        <div class="text-[11px] text-slate-300">
+            Perubahan hierarki langsung memperbarui bagan secara menyeluruh tanpa batas tingkat kedalaman.
+        </div>
+    </div>
+
+    <!-- TABEL UTAMA SOTK -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <h4 class="font-bold text-navy-900 text-sm">Tabel Hierarki SOTK (Urutan Penelusuran Hierarki)</h4>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold <%= listStruktur.length > 0 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-500' %>">
+                    <%= listStruktur.length %> Posisi Terdaftar
+                </span>
+            </div>
+            <% if (listStruktur.length > 0) { %>
+                <form action="/admin-diskominfo/struktur/reset-all" method="POST" onsubmit="return confirm('PERINGATAN: Kosongkan semua jabatan pada bagan struktur organisasi?');">
+                    <button type="submit" class="text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200 transition-all flex items-center gap-1.5">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Kosongkan Bagan
+                    </button>
+                </form>
+            <% } %>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 font-bold">Garis Hierarki & Nama Jabatan</th>
+                        <th class="px-6 py-4 font-bold">Pejabat Pemegang</th>
+                        <th class="px-6 py-4 font-bold text-center">Peran Hierarki</th>
+                        <th class="px-6 py-4 font-bold">Atasan Langsung</th>
+                        <th class="px-6 py-4 font-bold text-right">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    <% if (listHierarchy.length > 0) { %>
+                        <% listHierarchy.forEach(s => { %>
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <!-- KOLOM 1: HIERARKI & JABATAN -->
+                                <td class="px-6 py-4 font-bold text-navy-900">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-mono text-slate-400 select-none text-xs"><%= s.treePrefix || '•' %></span>
+                                        <div>
+                                            <span class="text-navy-900 font-bold <%= s.isRoot ? 'text-base text-amber-700' : '' %>">
+                                                <%= s.jabatan %>
+                                            </span>
+                                            <div class="flex items-center gap-1.5 mt-0.5">
+                                                <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-medium">
+                                                    Tingkat <%= (s.level !== undefined ? s.level + 1 : 1) %>
+                                                </span>
+                                                <span class="text-[10px] text-slate-400">
+                                                    Urutan: #<%= s.urutan || 1 %>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- KOLOM 2: NAMA PEJABAT -->
+                                <td class="px-6 py-4 text-slate-600">
+                                    <% if (s.nama_pejabat && s.nama_pejabat.trim() !== '') { %>
+                                        <div class="font-medium text-slate-800"><%= s.nama_pejabat %></div>
+                                    <% } else { %>
+                                        <span class="text-slate-400 italic text-xs font-normal">(Posisi Kosong / Belum Ada Pejabat)</span>
+                                    <% } %>
+                                </td>
+
+                                <!-- KOLOM 3: 5 KOMPONEN TREE BADGE -->
+                                <td class="px-6 py-4 text-center">
+                                    <div class="inline-flex flex-col items-center gap-1">
+                                        <% if (s.isRoot) { %>
+                                            <span class="px-3 py-1 bg-amber-50 text-amber-700 font-extrabold text-xs rounded-full border border-amber-300 shadow-sm">
+                                                👑 PUNCAK (Akar)
+                                            </span>
+                                        <% } else if (s.isParent) { %>
+                                            <span class="px-3 py-1 bg-blue-50 text-blue-700 font-extrabold text-xs rounded-full border border-blue-300 shadow-sm">
+                                                👔 INDUK (<%= s.childrenCount || 0 %> Sub-Jabatan)
+                                            </span>
+                                        <% } else { %>
+                                            <span class="px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold text-xs rounded-full border border-emerald-300 shadow-sm">
+                                                🌿 PELAKSANA (Daun)
+                                            </span>
+                                        <% } %>
+
+                                        <% if (s.siblingsCount && s.siblingsCount > 0) { %>
+                                            <span class="text-[10px] text-slate-500 flex items-center gap-1">
+                                                <i data-lucide="users" class="w-3 h-3 text-slate-400"></i> <%= s.siblingsCount %> Rekan (Sibling)
+                                            </span>
+                                        <% } %>
+                                    </div>
+                                </td>
+
+                                <!-- KOLOM 4: ATASAN LANGSUNG -->
+                                <td class="px-6 py-4 text-slate-600 text-xs">
+                                    <% if (s.nama_atasan) { %>
+                                        <span class="font-semibold text-slate-800"><%= s.nama_atasan %></span>
+                                    <% } else { %>
+                                        <span class="text-amber-700 font-semibold italic">— Puncak Hierarki (Root)</span>
+                                    <% } %>
+                                </td>
+
+                                <!-- KOLOM 5: AKSI -->
+                                <td class="px-6 py-4 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" 
+                                                data-parent-id="<%= s.id %>"
+                                                data-parent-title="<%= s.jabatan || '' %>"
+                                                onclick="openModalAddSub(this.dataset.parentId, this.dataset.parentTitle)"
+                                                class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+                                                title="Tambah Sub-Jabatan di bawah <%= s.jabatan %>">
+                                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> + Sub
+                                        </button>
+                                        <button type="button" 
+                                                class="btn-edit-struktur px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+                                                data-id="<%= s.id %>"
+                                                data-parent="<%= s.parent_id || '' %>"
+                                                data-tipe="<%= s.tipe_posisi || '' %>"
+                                                data-urutan="<%= s.urutan || 1 %>">
+                                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Ubah
+                                            <span class="hidden-jabatan hidden"><%= s.jabatan %></span>
+                                            <span class="hidden-pejabat hidden"><%= s.nama_pejabat || '' %></span>
+                                        </button>
+                                        <button type="button" 
+                                                class="btn-hapus-struktur px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white dark:bg-rose-950/30 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white border border-rose-200 dark:border-rose-900/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                                data-id="<%= s.id %>"
+                                                title="Hapus Jabatan <%= s.jabatan %>">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus
+                                            <span class="hidden-hapus-jabatan hidden"><%= s.jabatan %></span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="py-16 text-center">
+                                <div class="max-w-md mx-auto flex flex-col items-center">
+                                    <div class="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-500 mb-3 shadow-sm">
+                                        <i data-lucide="network" class="w-8 h-8"></i>
+                                    </div>
+                                    <h4 class="text-base font-bold text-navy-900 mb-1">Bagan Struktur Masih Kosong</h4>
+                                    <p class="text-xs text-slate-500 mb-5 leading-relaxed">
+                                        Belum ada hierarki jabatan yang ditambahkan ke database. Mulai dengan membuat posisi Puncak Pimpinan (Root / Kepala Dinas), lalu hubungkan posisi Parent dan Leaf di bawahnya.
+                                    </p>
+                                    <button type="button" onclick="openModalTambahBaru()" class="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-orange-500/25 flex items-center gap-2 transition-all">
+                                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Posisi Puncak
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SUB-TAB 3: LIVE PREVIEW BAGAN (ULTRA DINAMIS TREE ENGINE) -->
+<!-- ============================================================== -->
+<style>
+    /* CSS ULTRA DINAMIS KANVAS INTERAKTIF PREVIEW */
+    .admin-viewport {
+        position: relative;
+        width: 100%;
+        min-height: 540px;
+        height: 65vh;
+        max-height: 720px;
+        background: #F8FAFC;
+        background-image: 
+            radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.25) 1px, transparent 0);
+        background-size: 24px 24px;
+        overflow: hidden;
+        border-radius: 20px;
+        border: 1px solid #E2E8F0;
+        cursor: grab;
+        user-select: none;
+    }
+    .admin-viewport.is-dragging {
+        cursor: grabbing;
+    }
+    .admin-stage {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform-origin: 0 0;
+        transition: transform 0.05s ease-out;
+    }
+    .admin-svg-connectors {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 1;
+    }
+    .admin-cards-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+    }
+    .admin-node-card {
+        position: absolute;
+        width: 220px;
+        min-height: 88px;
+        border-radius: 16px;
+        padding: 12px 14px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+        background: #FFFFFF;
+        border: 2px solid #CBD5E1;
+        cursor: grab;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        user-select: none;
+    }
+    .admin-node-card:hover {
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+        z-index: 10;
+    }
+    .admin-node-card.is-dragging-card {
+        cursor: grabbing !important;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.28) !important;
+        border-color: #F97316 !important;
+        transform: scale(1.04) !important;
+        z-index: 99 !important;
+        transition: none !important;
+    }
+    .admin-node-card.node-root {
+        background: #0F172A;
+        color: #FFFFFF;
+        border-color: #F97316;
+        box-shadow: 0 10px 24px rgba(249, 115, 22, 0.2);
+    }
+    .admin-node-card.node-parent {
+        background: #FFFFFF;
+        border-color: #3B82F6;
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12);
+    }
+    .admin-node-card.node-leaf {
+        background: #FFFFFF;
+        border-color: #10B981;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.1);
+    }
+    .admin-node-role-badge {
+        font-size: 0.62rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 9999px;
+        margin-bottom: 4px;
+        align-self: flex-start;
+    }
+    .node-root .admin-node-role-badge {
+        background: #F97316;
+        color: #FFFFFF;
+    }
+    .node-parent .admin-node-role-badge {
+        background: #EFF6FF;
+        color: #2563EB;
+        border: 1px solid #BFDBFE;
+    }
+    .node-leaf .admin-node-role-badge {
+        background: #ECFDF5;
+        color: #059669;
+        border: 1px solid #A7F3D0;
+    }
+    .admin-node-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1.3;
+        margin-bottom: 2px;
+    }
+    .node-root .admin-node-title { color: #FFFFFF; }
+    .node-parent .admin-node-title, .node-leaf .admin-node-title { color: #0F172A; }
+    .admin-node-person {
+        font-size: 0.72rem;
+        line-height: 1.25;
+    }
+    .node-root .admin-node-person { color: #FDBA74; }
+    .node-parent .admin-node-person, .node-leaf .admin-node-person { color: #64748B; }
+
+    .btn-admin-collapse {
+        margin-top: 6px;
+        background: #F1F5F9;
+        border: 1px solid #E2E8F0;
+        border-radius: 9999px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #334155;
+        padding: 2px 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        transition: all 0.2s ease;
+        align-self: flex-start;
+    }
+    .btn-admin-collapse:hover {
+        background: #E2E8F0;
+        color: #0F172A;
+    }
+    .btn-admin-collapse.collapsed {
+        background: #FEF3C7;
+        color: #B45309;
+        border-color: #FDE68A;
+    }
+
+    /* BADGE TOGGLE HUBUNGAN MENYATU / LINI PADA KARTU */
+    .admin-node-wing-toggle {
+        margin-top: 6px;
+        border-radius: 9999px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        cursor: pointer;
+        user-select: none;
+    }
+    .admin-node-wing-toggle:hover {
+        transform: translateY(-1px) scale(1.04);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .admin-node-wing-toggle.is-wing {
+        background: #EFF6FF;
+        color: #1D4ED8;
+        border: 1px solid #93C5FD;
+    }
+    .admin-node-wing-toggle.is-wing:hover {
+        background: #DBEAFE;
+        color: #1E40AF;
+        border-color: #60A5FA;
+    }
+    .admin-node-wing-toggle.is-line {
+        background: #F8FAFC;
+        color: #64748B;
+        border: 1px solid #E2E8F0;
+    }
+    .admin-node-wing-toggle.is-line:hover {
+        background: #F1F5F9;
+        color: #0F172A;
+        border-color: #CBD5E1;
+    }
+
+    /* OUTLINE TREE ROW */
+    .admin-outline-row {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+    .admin-outline-row:hover {
+        background: #FFFFFF;
+        border-color: #F97316;
+        transform: translateX(4px);
+    }
+    .admin-outline-row[data-level="1"] { margin-left: 24px; }
+    .admin-outline-row[data-level="2"] { margin-left: 48px; }
+    .admin-outline-row[data-level="3"] { margin-left: 72px; }
+    .admin-outline-row[data-level="4"] { margin-left: 96px; }
+    .admin-outline-row[data-level="5"] { margin-left: 120px; }
+    .admin-outline-row[data-level="6"] { margin-left: 144px; }
+    .admin-outline-row[data-level="7"] { margin-left: 168px; }
+    .admin-outline-row[data-level="8"] { margin-left: 192px; }
+</style>
+
+<div id="subtab-preview" class="profil-subtab-pane hidden space-y-4">
+    <div class="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 shadow-sm">
+        
+        <!-- HEADER PREVIEW & TOOLBAR -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        Tampilan Nyata
+                    </span>
+                    <h4 class="font-bold text-navy-900 text-base">Pratinjau Nyata Bagan SOTK Ultra Dinamis</h4>
+                </div>
+                <p class="text-xs text-slate-400">
+                    Bagan dirender secara otomatis sesuai susunan hierarki di database. Geser kanvas untuk berpindah, gulir mouse untuk perbesar/perkecil.
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <!-- Mode View Toggle -->
+                <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
+                    <button type="button" id="btnAdminModeVisual" onclick="switchAdminPreviewMode('visual')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-navy-900 text-white shadow-sm flex items-center gap-1.5 transition-all">
+                        <i data-lucide="network" class="w-3.5 h-3.5"></i> Bagan Visual
+                    </button>
+                    <button type="button" id="btnAdminModeOutline" onclick="switchAdminPreviewMode('outline')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-navy-900 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="list-tree" class="w-3.5 h-3.5"></i> Garis Hierarki
+                    </button>
+                </div>
+                <a href="/profil" target="_blank" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition-all">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Portal Publik
+                </a>
+            </div>
+        </div>
+
+        <% if (listStruktur.length > 0) { %>
+            <!-- EMBED DATA JSON -->
+            <script id="adminTreeData" type="application/json">
+                <%- JSON.stringify(treeData) %>
+            </script>
+            <script id="adminAllNodesData" type="application/json">
+                <%- JSON.stringify(listStruktur) %>
+            </script>
+            <script id="adminBaganConfig" type="application/json">
+                <%- JSON.stringify(dataProfil.bagan_config ? (typeof dataProfil.bagan_config === 'string' ? JSON.parse(dataProfil.bagan_config) : dataProfil.bagan_config) : null) %>
+            </script>
+
+            <!-- TAMPILAN 1: BAGAN VISUAL CANVAS -->
+            <div id="containerAdminVisual">
+                <!-- PANEL PENGATUR GARIS & POSISI ULTRA DINAMIS -->
+                <div class="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 mb-3 text-xs shadow-xs">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center font-bold">
+                                <i data-lucide="sliders" class="w-4 h-4"></i>
+                            </span>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-navy-900 block text-xs">Pengaturan Garis & Posisi Bagan Ultra Dinamis</span>
+                                    <span id="baganStatusBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 hidden"></span>
+                                </div>
+                                <span class="text-[11px] text-slate-400">Geser penggeser atau seret langsung kartu posisi di kanvas, lalu klik <strong>Simpan Tata Letak</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- SLIDER & STYLE CONTROLS -->
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <!-- Slider: Geser Garis Siku (Elbow Height) -->
+                            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                                <span class="text-slate-600 font-semibold text-[11px] whitespace-nowrap flex items-center gap-1">
+                                    <i data-lucide="git-commit" class="w-3.5 h-3.5 text-orange-500"></i> Geser Garis Cabang:
+                                </span>
+                                <input type="range" id="sliderAdminElbow" min="15" max="85" value="50" class="w-24 accent-orange-500 cursor-pointer" title="Geser posisi garis horizontal ke atas/bawah">
+                                <span id="valAdminElbow" class="font-mono font-bold text-navy-900 text-[11px] w-8 text-right">50%</span>
+                            </div>
+
+                            <!-- Slider: Jarak Vertikal (V-Gap) -->
+                            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                                <span class="text-slate-600 font-semibold text-[11px] whitespace-nowrap flex items-center gap-1">
+                                    <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-blue-500"></i> Jarak Vertikal:
+                                </span>
+                                <input type="range" id="sliderAdminVGap" min="40" max="150" value="72" class="w-20 accent-blue-500 cursor-pointer" title="Atur jarak antar level hierarki">
+                                <span id="valAdminVGap" class="font-mono font-bold text-navy-900 text-[11px] w-9 text-right">72px</span>
+                            </div>
+
+                            <!-- Slider: Jarak Horizontal (H-Gap) -->
+                            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                                <span class="text-slate-600 font-semibold text-[11px] whitespace-nowrap flex items-center gap-1">
+                                    <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 text-emerald-500"></i> Jarak Kotak:
+                                </span>
+                                <input type="range" id="sliderAdminHGap" min="16" max="90" value="36" class="w-20 accent-emerald-500 cursor-pointer" title="Atur jarak horizontal antar kotak">
+                                <span id="valAdminHGap" class="font-mono font-bold text-navy-900 text-[11px] w-9 text-right">36px</span>
+                            </div>
+
+                            <!-- Pilihan Gaya Garis -->
+                            <div class="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
+                                <button type="button" id="btnAdminLineOrtho" onclick="setAdminLineStyle('orthogonal')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-navy-900 text-white transition-all shadow-xs" title="Garis Siku Standar Kedinasan">
+                                    📐 Siku
+                                </button>
+                                <button type="button" id="btnAdminLineCurve" onclick="setAdminLineStyle('curve')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-600 hover:text-navy-900 transition-all" title="Garis Kurva Halus">
+                                    〰️ Kurva
+                                </button>
+                                <button type="button" id="btnAdminLineDirect" onclick="setAdminLineStyle('direct')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-600 hover:text-navy-900 transition-all" title="Garis Lurus Langsung">
+                                    ⚡ Lurus
+                                </button>
+                            </div>
+
+                            <!-- Keterangan Ultra Dinamis -->
+                            <div class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-xl border border-blue-200/80 text-[11px] font-semibold text-blue-900 shadow-2xs">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-600"></i>
+                                <span>Klik badge <strong>🔗 Menyatu</strong> / <strong>⬇️ Lini Bawah</strong> di tiap kartu untuk atur sambungan</span>
+                            </div>
+
+                            <!-- Tombol Reset Layout -->
+                            <button type="button" onclick="adminResetTreeLayout()" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-200 text-[11px] flex items-center gap-1 shadow-2xs transition-all" title="Kembalikan semua posisi garis dan kartu ke tata letak standar pohon">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-400"></i> Tata Letak Awal
+                            </button>
+
+                            <!-- Tombol Simpan Tata Letak -->
+                            <button type="button" id="btnAdminSaveBagan" onclick="adminSaveTreeLayout()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-[11px] flex items-center gap-1.5 shadow-md shadow-emerald-600/25 transition-all" title="Simpan hasil modifikasi garis & letak kartu ke database agar tampil identik di halaman publik">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                <span id="btnAdminSaveBaganText">Simpan Tata Letak</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOOLBAR KONTROL ZOOM & FIT -->
+                <div class="flex items-center justify-between mb-3 px-1 text-xs text-slate-500">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400"><i data-lucide="move" class="w-3.5 h-3.5 inline text-orange-500"></i> Seret kartu posisi untuk mengatur garis bebas, seret kanvas untuk menggeser sudut pandang, klik kartu untuk ubah rincian.</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="adminTreeZoomIn()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-navy-900 rounded-lg border border-slate-200 transition-all" title="Perbesar">
+                            <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                        </button>
+                        <button type="button" onclick="adminTreeZoomOut()" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-navy-900 rounded-lg border border-slate-200 transition-all" title="Perkecil">
+                            <i data-lucide="zoom-out" class="w-4 h-4"></i>
+                        </button>
+                        <button type="button" onclick="adminTreeResetView()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-navy-900 font-bold rounded-lg border border-slate-200 text-[11px] transition-all" title="Ukuran Semula">
+                            100%
+                        </button>
+                        <button type="button" onclick="adminTreeCenterFit()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-navy-900 font-bold rounded-lg border border-slate-200 text-[11px] transition-all" title="Posisikan ke Tengah">
+                            Penuh Layar
+                        </button>
+                        <button type="button" onclick="adminTreeExpandAll()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-navy-900 font-bold rounded-lg border border-slate-200 text-[11px] transition-all" title="Buka Semua Cabang">
+                            Buka Cabang
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEWPORT INTERAKTIF -->
+                <div id="adminTreeViewport" class="admin-viewport">
+                    <div id="adminTreeStage" class="admin-stage">
+                        <svg id="adminTreeSvg" class="admin-svg-connectors"></svg>
+                        <div id="adminTreeCardsBox" class="admin-cards-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAMPILAN 2: GARIS HIERARKI (OUTLINE TREE VIEW) -->
+            <div id="containerAdminOutline" class="hidden">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-left">
+                    <h5 class="font-bold text-navy-900 text-sm mb-4 pb-2 border-b border-slate-200 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i data-lucide="list-tree" class="w-4 h-4 text-orange-500"></i> Garis Komando SOTK Sesuai Hierarki</span>
+                        <span class="text-xs text-slate-400 font-normal"><%= listHierarchy.length %> Posisi Terdaftar</span>
+                    </h5>
+
+                    <div class="space-y-2">
+                        <% listHierarchy.forEach(item => { %>
+                            <div class="admin-outline-row" data-level="<%= item.level || 0 %>" data-id="<%= item.id %>" onclick="quickEditNode(this.dataset.id)">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-slate-400 text-xs"><%= item.treePrefix %></span>
+                                    <div>
+                                        <span class="font-bold text-navy-900 text-sm"><%= item.jabatan %></span>
+                                        <% if (item.nama_pejabat) { %>
+                                            <span class="text-xs text-slate-500 ml-1">(• <%= item.nama_pejabat %>)</span>
+                                        <% } else { %>
+                                            <span class="text-xs text-slate-400 italic ml-1">(Posisi Kosong)</span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <% if (item.isRoot) { %>
+                                        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold border border-amber-200">👑 PUNCAK</span>
+                                    <% } else if (item.isParent) { %>
+                                        <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold border border-blue-200">👔 INDUK (<%= item.childrenCount || 0 %>)</span>
+                                    <% } else { %>
+                                        <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200">🌿 PELAKSANA</span>
+                                    <% } %>
+                                    <span class="text-xs text-slate-400"><i data-lucide="edit-3" class="w-3.5 h-3.5 inline"></i></span>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+
+        <% } else { %>
+            <div class="py-16 text-center flex flex-col items-center justify-center">
+                <div class="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mb-3 shadow-sm">
+                    <i data-lucide="git-fork" class="w-8 h-8"></i>
+                </div>
+                <h5 class="text-sm font-bold text-navy-900 mb-1">Pratinjau Bagan Masih Kosong</h5>
+                <p class="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed">
+                    Bagan struktur organisasi visual akan digambar secara otomatis setelah posisi jabatan ditambahkan ke database.
+                </p>
+                <button type="button" onclick="activateProfilSubTab('struktur')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-navy-900 text-xs font-bold rounded-xl flex items-center gap-2 transition-all border border-slate-200 shadow-sm">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Buka Tab Bagan Struktur
+                </button>
+            </div>
+        <% } %>
+
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL TAMBAH JABATAN -->
+<!-- ============================================================== -->
+<div id="modalTambahStruktur" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md p-3 sm:p-4 md:p-6 transition-all duration-300" style="scrollbar-gutter: stable;">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[88vh] my-auto">
+        <!-- Pinned Header -->
+        <div class="px-6 py-4.5 bg-navy-900 text-white flex items-center justify-between shrink-0 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"></span>
+                <h3 class="text-base font-bold text-white leading-none">Tambah Posisi Hierarki SOTK</h3>
+            </div>
+            <button type="button" onclick="closeModalTambahStruktur()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form action="/admin-diskominfo/struktur/tambah" method="POST" class="flex-1 flex flex-col min-h-0">
+            <!-- Scrollable Body -->
+            <div class="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain">
+                <!-- Banner Indikator jika tambah Sub-Jabatan -->
+                <div id="subJabatanBanner" class="hidden p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                    <i data-lucide="corner-down-right" class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0"></i>
+                    <span>Menambahkan Sub-Jabatan di bawah: <strong id="subJabatanParentName" class="text-emerald-900 dark:text-emerald-200"></strong></span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Nama Jabatan</label>
+                    <input type="text" name="jabatan" required placeholder="Contoh: Kepala Dinas / Sekretaris / Kepala Bidang TIK" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Nama Pejabat</label>
+                        <span class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">(Opsional / Boleh Kosong)</span>
+                    </div>
+                    <input type="text" name="nama_pejabat" placeholder="Kosongkan jika posisi belum terisi pejabat..." class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Atasan Langsung (Posisi Induk)</label>
+                    <select id="tambahStrukturParent" name="parent_id" onchange="onTambahParentChange(this.value)" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-medium">
+                        <option value="">— Tidak Ada (Sebagai Puncak Pimpinan) —</option>
+                        <% if (listHierarchy.length > 0) { %>
+                            <% listHierarchy.forEach(item => { %>
+                                <option value="<%= item.id %>">
+                                    <%= item.treePrefix %> <%= item.jabatan %> <%= item.nama_pejabat ? '(' + item.nama_pejabat + ')' : '' %>
+                                </option>
+                            <% }) %>
+                        <% } %>
+                    </select>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                        Pilih posisi atasan. Jika dikosongkan, jabatan ini akan menjadi <strong>Pimpinan Puncak (Akar)</strong> teratas.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Tipe Posisi / Sambungan</label>
+                        <select id="tambahStrukturTipe" name="tipe_posisi" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold text-navy-900 dark:text-white">
+                            <option value="ROOT">👑 Pimpinan Puncak (Akar)</option>
+                            <option value="STAFF_SAYAP">🔗 Garis Menyatu / Sayap Samping (Sekretariat, Staf, dsb)</option>
+                            <option value="LINE_BIDANG" selected>⬇️ Garis Lini Bawah (Bidang, Seksi, Pelaksana)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Urutan Antar Saudara</label>
+                        <input type="number" name="urutan" value="1" min="1" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pinned Footer -->
+            <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="closeModalTambahStruktur()" class="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">Batal</button>
+                <button type="submit" class="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Simpan Posisi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL EDIT JABATAN -->
+<!-- ============================================================== -->
+<div id="modalEditStruktur" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md p-3 sm:p-4 md:p-6 transition-all duration-300" style="scrollbar-gutter: stable;">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[88vh] my-auto">
+        <!-- Pinned Header -->
+        <div class="px-6 py-4.5 bg-navy-900 text-white flex items-center justify-between shrink-0 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                <h3 class="text-base font-bold text-white leading-none">Ubah Data Jabatan SOTK</h3>
+            </div>
+            <button type="button" onclick="closeModalEditStruktur()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form action="/admin-diskominfo/struktur/update" method="POST" class="flex-1 flex flex-col min-h-0">
+            <!-- Scrollable Body -->
+            <div class="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain">
+                <input type="hidden" id="editStrukturId" name="id">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Nama Jabatan</label>
+                    <input type="text" id="editStrukturJabatan" name="jabatan" required class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Nama Pejabat</label>
+                        <span class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">(Opsional / Boleh Kosong)</span>
+                    </div>
+                    <input type="text" id="editStrukturPejabat" name="nama_pejabat" placeholder="Kosongkan jika posisi belum ada nama pejabatnya..." class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Atasan Langsung</label>
+                    <select id="editStrukturParent" name="parent_id" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-medium">
+                        <option value="">— Tidak Ada (Sebagai Puncak Pimpinan) —</option>
+                        <% if (listHierarchy.length > 0) { %>
+                            <% listHierarchy.forEach(item => { %>
+                                <option value="<%= item.id %>" data-node-id="<%= item.id %>">
+                                    <%= item.treePrefix %> <%= item.jabatan %> <%= item.nama_pejabat ? '(' + item.nama_pejabat + ')' : '' %>
+                                </option>
+                            <% }) %>
+                        <% } %>
+                    </select>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                        Sistem memiliki proteksi siklus otomatis (mencegah memilih diri sendiri atau sub-jabatan di bawahnya sebagai atasan).
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Tipe Posisi / Sambungan</label>
+                        <select id="editStrukturTipe" name="tipe_posisi" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold text-navy-900 dark:text-white">
+                            <option value="ROOT">👑 Pimpinan Puncak (Akar)</option>
+                            <option value="STAFF_SAYAP">🔗 Garis Menyatu / Sayap Samping (Sekretariat, Staf, dsb)</option>
+                            <option value="LINE_BIDANG">⬇️ Garis Lini Bawah (Bidang, Seksi, Pelaksana)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Urutan Antar Saudara</label>
+                        <input type="number" id="editStrukturUrutan" name="urutan" min="1" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pinned Footer -->
+            <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="closeModalEditStruktur()" class="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">Batal</button>
+                <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL HAPUS JABATAN -->
+<!-- ============================================================== -->
+<div id="modalHapusStruktur" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transform transition-all duration-300 text-center p-6 sm:p-8">
+        <div class="w-16 h-16 rounded-3xl bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4 animate-bounce">
+            <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+        </div>
+
+        <h3 class="text-lg font-bold text-navy-900 dark:text-white mb-2">Hapus Posisi Dari Bagan?</h3>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mb-3">Tindakan ini akan menghapus jabatan ini dari bagan struktur:</p>
+        
+        <div class="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 mb-6 text-xs font-semibold text-navy-900 dark:text-slate-200 line-clamp-2" id="deleteStrukturTitle">
+            -
+        </div>
+
+        <div class="flex items-center justify-center gap-3">
+            <button type="button" onclick="closeModalHapusStruktur()" class="w-1/2 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all">
+                Batal
+            </button>
+            <a id="btnConfirmDeleteStruktur" href="#" class="w-1/2 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center">
+                Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL RESET / KOSONGKAN DATA PROFIL -->
+<!-- ============================================================== -->
+<div id="modalResetProfil" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[88vh]">
+        <div class="p-6 sm:p-8 overflow-y-auto flex-1 min-h-0 overscroll-contain">
+            <div class="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4 border border-rose-100 dark:border-rose-900/50">
+                <i data-lucide="rotate-ccw" class="w-7 h-7"></i>
+            </div>
+
+            <h3 class="text-lg font-bold text-navy-900 dark:text-white text-center mb-1">Reset & Kosongkan Modul Profil</h3>
+            <p class="text-slate-500 dark:text-slate-400 text-xs text-center mb-6">Pilih cakupan data yang ingin Anda kosongkan dari database:</p>
+
+            <div class="space-y-3 mb-6">
+                <!-- Pilihan 1: Kosongkan Form Profil & Peta Saja -->
+                <form action="/admin-diskominfo/profil/reset" method="POST" onsubmit="return confirm('Kosongkan data Profil Dinas (visi, misi, kontak, peta)?');">
+                    <button type="submit" class="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 bg-white dark:bg-slate-800/80 hover:bg-orange-50/30 dark:hover:bg-slate-800 transition-all text-left flex items-start gap-3 group">
+                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-700 group-hover:bg-orange-500 group-hover:text-white flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0 transition-colors">
+                            <i data-lucide="building" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-xs text-navy-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 mb-0.5">Kosongkan Profil Dinas Saja</div>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Mereset visi, misi, kontak, alamat, dan tautan peta menjadi kosong.</p>
+                        </div>
+                    </button>
+                </form>
+
+                <!-- Pilihan 2: Kosongkan Seluruh Bagan Struktur Organisasi Saja -->
+                <form action="/admin-diskominfo/struktur/reset-all" method="POST" onsubmit="return confirm('Kosongkan SEMUA jabatan pada bagan struktur organisasi?');">
+                    <button type="submit" class="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 bg-white dark:bg-slate-800/80 hover:bg-blue-50/30 dark:hover:bg-slate-800 transition-all text-left flex items-start gap-3 group">
+                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-700 group-hover:bg-blue-500 group-hover:text-white flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0 transition-colors">
+                            <i data-lucide="network" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-xs text-navy-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-0.5">Kosongkan Seluruh Bagan Struktur Saja</div>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Menghapus seluruh hierarki pimpinan, atasan, dan staf pelaksana dari database.</p>
+                        </div>
+                    </button>
+                </form>
+
+                <!-- Pilihan 3: Reset Total Keduanya -->
+                <form action="/admin-diskominfo/profil/reset-all" method="POST" onsubmit="return confirm('PERINGATAN: Anda yakin ingin mengosongkan SELURUH data profil dinas dan bagan struktur organisasi sekaligus?');">
+                    <button type="submit" class="w-full p-4 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/30 hover:bg-rose-100/70 dark:hover:bg-rose-950/50 transition-all text-left flex items-start gap-3 group">
+                        <div class="w-9 h-9 rounded-xl bg-rose-200 dark:bg-rose-900/60 group-hover:bg-rose-600 group-hover:text-white flex items-center justify-center text-rose-700 dark:text-rose-300 shrink-0 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-xs text-rose-900 dark:text-rose-200 mb-0.5">Reset Total (Kosongkan Semua)</div>
+                            <p class="text-[11px] text-rose-600 dark:text-rose-400">Mengosongkan profil instansi DAN menghapus seluruh bagan struktur organisasi.</p>
+                        </div>
+                    </button>
+                </form>
+            </div>
+
+            <button type="button" onclick="closeModalResetProfil()" class="w-full py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all">
+                Tutup / Batal
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SCRIPT INTERAKTIF SUB-TAB, MODAL & ULTRA DINAMIS PREVIEW ENGINE -->
+<!-- ============================================================== -->
+<script>
+    function activateProfilSubTab(tabName) {
+        if (!tabName) tabName = 'profil';
+
+        // 1. Update status tombol tab
+        document.querySelectorAll('.btn-profil-tab').forEach(b => {
+            b.classList.remove('text-orange-600', 'border-orange-500');
+            b.classList.add('text-slate-500', 'border-transparent');
+            if (b.getAttribute('data-subtab') === tabName) {
+                b.classList.add('text-orange-600', 'border-orange-500');
+                b.classList.remove('text-slate-500', 'border-transparent');
+            }
+        });
+
+        // 2. Tampilkan panel tab yang aktif
+        document.querySelectorAll('.profil-subtab-pane').forEach(el => el.classList.add('hidden'));
+        const target = document.getElementById('subtab-' + tabName);
+        if (target) {
+            target.classList.remove('hidden');
+        } else {
+            const fallback = document.getElementById('subtab-profil');
+            if (fallback) fallback.classList.remove('hidden');
+        }
+
+        // 3. Simpan state di localStorage
+        localStorage.setItem('active_profil_subtab', tabName);
+
+        // 4. Jika tab preview dibuka, re-render kanvas pohon
+        if (tabName === 'preview' && typeof initAdminTreeCanvas === 'function') {
+            setTimeout(initAdminTreeCanvas, 50);
+        }
+
+        // 5. Pastikan ikon Lucide ter-render sempurna di setiap subtab (termasuk BPS)
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    function switchProfilSubTab(tabName, btn) {
+        activateProfilSubTab(tabName);
+    }
+
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const subtabParam = urlParams.get('subtab');
+        const savedSubtab = subtabParam || localStorage.getItem('active_profil_subtab') || 'profil';
+        activateProfilSubTab(savedSubtab);
+    });
+
+    function openModalTambahBaru() {
+        document.getElementById('subJabatanBanner').classList.add('hidden');
+        const parentSelect = document.getElementById('tambahStrukturParent');
+        if (parentSelect) parentSelect.value = '';
+        const tipeSelect = document.getElementById('tambahStrukturTipe');
+        if (tipeSelect) {
+            const hasPositions = '<%= listStruktur.length > 0 %>' === 'true';
+            tipeSelect.value = hasPositions ? 'LINE_BIDANG' : 'ROOT';
+        }
+        openModalTambahStruktur();
+    }
+
+    function openModalAddSub(parentId, parentTitle) {
+        document.getElementById('subJabatanBanner').classList.remove('hidden');
+        document.getElementById('subJabatanParentName').textContent = parentTitle;
+        const parentSelect = document.getElementById('tambahStrukturParent');
+        if (parentSelect) {
+            parentSelect.value = parentId;
+        }
+        const tipeSelect = document.getElementById('tambahStrukturTipe');
+        if (tipeSelect) {
+            tipeSelect.value = 'LINE_BIDANG';
+        }
+        openModalTambahStruktur();
+    }
+
+    function onTambahParentChange(val) {
+        const tipeSelect = document.getElementById('tambahStrukturTipe');
+        if (!tipeSelect) return;
+        if (!val || val === '') {
+            tipeSelect.value = 'ROOT';
+        } else if (tipeSelect.value === 'ROOT') {
+            tipeSelect.value = 'LINE_BIDANG';
+        }
+    }
+
+    function teleportModalProfil(modalId) {
+        const m = document.getElementById(modalId);
+        if (m && m.parentElement !== document.body) {
+            document.body.appendChild(m);
+        }
+    }
+
+    function openModalTambahStruktur() {
+        teleportModalProfil('modalTambahStruktur');
+        const m = document.getElementById('modalTambahStruktur');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+    function closeModalTambahStruktur() {
+        const m = document.getElementById('modalTambahStruktur');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.getElementById('subJabatanBanner').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function openModalEditStruktur() {
+        teleportModalProfil('modalEditStruktur');
+        const m = document.getElementById('modalEditStruktur');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+    function closeModalEditStruktur() {
+        const m = document.getElementById('modalEditStruktur');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function openModalHapusStruktur() {
+        teleportModalProfil('modalHapusStruktur');
+        const m = document.getElementById('modalHapusStruktur');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+    function closeModalHapusStruktur() {
+        const m = document.getElementById('modalHapusStruktur');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function openModalResetProfil() {
+        teleportModalProfil('modalResetProfil');
+        const m = document.getElementById('modalResetProfil');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+    function closeModalResetProfil() {
+        const m = document.getElementById('modalResetProfil');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function quickEditNode(nodeId) {
+        const btn = document.querySelector(`.btn-edit-struktur[data-id="${nodeId}"]`);
+        if (btn) btn.click();
+    }
+
+    // Atur indentasi Admin Outline Tree jika level > 8
+    document.querySelectorAll('.admin-outline-row[data-level]').forEach(el => {
+        const lvl = parseInt(el.dataset.level, 10);
+        if (!isNaN(lvl)) el.style.marginLeft = (lvl * 24) + 'px';
+    });
+
+    document.addEventListener("click", function(e) {
+        const btnEdit = e.target.closest(".btn-edit-struktur");
+        if (btnEdit) {
+            const id = btnEdit.dataset.id;
+            const parent = btnEdit.dataset.parent;
+            const tipe = btnEdit.dataset.tipe;
+            const urutan = btnEdit.dataset.urutan;
+            const jabatan = btnEdit.querySelector(".hidden-jabatan").innerText;
+            const pejabat = btnEdit.querySelector(".hidden-pejabat").innerText;
+
+            let tipeVal = tipe;
+            if (!tipeVal || tipeVal === '') {
+                tipeVal = (!parent ? 'ROOT' : 'LINE_BIDANG');
+            }
+
+            document.getElementById("editStrukturId").value = id;
+            document.getElementById("editStrukturJabatan").value = jabatan;
+            document.getElementById("editStrukturPejabat").value = pejabat;
+            document.getElementById("editStrukturTipe").value = tipeVal;
+            
+            // Atur pilihan parent dan disable opsi node itu sendiri (anti-siklus langsung)
+            const parentSelect = document.getElementById("editStrukturParent");
+            if (parentSelect) {
+                Array.from(parentSelect.options).forEach(opt => {
+                    opt.disabled = (opt.value === String(id));
+                });
+                parentSelect.value = parent || '';
+            }
+
+            document.getElementById("editStrukturUrutan").value = urutan || 1;
+
+            openModalEditStruktur();
+            return;
+        }
+
+        const btnHapus = e.target.closest(".btn-hapus-struktur");
+        if (btnHapus) {
+            const id = btnHapus.dataset.id;
+            const jabatan = btnHapus.querySelector(".hidden-hapus-jabatan").innerText;
+            document.getElementById("deleteStrukturTitle").textContent = `"${jabatan}"`;
+            document.getElementById("btnConfirmDeleteStruktur").href = `/admin-diskominfo/struktur/hapus/${id}`;
+            openModalHapusStruktur();
+        }
+    });
+
+    // ==============================================================
+    // ENGINE ULTRA DINAMIS PREVIEW UNTUK SUB-TAB 3 ADMIN
+    // ==============================================================
+    let ADM_CARD_W = 220;
+    let ADM_CARD_H = 88;
+    let ADM_H_GAP  = 36;
+    let ADM_V_GAP  = 72;
+    let ADM_PAD    = 40;
+    let adminElbowRatio = 0.50; // 0.15 - 0.85 (posisi garis siku)
+    let adminLineStyle = 'orthogonal'; // 'orthogonal' | 'curve' | 'direct'
+    let customNodePositions = new Map(); // id -> { x, y }
+    let adminWingNodeIds = new Set(); // ID jabatan yang dipilih sebagai MENYATU
+    let adminNonWingNodeIds = new Set(); // ID jabatan yang dipilih sebagai LINI BAWAH
+    let adminTreeInitialized = false;
+    let adminZoom = 1;
+    let adminPanX = 0;
+    let adminPanY = 0;
+    let adminIsDragging = false;
+    let adminStartX = 0;
+    let adminStartY = 0;
+    let adminNodeMap = new Map();
+    let adminRoots = [];
+    let adminRootTree = null;
+
+    // FUNGSI STATUS PERUBAHAN & TOAST
+    function markBaganUnsaved() {
+        const badge = document.getElementById('baganStatusBadge');
+        if (badge) {
+            badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 inline-block';
+            badge.innerHTML = '● Perubahan Belum Disimpan';
+        }
+    }
+
+    function markBaganSaved() {
+        const badge = document.getElementById('baganStatusBadge');
+        if (badge) {
+            badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-block';
+            badge.innerHTML = '✓ Tersimpan & Sinkron Publik';
+        }
+    }
+
+    function showAdminToast(msg, type = 'success') {
+        if (typeof showAdminAlert === 'function') {
+            showAdminAlert(msg, type);
+            return;
+        }
+        let toast = document.getElementById('adminToastNotification');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'adminToastNotification';
+            document.body.appendChild(toast);
+        }
+        toast.className = `fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl transition-all duration-300 transform text-xs font-bold ${
+            type === 'success' ? 'bg-navy-900 text-white border border-emerald-500 shadow-emerald-500/20' : 'bg-rose-600 text-white shadow-rose-600/30'
+        }`;
+        toast.innerHTML = `<span class="w-2 h-2 rounded-full ${type === 'success' ? 'bg-emerald-400 animate-ping' : 'bg-white'}"></span> <span>${msg}</span>`;
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+        });
+        setTimeout(() => {
+            toast.style.transform = 'translateY(20px)';
+            toast.style.opacity = '0';
+        }, 3500);
+    }
+
+    // SIMPAN KONFIGURASI TATA LETAK KE DATABASE
+    window.adminSaveTreeLayout = async function() {
+        const btn = document.getElementById('btnAdminSaveBagan');
+        const btnText = document.getElementById('btnAdminSaveBaganText');
+        const originalText = 'Simpan Tata Letak';
+
+        if (btn) btn.disabled = true;
+        if (btnText) btnText.textContent = 'Menyimpan...';
+
+        const positionsObj = {};
+        customNodePositions.forEach((pos, id) => {
+            positionsObj[id] = pos;
+        });
+
+        const config = {
+            elbowRatio: adminElbowRatio,
+            vGap: ADM_V_GAP,
+            hGap: ADM_H_GAP,
+            lineStyle: (adminLineStyle === 'kedinasan' ? 'orthogonal' : adminLineStyle),
+            customPositions: positionsObj,
+            wingNodes: Array.from(adminWingNodeIds),
+            nonWingNodes: Array.from(adminNonWingNodeIds)
+        };
+
+        try {
+            const resp = await fetch('/admin-diskominfo/profil/save-bagan-config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config })
+            });
+            const res = await resp.json();
+            if (res.success) {
+                markBaganSaved();
+                if (btnText) btnText.textContent = '✓ Berhasil Disimpan!';
+                showAdminToast(res.message || 'Tata letak bagan berhasil disimpan!', 'success');
+                setTimeout(() => {
+                    if (btnText) btnText.textContent = originalText;
+                    if (btn) btn.disabled = false;
+                }, 2000);
+            } else {
+                showAdminToast('Gagal menyimpan: ' + (res.message || 'Terjadi kesalahan sistem'), 'error');
+                if (btnText) btnText.textContent = originalText;
+                if (btn) btn.disabled = false;
+            }
+        } catch(err) {
+            showAdminToast('Gagal menghubungi server: ' + err.message, 'error');
+            if (btnText) btnText.textContent = originalText;
+            if (btn) btn.disabled = false;
+        }
+    };
+
+    function applyDefaultKedinasanCoordinates(nodes, posMap) {
+        if (!nodes || nodes.length === 0) return;
+        const kadin = nodes.find(n => n.parent_id === null || (n.jabatan || '').toLowerCase().includes('kepala dinas')) || nodes[0];
+        const sek = nodes.find(n => (n.jabatan || '').toLowerCase().includes('sekretar') || n.tipe_posisi === 'STAFF_SAYAP');
+        const subbag = (sek ? nodes.find(n => n.parent_id === sek.id) : null) || nodes.find(n => (n.jabatan || '').toLowerCase().includes('sub') || (n.jabatan || '').toLowerCase().includes('kasubag'));
+        const fung = nodes.find(n => (n.jabatan || '').toLowerCase().includes('fungsional') || (n.jabatan || '').toLowerCase().includes('koordinator'));
+        
+        let bidangList = nodes.filter(n => {
+            if (kadin && n.id === kadin.id) return false;
+            if (sek && n.id === sek.id) return false;
+            if (subbag && n.id === subbag.id) return false;
+            if (fung && n.id === fung.id) return false;
+            return n.parent_id === (kadin ? kadin.id : null) || (n.jabatan || '').toLowerCase().includes('bidang');
+        });
+
+        bidangList.sort((a, b) => {
+            const getRank = (item) => {
+                const j = (item.jabatan || '').toLowerCase();
+                if (j.includes('informasi dan komunikasi') || j.includes('ikp')) return 1;
+                if (j.includes('teknologi')) return 2;
+                if (j.includes('statistik')) return 3;
+                if (j.includes('persandian')) return 4;
+                return 5 + (Number(item.urutan) || 1);
+            };
+            return getRank(a) - getRank(b);
+        });
+
+        const startX = 60;
+        const bGap = 36;
+        const bY = 420;
+
+        bidangList.forEach((b, idx) => {
+            const bx = startX + idx * (ADM_CARD_W + bGap);
+            posMap.set(Number(b.id), { x: bx, y: bY });
+        });
+
+        const totalSpan = bidangList.length > 0 ? (bidangList.length * ADM_CARD_W + (bidangList.length - 1) * bGap) : 988;
+        const centerSpineX = startX + totalSpan / 2;
+        const kadinX = Math.round(centerSpineX - ADM_CARD_W / 2);
+
+        if (kadin) {
+            posMap.set(Number(kadin.id), { x: kadinX, y: 40 });
+        }
+        if (sek) {
+            const sekX = Math.round(centerSpineX + 180);
+            posMap.set(Number(sek.id), { x: Math.max(sekX, 740), y: 160 });
+        }
+        if (subbag) {
+            const subX = Math.round(centerSpineX + 268);
+            posMap.set(Number(subbag.id), { x: Math.max(subX, 828), y: 290 });
+        }
+        if (fung) {
+            posMap.set(Number(fung.id), { x: kadinX, y: 230 });
+        }
+    }
+
+    function loadSavedBaganConfig(allNodes) {
+        const savedConfigEl = document.getElementById('adminBaganConfig');
+        let hasCustomPositions = false;
+        if (savedConfigEl && savedConfigEl.textContent) {
+            try {
+                const savedCfg = JSON.parse(savedConfigEl.textContent);
+                if (savedCfg && typeof savedCfg === 'object') {
+                    if (Array.isArray(savedCfg.wingNodes)) {
+                        adminWingNodeIds = new Set(savedCfg.wingNodes.map(Number));
+                    }
+                    if (Array.isArray(savedCfg.nonWingNodes)) {
+                        adminNonWingNodeIds = new Set(savedCfg.nonWingNodes.map(Number));
+                    }
+                    if (typeof savedCfg.elbowRatio === 'number') {
+                        adminElbowRatio = savedCfg.elbowRatio;
+                        const sElbow = document.getElementById('sliderAdminElbow');
+                        const vElbow = document.getElementById('valAdminElbow');
+                        if (sElbow) sElbow.value = Math.round(adminElbowRatio * 100);
+                        if (vElbow) vElbow.textContent = Math.round(adminElbowRatio * 100) + '%';
+                    }
+                    if (typeof savedCfg.vGap === 'number') {
+                        ADM_V_GAP = savedCfg.vGap;
+                        const sVGap = document.getElementById('sliderAdminVGap');
+                        const vVGap = document.getElementById('valAdminVGap');
+                        if (sVGap) sVGap.value = ADM_V_GAP;
+                        if (vVGap) vVGap.textContent = ADM_V_GAP + 'px';
+                    }
+                    if (typeof savedCfg.hGap === 'number') {
+                        ADM_H_GAP = savedCfg.hGap;
+                        const sHGap = document.getElementById('sliderAdminHGap');
+                        const vHGap = document.getElementById('valAdminHGap');
+                        if (sHGap) sHGap.value = ADM_H_GAP;
+                        if (vHGap) vHGap.textContent = ADM_H_GAP + 'px';
+                    }
+                    if (savedCfg.lineStyle) {
+                        adminLineStyle = (savedCfg.lineStyle === 'kedinasan' ? 'orthogonal' : savedCfg.lineStyle);
+                        setAdminLineStyle(adminLineStyle);
+                    } else {
+                        setAdminLineStyle('orthogonal');
+                    }
+                    if (savedCfg.customPositions && typeof savedCfg.customPositions === 'object' && Object.keys(savedCfg.customPositions).length > 0) {
+                        customNodePositions.clear();
+                        for (const [key, val] of Object.entries(savedCfg.customPositions)) {
+                            if (val && typeof val.x === 'number' && typeof val.y === 'number') {
+                                customNodePositions.set(Number(key), { x: val.x, y: val.y });
+                            }
+                        }
+                        hasCustomPositions = true;
+                    }
+                    markBaganSaved();
+                }
+            } catch(e) {
+                console.warn('Gagal membaca saved bagan config:', e);
+            }
+        }
+        if (!hasCustomPositions && allNodes && allNodes.length > 0) {
+            applyDefaultKedinasanCoordinates(allNodes, customNodePositions);
+        }
+    }
+
+    function initAdminTreeCanvas() {
+        const rawEl = document.getElementById('adminAllNodesData');
+        if (!rawEl) return;
+
+        let allNodes = [];
+        try {
+            allNodes = JSON.parse(rawEl.textContent || '[]');
+        } catch(e) {
+            allNodes = [];
+        }
+        if (!allNodes || allNodes.length === 0) return;
+
+        const viewport = document.getElementById('adminTreeViewport');
+        const stage    = document.getElementById('adminTreeStage');
+        const svg      = document.getElementById('adminTreeSvg');
+        const cardsBox = document.getElementById('adminTreeCardsBox');
+        if (!viewport || !stage || !svg || !cardsBox) return;
+
+        // Muat konfigurasi tersimpan jika ada (atau terapkan preset SOTK kedinasan bawaan)
+        loadSavedBaganConfig(allNodes);
+
+        // Reset map & nodes
+        adminNodeMap.clear();
+        allNodes.forEach(n => {
+            adminNodeMap.set(Number(n.id), Object.assign({}, n, {
+                id: Number(n.id),
+                parent_id: (n.parent_id !== null && n.parent_id !== undefined && n.parent_id !== '') ? Number(n.parent_id) : null,
+                children: [],
+                isCollapsed: false,
+                isRoot: false,
+                isParent: false,
+                isLeaf: false,
+                level: 0
+            }));
+        });
+
+        // Hubungkan hubungan anak ke parent
+        adminRoots = [];
+        adminNodeMap.forEach(n => {
+            if (n.parent_id !== null && adminNodeMap.has(n.parent_id)) {
+                adminNodeMap.get(n.parent_id).children.push(n);
+            } else {
+                adminRoots.push(n);
+            }
+        });
+
+        // Urutkan anak
+        adminNodeMap.forEach(n => {
+            n.children.sort((a, b) => (Number(a.urutan) || 1) - (Number(b.urutan) || 1) || a.id - b.id);
+        });
+        adminRoots.sort((a, b) => (Number(a.urutan) || 1) - (Number(b.urutan) || 1) || a.id - b.id);
+
+        function markMeta(n, lvl) {
+            n.level = lvl;
+            n.isRoot = n.parent_id === null;
+            n.isParent = n.children.length > 0;
+            n.isLeaf = n.children.length === 0;
+            n.children.forEach(c => markMeta(c, lvl + 1));
+        }
+        adminRoots.forEach(r => markMeta(r, 0));
+
+        // Virtual root jika terdapat lebih dari 1 akar
+        if (adminRoots.length === 1) {
+            adminRootTree = adminRoots[0];
+        } else {
+            adminRootTree = {
+                id: '__adm_virtual__',
+                jabatan: 'Pimpinan Kedinasan',
+                nama_pejabat: '',
+                isRoot: true,
+                isParent: true,
+                isLeaf: false,
+                level: 0,
+                children: adminRoots,
+                isCollapsed: false,
+                isVirtual: true
+            };
+        }
+
+        renderAdminTree();
+        setTimeout(adminTreeCenterFit, 50);
+
+        if (!adminTreeInitialized) {
+            adminTreeInitialized = true;
+
+            viewport.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.admin-node-card') || e.target.closest('button')) return;
+                adminIsDragging = true;
+                viewport.classList.add('is-dragging');
+                adminStartX = e.clientX - adminPanX;
+                adminStartY = e.clientY - adminPanY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!adminIsDragging) return;
+                adminPanX = e.clientX - adminStartX;
+                adminPanY = e.clientY - adminStartY;
+                updateAdminStageTransform();
+            });
+
+            window.addEventListener('mouseup', () => {
+                adminIsDragging = false;
+                viewport.classList.remove('is-dragging');
+            });
+
+            viewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? 0.1 : -0.1;
+                adminZoom = Math.min(Math.max(0.4, adminZoom + delta), 2.2);
+                updateAdminStageTransform();
+            }, { passive: false });
+        }
+    }
+
+    function measureAdminWidth(node) {
+        if (node.isCollapsed || node.children.length === 0) {
+            node._w = ADM_CARD_W;
+        } else {
+            let total = 0;
+            node.children.forEach((c, idx) => {
+                measureAdminWidth(c);
+                total += c._w + (idx > 0 ? ADM_H_GAP : 0);
+            });
+            node._w = Math.max(ADM_CARD_W, total);
+        }
+        return node._w;
+    }
+
+    function assignAdminCoords(node, leftX, topY) {
+        if (customNodePositions.has(node.id)) {
+            const saved = customNodePositions.get(node.id);
+            node._x = saved.x;
+            node._y = saved.y;
+        } else {
+            node._y = topY;
+            node._x = leftX + (node._w - ADM_CARD_W) / 2;
+        }
+
+        if (!node.isCollapsed && node.children.length > 0) {
+            let curX = leftX;
+            node.children.forEach(c => {
+                assignAdminCoords(c, curX, topY + ADM_CARD_H + ADM_V_GAP);
+                curX += c._w + ADM_H_GAP;
+            });
+        }
+    }
+
+    let admMaxRight = 0;
+    let admMaxBottom = 0;
+    function computeAdminBounds(node) {
+        admMaxRight = Math.max(admMaxRight, node._x + ADM_CARD_W);
+        admMaxBottom = Math.max(admMaxBottom, node._y + ADM_CARD_H);
+        if (!node.isCollapsed && node.children.length > 0) {
+            node.children.forEach(computeAdminBounds);
+        }
+    }
+
+    function renderAdminTree() {
+        if (!adminRootTree) return;
+        const stage    = document.getElementById('adminTreeStage');
+        const svg      = document.getElementById('adminTreeSvg');
+        const cardsBox = document.getElementById('adminTreeCardsBox');
+        if (!stage || !svg || !cardsBox) return;
+
+        measureAdminWidth(adminRootTree);
+        assignAdminCoords(adminRootTree, ADM_PAD, ADM_PAD);
+
+        admMaxRight = 0;
+        admMaxBottom = 0;
+        computeAdminBounds(adminRootTree);
+
+        const canvasW = Math.max(1400, admMaxRight + ADM_PAD * 3);
+        const canvasH = Math.max(800, admMaxBottom + ADM_PAD * 3);
+
+        stage.style.width = canvasW + 'px';
+        stage.style.height = canvasH + 'px';
+        svg.setAttribute('width', canvasW);
+        svg.setAttribute('height', canvasH);
+
+        cardsBox.innerHTML = '';
+        renderAdminCards(adminRootTree, cardsBox);
+        redrawAdminSvgOnly();
+        updateAdminStageTransform();
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function renderAdminCards(node, cardsBox) {
+        if (!node.isVirtual) {
+            const card = document.createElement('div');
+            card.className = `admin-node-card ${getAdminNodeClass(node)}`;
+            card.style.left = node._x + 'px';
+            card.style.top  = node._y + 'px';
+            card.setAttribute('data-id', node.id);
+
+            let collapseBtn = '';
+            if (node.isParent) {
+                const count = node.children.length;
+                collapseBtn = node.isCollapsed
+                    ? `<button type="button" class="btn-admin-collapse collapsed" onclick="event.stopPropagation(); toggleAdminNodeCollapse(${node.id})"><i data-lucide="plus" class="w-3 h-3 inline"></i> ${count} Sub-Jabatan</button>`
+                    : `<button type="button" class="btn-admin-collapse" onclick="event.stopPropagation(); toggleAdminNodeCollapse(${node.id})"><i data-lucide="minus" class="w-3 h-3 inline"></i> ${count} Sub-Jabatan</button>`;
+            }
+
+            let wingToggleBtn = '';
+            if (!node.isRoot && node.parent_id !== null) {
+                const parent = adminNodeMap.get(node.parent_id);
+                const isWing = isWingChild(node, parent ? parent.children : []);
+                if (isWing) {
+                    wingToggleBtn = `<button type="button" class="admin-node-wing-toggle is-wing" onclick="event.stopPropagation(); toggleNodeMenyatu(${node.id})" title="Garis menyatu ke tulang cabang samping. Klik untuk ganti jadi Lini Bawah"><i data-lucide="link" class="w-2.5 h-2.5 inline"></i> Menyatu</button>`;
+                } else {
+                    wingToggleBtn = `<button type="button" class="admin-node-wing-toggle is-line" onclick="event.stopPropagation(); toggleNodeMenyatu(${node.id})" title="Garis lini ke busbar bawah. Klik untuk ganti jadi Menyatu"><i data-lucide="arrow-down" class="w-2.5 h-2.5 inline"></i> Lini Bawah</button>`;
+                }
+            }
+
+            const personHtml = node.nama_pejabat 
+                ? `<div class="admin-node-person">${escapeHtmlText(node.nama_pejabat)}</div>` 
+                : ``;
+
+            card.innerHTML = `
+                <div>
+                    <div class="admin-node-title">${escapeHtmlText(node.jabatan)}</div>
+                    ${personHtml}
+                </div>
+                <div class="flex items-center gap-1.5 flex-wrap mt-2">
+                    ${wingToggleBtn}
+                    ${collapseBtn}
+                </div>
+            `;
+
+            // DRAG KARTU DENGAN REAL-TIME RE-CALCULATING CONNECTORS
+            let isDragging = false;
+            let startX = 0, startY = 0;
+            let initNodeX = 0, initNodeY = 0;
+            let moved = false;
+
+            card.addEventListener('mousedown', (e) => {
+                if (e.target.closest('button')) return;
+                e.stopPropagation();
+
+                isDragging = true;
+                moved = false;
+                startX = e.clientX;
+                startY = e.clientY;
+                initNodeX = node._x;
+                initNodeY = node._y;
+
+                function onMove(ev) {
+                    if (!isDragging) return;
+                    const dx = (ev.clientX - startX) / adminZoom;
+                    const dy = (ev.clientY - startY) / adminZoom;
+                    if (Math.hypot(dx, dy) > 4) {
+                        moved = true;
+                        card.classList.add('is-dragging-card');
+                    }
+                    if (moved) {
+                        node._x = Math.round(initNodeX + dx);
+                        node._y = Math.round(initNodeY + dy);
+                        card.style.left = node._x + 'px';
+                        card.style.top = node._y + 'px';
+                        customNodePositions.set(node.id, { x: node._x, y: node._y });
+                        redrawAdminSvgOnly();
+                    }
+                }
+
+                function onUp() {
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                    if (isDragging) {
+                        isDragging = false;
+                        if (moved) {
+                            markBaganUnsaved();
+                            setTimeout(() => card.classList.remove('is-dragging-card'), 50);
+                        } else {
+                            quickEditNode(node.id);
+                        }
+                    }
+                }
+
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onUp);
+            });
+
+            cardsBox.appendChild(card);
+        }
+
+        if (!node.isCollapsed && node.children.length > 0) {
+            node.children.forEach(c => renderAdminCards(c, cardsBox));
+        }
+    }
+
+    function redrawAdminSvgOnly() {
+        const svg = document.getElementById('adminTreeSvg');
+        if (!svg || !adminRootTree) return;
+        svg.innerHTML = '';
+        renderLinesRecursive(adminRootTree, svg);
+    }
+
+    function isWingChild(c, allChildren) {
+        if (!c) return false;
+        const cId = Number(c.id);
+        if (adminWingNodeIds.has(cId)) return true;
+        if (adminNonWingNodeIds.has(cId)) return false;
+
+        const tip = (c.tipe_posisi || '').toUpperCase();
+        if (tip === 'STAFF_SAYAP') return true;
+        if (tip === 'LINE_BIDANG' || tip === 'ROOT') return false;
+
+        const jab = (c.jabatan || '').toLowerCase();
+        if (jab.includes('sekretar') || jab.includes('staf ahli') || jab.includes('fungsional') || jab.includes('koordinator')) {
+            return true;
+        }
+        if (allChildren && allChildren.length > 1) {
+            const maxY = Math.max(...allChildren.map(ch => ch._y));
+            if (maxY - c._y > ADM_CARD_H * 0.7) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    window.toggleNodeMenyatu = function(nodeId) {
+        const id = Number(nodeId);
+        const node = adminNodeMap.get(id);
+        if (!node) return;
+        const parent = node.parent_id ? adminNodeMap.get(node.parent_id) : null;
+        const siblings = parent ? parent.children : [];
+        const currentIsWing = isWingChild(node, siblings);
+
+        if (currentIsWing) {
+            adminWingNodeIds.delete(id);
+            adminNonWingNodeIds.add(id);
+            showAdminToast(`"${node.jabatan}" diatur ke Garis Lini Bawah`, 'info');
+        } else {
+            adminNonWingNodeIds.delete(id);
+            adminWingNodeIds.add(id);
+            showAdminToast(`"${node.jabatan}" diatur ke Garis Menyatu (Sayap Samping)`, 'success');
+        }
+        markBaganUnsaved();
+        renderAdminTree();
+    };
+
+    function renderLinesRecursive(node, svg) {
+        if (!node.isCollapsed && node.children.length > 0) {
+            const parentBottomX = node._x + ADM_CARD_W / 2;
+            const parentBottomY = node.isVirtual ? node._y : node._y + ADM_CARD_H;
+            const elbowY = parentBottomY + ADM_V_GAP * adminElbowRatio;
+
+            if (adminLineStyle === 'curve') {
+                node.children.forEach(c => {
+                    const childX = c._x + ADM_CARD_W / 2;
+                    drawAdminSvgBezier(svg, parentBottomX, parentBottomY, childX, c._y);
+                });
+            } else if (adminLineStyle === 'direct') {
+                node.children.forEach(c => {
+                    const childX = c._x + ADM_CARD_W / 2;
+                    drawAdminSvgLine(svg, parentBottomX, parentBottomY, childX, c._y);
+                });
+            } else {
+                // Orthogonal / Siku Standar & Ultra Dinamis Cabang Menyatu
+                if (node.children.length === 1) {
+                    const child = node.children[0];
+                    const childX = child._x + ADM_CARD_W / 2;
+                    if (Math.abs(parentBottomX - childX) < 8) {
+                        drawAdminSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, child._y);
+                    } else {
+                        const stepY = parentBottomY + (child._y - parentBottomY) * adminElbowRatio;
+                        drawAdminSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, stepY);
+                        drawAdminSvgLine(svg, parentBottomX, stepY, childX, stepY);
+                        drawAdminSvgLine(svg, childX, stepY, childX, child._y);
+                    }
+                } else {
+                    const wingChildren = node.children.filter(c => isWingChild(c, node.children));
+                    const lineChildren = node.children.filter(c => !isWingChild(c, node.children));
+
+                    if (wingChildren.length > 0 && lineChildren.length > 0) {
+                        // HIERARKI KEDINASAN DUA TIER: SAYAP MENYATU + LINI BAWAH
+                        const minLineY = Math.min(...lineChildren.map(c => c._y));
+                        const lineBarY = minLineY - Math.max(22, Math.round(ADM_V_GAP * (1 - adminElbowRatio)));
+
+                        // 1. Tulang Punggung Vertikal Menyatu (Central Spine)
+                        drawAdminSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, lineBarY);
+
+                        // 2. Cabang ke Sayap (Menyatu dari Tulang Vertikal)
+                        wingChildren.forEach(w => {
+                            const wCenterX = w._x + ADM_CARD_W / 2;
+                            const wingBranchY = parentBottomY + (w._y - parentBottomY) * adminElbowRatio;
+                            drawAdminSvgLine(svg, parentBottomX, wingBranchY, wCenterX, wingBranchY);
+                            drawAdminSvgLine(svg, wCenterX, wingBranchY, wCenterX, w._y);
+
+                            // Koordinasi putus-putus jika ada fungsional & sekretariat
+                            const isFung = (w.jabatan || '').toLowerCase().includes('fungsional') || (w.jabatan || '').toLowerCase().includes('koordinator');
+                            if (isFung) {
+                                const sek = wingChildren.find(item => (item.jabatan || '').toLowerCase().includes('sekretar'));
+                                if (sek) {
+                                    const sekBottomX = sek._x + ADM_CARD_W / 2;
+                                    const sekBottomY = sek._y + ADM_CARD_H;
+                                    const fMidY = sekBottomY + 16;
+                                    drawAdminSvgDashedLine(svg, sekBottomX, sekBottomY, sekBottomX, fMidY);
+                                    drawAdminSvgDashedLine(svg, sekBottomX, fMidY, wCenterX, fMidY);
+                                    drawAdminSvgDashedLine(svg, wCenterX, fMidY, wCenterX, w._y);
+                                }
+                            }
+                        });
+
+                        // 3. Garis Busbar Horizontal Distribusi Bidang
+                        const lineXs = lineChildren.map(c => c._x + ADM_CARD_W / 2);
+                        const minLineX = Math.min(parentBottomX, ...lineXs);
+                        const maxLineX = Math.max(parentBottomX, ...lineXs);
+                        drawAdminSvgLine(svg, minLineX, lineBarY, maxLineX, lineBarY);
+
+                        // 4. Drop Garis Vertikal Menuju Atap Masing-Masing Bidang
+                        lineChildren.forEach(c => {
+                            const cX = c._x + ADM_CARD_W / 2;
+                            drawAdminSvgLine(svg, cX, lineBarY, cX, c._y);
+                        });
+                    } else if (wingChildren.length > 0 && lineChildren.length === 0) {
+                        // Semua anak sayap menyatu
+                        const maxWingY = Math.max(...wingChildren.map(w => w._y));
+                        const lastBranchY = parentBottomY + (maxWingY - parentBottomY) * adminElbowRatio;
+                        drawAdminSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, lastBranchY);
+
+                        wingChildren.forEach(w => {
+                            const wCenterX = w._x + ADM_CARD_W / 2;
+                            const wingBranchY = parentBottomY + (w._y - parentBottomY) * adminElbowRatio;
+                            drawAdminSvgLine(svg, parentBottomX, wingBranchY, wCenterX, wingBranchY);
+                            drawAdminSvgLine(svg, wCenterX, wingBranchY, wCenterX, w._y);
+                        });
+                    } else {
+                        // Semua anak lini bawah standar busbar
+                        drawAdminSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, elbowY);
+
+                        const childXs = node.children.map(c => c._x + ADM_CARD_W / 2);
+                        const minX = Math.min(parentBottomX, ...childXs);
+                        const maxX = Math.max(parentBottomX, ...childXs);
+                        drawAdminSvgLine(svg, minX, elbowY, maxX, elbowY);
+
+                        node.children.forEach(c => {
+                            const childX = c._x + ADM_CARD_W / 2;
+                            drawAdminSvgLine(svg, childX, elbowY, childX, c._y);
+                        });
+                    }
+                }
+            }
+
+            node.children.forEach(c => renderLinesRecursive(c, svg));
+        }
+    }
+
+    function getAdminNodeClass(n) {
+        if (n.isRoot) return 'node-root';
+        if (n.isParent) return 'node-parent';
+        return 'node-leaf';
+    }
+
+    function drawAdminSvgLine(svg, x1, y1, x2, y2) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', Math.round(x1));
+        line.setAttribute('y1', Math.round(y1));
+        line.setAttribute('x2', Math.round(x2));
+        line.setAttribute('y2', Math.round(y2));
+        line.setAttribute('stroke', '#0F172A');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(line);
+    }
+
+    function drawAdminSvgDashedLine(svg, x1, y1, x2, y2) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', Math.round(x1));
+        line.setAttribute('y1', Math.round(y1));
+        line.setAttribute('x2', Math.round(x2));
+        line.setAttribute('y2', Math.round(y2));
+        line.setAttribute('stroke', '#0F172A');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-dasharray', '5,4');
+        line.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(line);
+    }
+
+    function drawAdminSvgBezier(svg, x1, y1, x2, y2) {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const midY = (y1 + y2) / 2;
+        const d = `M ${Math.round(x1)} ${Math.round(y1)} C ${Math.round(x1)} ${Math.round(midY)}, ${Math.round(x2)} ${Math.round(midY)}, ${Math.round(x2)} ${Math.round(y2)}`;
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', '#0F172A');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(path);
+    }
+
+    window.setAdminLineStyle = function(style) {
+        adminLineStyle = (style === 'kedinasan' ? 'orthogonal' : style);
+        const btnOrtho = document.getElementById('btnAdminLineOrtho');
+        const btnCurve = document.getElementById('btnAdminLineCurve');
+        const btnDirect = document.getElementById('btnAdminLineDirect');
+        const buttons = [
+            { el: btnOrtho, key: 'orthogonal' },
+            { el: btnCurve, key: 'curve' },
+            { el: btnDirect, key: 'direct' }
+        ];
+        buttons.forEach(b => {
+            if (!b.el) return;
+            if (b.key === adminLineStyle) {
+                b.el.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-navy-900 text-white transition-all shadow-xs';
+            } else {
+                b.el.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-600 hover:text-navy-900 transition-all';
+            }
+        });
+        redrawAdminSvgOnly();
+        markBaganUnsaved();
+    };
+
+    window.adminResetTreeLayout = function() {
+        customNodePositions.clear();
+        adminWingNodeIds.clear();
+        adminNonWingNodeIds.clear();
+        adminElbowRatio = 0.50;
+        ADM_V_GAP = 72;
+        ADM_H_GAP = 36;
+        adminLineStyle = 'orthogonal';
+
+        const sliderElbow = document.getElementById('sliderAdminElbow');
+        if (sliderElbow) sliderElbow.value = 50;
+        const valElbow = document.getElementById('valAdminElbow');
+        if (valElbow) valElbow.textContent = '50%';
+
+        const sliderVGap = document.getElementById('sliderAdminVGap');
+        if (sliderVGap) sliderVGap.value = 72;
+        const valVGap = document.getElementById('valAdminVGap');
+        if (valVGap) valVGap.textContent = '72px';
+
+        const sliderHGap = document.getElementById('sliderAdminHGap');
+        if (sliderHGap) sliderHGap.value = 36;
+        const valHGap = document.getElementById('valAdminHGap');
+        if (valHGap) valHGap.textContent = '36px';
+
+        setAdminLineStyle('orthogonal');
+        renderAdminTree();
+        adminTreeCenterFit();
+        markBaganUnsaved();
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const sliderElbow = document.getElementById('sliderAdminElbow');
+        if (sliderElbow) {
+            sliderElbow.addEventListener('input', function() {
+                adminElbowRatio = Number(this.value) / 100;
+                const valEl = document.getElementById('valAdminElbow');
+                if (valEl) valEl.textContent = this.value + '%';
+                redrawAdminSvgOnly();
+                markBaganUnsaved();
+            });
+        }
+        const sliderVGap = document.getElementById('sliderAdminVGap');
+        if (sliderVGap) {
+            sliderVGap.addEventListener('input', function() {
+                ADM_V_GAP = Number(this.value);
+                const valEl = document.getElementById('valAdminVGap');
+                if (valEl) valEl.textContent = this.value + 'px';
+                renderAdminTree();
+                markBaganUnsaved();
+            });
+        }
+        const sliderHGap = document.getElementById('sliderAdminHGap');
+        if (sliderHGap) {
+            sliderHGap.addEventListener('input', function() {
+                ADM_H_GAP = Number(this.value);
+                const valEl = document.getElementById('valAdminHGap');
+                if (valEl) valEl.textContent = this.value + 'px';
+                renderAdminTree();
+                markBaganUnsaved();
+            });
+        }
+    });
+
+    function escapeHtmlText(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function updateAdminStageTransform() {
+        const stage = document.getElementById('adminTreeStage');
+        if (stage) {
+            stage.style.transform = `translate(${adminPanX}px, ${adminPanY}px) scale(${adminZoom})`;
+        }
+    }
+
+    window.adminTreeZoomIn = function() {
+        adminZoom = Math.min(2.2, adminZoom + 0.15);
+        updateAdminStageTransform();
+    };
+    window.adminTreeZoomOut = function() {
+        adminZoom = Math.max(0.4, adminZoom - 0.15);
+        updateAdminStageTransform();
+    };
+    window.adminTreeResetView = function() {
+        adminZoom = 1;
+        adminPanX = 0;
+        adminPanY = 0;
+        updateAdminStageTransform();
+    };
+    window.adminTreeCenterFit = function() {
+        const viewport = document.getElementById('adminTreeViewport');
+        const stage    = document.getElementById('adminTreeStage');
+        if (!viewport || !stage) return;
+        const vpW = viewport.clientWidth;
+        const stageW = parseInt(stage.style.width) || 800;
+        adminZoom = Math.min(1, Math.max(0.45, (vpW - 60) / stageW));
+        adminPanX = Math.max(10, (vpW - stageW * adminZoom) / 2);
+        adminPanY = 20;
+        updateAdminStageTransform();
+    };
+    window.toggleAdminNodeCollapse = function(id) {
+        const node = adminNodeMap.get(Number(id));
+        if (node) {
+            node.isCollapsed = !node.isCollapsed;
+            renderAdminTree();
+        }
+    };
+    window.adminTreeExpandAll = function() {
+        adminNodeMap.forEach(n => { n.isCollapsed = false; });
+        renderAdminTree();
+    };
+
+    window.switchAdminPreviewMode = function(mode) {
+        const vBox = document.getElementById('containerAdminVisual');
+        const oBox = document.getElementById('containerAdminOutline');
+        const bVisual = document.getElementById('btnAdminModeVisual');
+        const bOutline = document.getElementById('btnAdminModeOutline');
+
+        if (mode === 'visual') {
+            vBox.classList.remove('hidden');
+            oBox.classList.add('hidden');
+            bVisual.classList.add('bg-navy-900', 'text-white', 'shadow-sm');
+            bVisual.classList.remove('text-slate-600');
+            bOutline.classList.remove('bg-navy-900', 'text-white', 'shadow-sm');
+            bOutline.classList.add('text-slate-600');
+            setTimeout(adminTreeCenterFit, 50);
+        } else {
+            vBox.classList.add('hidden');
+            oBox.classList.remove('hidden');
+            bOutline.classList.add('bg-navy-900', 'text-white', 'shadow-sm');
+            bOutline.classList.remove('text-slate-600');
+            bVisual.classList.remove('bg-navy-900', 'text-white', 'shadow-sm');
+            bVisual.classList.add('text-slate-600');
+        }
+    };
+
+    // ==============================================================
+    // INISIALISASI CKEDITOR 5 UNTUK VISI & MISI PROFIL
+    // ==============================================================
+    let editorVisiInstance = null;
+    let editorMisiInstance = null;
+
+    function initProfilCKEditors() {
+        if (typeof ClassicEditor === 'undefined') return;
+
+        const elVisi = document.querySelector('#editor-visi');
+        if (elVisi && !editorVisiInstance) {
+            ClassicEditor.create(elVisi, {
+                toolbar: {
+                    items: [
+                        'heading', '|',
+                        'bold', 'italic', 'underline', '|',
+                        'bulletedList', 'numberedList', 'blockQuote', '|',
+                        'undo', 'redo'
+                    ]
+                },
+                placeholder: 'Ketikkan visi instansi di sini...'
+            }).then(editor => {
+                editorVisiInstance = editor;
+                editor.model.document.on('change:data', () => {
+                    elVisi.value = editor.getData();
+                });
+            }).catch(err => console.error('CKEditor Visi init error:', err));
+        }
+
+        const elMisi = document.querySelector('#editor-misi');
+        if (elMisi && !editorMisiInstance) {
+            ClassicEditor.create(elMisi, {
+                toolbar: {
+                    items: [
+                        'heading', '|',
+                        'bold', 'italic', 'underline', '|',
+                        'bulletedList', 'numberedList', 'blockQuote', '|',
+                        'undo', 'redo'
+                    ]
+                },
+                placeholder: 'Ketikkan butir-butir misi pembangunan di sini...'
+            }).then(editor => {
+                editorMisiInstance = editor;
+                editor.model.document.on('change:data', () => {
+                    elMisi.value = editor.getData();
+                });
+            }).catch(err => console.error('CKEditor Misi init error:', err));
+        }
+
+        const formProfil = document.querySelector('form[action="/admin-diskominfo/profil/update"]');
+        if (formProfil && !formProfil.dataset.ckeditorBound) {
+            formProfil.dataset.ckeditorBound = 'true';
+            formProfil.addEventListener('submit', () => {
+                if (editorVisiInstance) {
+                    elVisi.value = editorVisiInstance.getData();
+                }
+                if (editorMisiInstance) {
+                    elMisi.value = editorMisiInstance.getData();
+                }
+            });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initProfilCKEditors);
+    } else {
+        initProfilCKEditors();
+    }
+
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+</script>

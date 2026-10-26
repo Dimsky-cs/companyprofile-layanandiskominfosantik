@@ -1,0 +1,177 @@
+<header class="sticky-top shadow" style="z-index: 1030;">
+    <!-- Topbar: Tanggal & Waktu Realtime (Kiri) + Jadwal Layanan & Status Realtime (Kanan) - Khusus Layar Desktop/Tablet (Sembunyi di HP) -->
+    <div class="topbar-gov d-none d-md-block py-1 py-md-2 text-light">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-1 gap-md-0 text-center text-md-start">
+            <!-- Sisi Kiri: Tanggal dan Jam Realtime -->
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-calendar3 text-warning" style="color: var(--orange-primary) !important;"></i>
+                <span id="realtime-clock" class="fw-medium">Memuat waktu...</span>
+            </div>
+
+            <!-- Sisi Kanan: Jam Pelayanan & Tanda Status Realtime -->
+            <div class="d-flex align-items-center gap-2 flex-wrap justify-content-center justify-content-md-end">
+                <i class="bi bi-clock-fill text-warning" style="color: var(--orange-primary) !important;"></i> 
+                <span class="d-none d-sm-inline">Layanan: <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.jam_layanan) ? siteSettings.jam_layanan : 'Senin - Jumat (08.00 - 16.00 WIB)' %></span>
+                <span class="d-inline d-sm-none"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.jam_layanan) ? siteSettings.jam_layanan : '08.00 - 16.00 WIB' %></span>
+                <span id="service-status-badge"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navbar (Navy + Oranye Line) -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-gov">
+        <div class="container">
+            <!-- Brand Logo & Nama Instansi -->
+            <a class="navbar-brand d-flex align-items-center gap-2 gap-sm-3" href="/">
+                <img src="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.logo_url) ? siteSettings.logo_url : '/images/logo.png' %>" alt="Logo" class="d-inline-block align-text-top shadow-sm rounded brand-logo-gov">
+                
+                <div class="lh-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="brand-title-gov fw-bold text-white tracking-wide"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.nama_instansi) ? siteSettings.nama_instansi : 'DISKOMINFOSANTIK' %></span>
+                    </div>
+                    <span class="brand-subtitle-gov text-light opacity-75 fw-medium"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.sub_instansi) ? siteSettings.sub_instansi : 'KABUPATEN BEKASI' %></span>
+                </div>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-1 align-items-lg-center">
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'beranda' ? 'active' : '' %>" href="/"><i class="bi bi-house-door me-1"></i> Beranda</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'profil' ? 'active' : '' %>" href="/profil"><i class="bi bi-building me-1"></i> Profil Dinas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'surat' ? 'active' : '' %>" href="/surat"><i class="bi bi-envelope-paper me-1"></i> Pelayanan Surat</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'statistik' ? 'active' : '' %>" href="/statistik"><i class="bi bi-bar-chart-line me-1"></i> Statistik</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'pengaduan' ? 'active' : '' %>" href="/pengaduan"><i class="bi bi-megaphone me-1"></i> Pengaduan</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'berita' ? 'active' : '' %>" href="/berita"><i class="bi bi-newspaper me-1"></i> Berita</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'galeri' ? 'active' : '' %>" href="/galeri"><i class="bi bi-images me-1"></i> Galeri</a>
+                    </li>
+                    <!-- Toggle Dark Navy Mode (Icon Only) -->
+                    <li class="nav-item ms-lg-2 my-2 my-lg-0">
+                        <button id="themeToggleBtn" class="btn-theme-toggle" type="button" aria-label="Ganti Mode Tampilan (Terang / Navy Gelap)" title="Ubah Mode Tampilan">
+                            <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
+                            <i class="bi bi-sun-fill theme-icon-sun"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<!-- Script Realtime Clock & Status Layanan Realtime -->
+<script>
+    function updateRealtimeClock() {
+        const clockElement = document.getElementById('realtime-clock');
+        const badgeDesktop = document.getElementById('service-status-badge');
+        const badgeMobile = document.getElementById('service-status-badge-mobile');
+
+        const now = new Date();
+
+        // Format Hari dan Tanggal (Bahasa Indonesia)
+        const dateOptions = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        const dateString = now.toLocaleDateString('id-ID', dateOptions);
+
+        // Format Jam:Menit:Detik (24 Jam)
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+
+        const hoursStr = String(hours).padStart(2, '0');
+        const minutesStr = String(minutes).padStart(2, '0');
+        const secondsStr = String(seconds).padStart(2, '0');
+        const timeString = `${hoursStr}:${minutesStr}:${secondsStr} WIB`;
+
+        if (clockElement) {
+            clockElement.textContent = `${dateString} • ${timeString}`;
+        }
+
+        // ========================================================
+        // LOGIKA STATUS LAYANAN (HARI & JAM KERJA OPERASIONAL)
+        // Jadwal Resmi: Senin - Jumat, pukul 08.00 - 16.00 WIB
+        // ========================================================
+        const day = now.getDay(); // 0 = Minggu, 1 = Senin, ..., 5 = Jumat, 6 = Sabtu
+        const currentMinutes = (hours * 60) + minutes;
+        const openMinutes = 8 * 60;   // 08:00 WIB (480 menit)
+        const closeMinutes = 16 * 60; // 16:00 WIB (960 menit)
+
+        const isWorkingDay = (day >= 1 && day <= 5); // Senin s/d Jumat
+        const isWorkingHours = (currentMinutes >= openMinutes && currentMinutes < closeMinutes);
+
+        // Dukungan override testing via URL (?status=tutup atau ?status=buka) atau Console
+        const urlParams = new URLSearchParams(window.location.search);
+        const forceStatus = urlParams.get('status') || window.__forceServiceStatus;
+
+        let isOpen = isWorkingDay && isWorkingHours;
+        if (forceStatus === 'tutup') isOpen = false;
+        if (forceStatus === 'buka') isOpen = true;
+
+        // Tooltip pesan penjelasan status
+        let tooltipReason = '';
+        if (isOpen) {
+            tooltipReason = 'Pelayanan kantor DISKOMINFOSANTIK saat ini BUKA (Senin – Jumat, 08.00 – 16.00 WIB)';
+        } else {
+            if (day === 0 || day === 6) {
+                tooltipReason = 'Pelayanan kantor saat ini TUTUP (Libur Akhir Pekan). Buka kembali hari Senin pukul 08.00 WIB.';
+            } else if (currentMinutes < openMinutes) {
+                tooltipReason = 'Pelayanan kantor saat ini TUTUP. Buka hari ini pukul 08.00 WIB.';
+            } else {
+                tooltipReason = 'Pelayanan kantor saat ini TUTUP di luar jam operasional. Buka kembali esok hari pukul 08.00 WIB.';
+            }
+        }
+
+        // Generate HTML Badge Status
+        let badgeHtml = '';
+        if (isOpen) {
+            badgeHtml = `
+                <span class="badge-service-status badge-service-open" title="${tooltipReason}">
+                    <span class="pulse-dot pulse-dot-open"></span>
+                    <span class="service-status-text">Layanan Buka</span>
+                </span>
+            `;
+        } else {
+            badgeHtml = `
+                <span class="badge-service-status badge-service-closed" title="${tooltipReason}">
+                    <span class="pulse-dot pulse-dot-closed"></span>
+                    <span class="service-status-text">Layanan Sedang Tutup</span>
+                </span>
+            `;
+        }
+
+        if (badgeDesktop && badgeDesktop.innerHTML.trim() !== badgeHtml.trim()) {
+            badgeDesktop.innerHTML = badgeHtml;
+        }
+        if (badgeMobile && badgeMobile.innerHTML.trim() !== badgeHtml.trim()) {
+            badgeMobile.innerHTML = badgeHtml;
+        }
+    }
+
+    // Helper untuk pengujian fleksibel lewat DevTools Console
+    window.setServiceStatus = function(status) {
+        window.__forceServiceStatus = status; // 'buka', 'tutup', atau null (auto)
+        updateRealtimeClock();
+        console.log(`[Service Status] Diatur ke: ${status || 'Otomatis (Sesuai Jam Realtime)'}`);
+    };
+
+    // Jalankan pertama kali & update setiap 1 detik secara live
+    updateRealtimeClock();
+    setInterval(updateRealtimeClock, 1000);
+</script>

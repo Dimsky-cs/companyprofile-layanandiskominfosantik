@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Permohonan Digital - <%= surat.nomor_surat %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Anti-flicker Theme Initialization -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('diskominfo_theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            color: #111;
+            background: #f8fafc;
+            padding: 30px 15px;
+            font-size: 12pt;
+            line-height: 1.6;
+            transition: background 0.3s ease;
+        }
+        .page-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 50px 60px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+        }
+        .header-letter {
+            border-bottom: 2px solid #000;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+        .meta-table td {
+            padding: 3px 6px;
+            vertical-align: top;
+        }
+        /* DESK TEMA DARK NAVY */
+        [data-theme="dark"] body {
+            background: #071527;
+        }
+        [data-theme="dark"] .action-toolbar-box {
+            background: #0f2238 !important;
+            border-color: #1e3d63 !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+        }
+        [data-theme="dark"] .action-toolbar-box .btn-outline-secondary {
+            color: #cbd5e1 !important;
+            border-color: #1e3d63 !important;
+        }
+        [data-theme="dark"] .action-toolbar-box .btn-outline-secondary:hover {
+            background: #1e3d63 !important;
+            color: #ffffff !important;
+        }
+        [data-theme="dark"] .page-container {
+            background: #ffffff !important;
+            color: #111111 !important;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6) !important;
+        }
+        @media print {
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+            }
+            .page-container {
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 20mm 20mm 20mm 20mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ACTION TOOLBAR (NON-PRINTABLE) -->
+    <div class="no-print mb-4 text-center">
+        <div class="d-inline-flex gap-2 p-2 bg-white action-toolbar-box rounded-pill shadow-sm border">
+            <button onclick="window.print()" class="btn btn-primary btn-sm rounded-pill px-3">
+                <i class="bi bi-printer-fill me-1"></i> Cetak / Simpan PDF
+            </button>
+            <a href="/surat?tracking=<%= surat.nomor_surat %>" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Kembali ke Portal
+            </a>
+            <button onclick="window.close()" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <div class="page-container">
+
+        <!-- HEADER IDENTITAS PERMOHONAN -->
+        <div class="header-letter d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <img src="/images/logo.png" alt="Logo Pemkab Bekasi" style="width: 55px; height: auto;">
+                <div>
+                    <h6 class="mb-0 fw-bold" style="letter-spacing: 0.5px;">SISTEM PERSURATAN MANDIRI MASYARAKAT</h6>
+                    <small class="text-secondary">Portal Pelayanan Digital DISKOMINFOSANTIK Kabupaten Bekasi</small>
+                </div>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-dark px-2.5 py-1 text-uppercase" style="font-family: monospace; font-size: 9pt;">
+                    <%= surat.nomor_surat %>
+                </span>
+                <div class="text-muted" style="font-size: 8pt; margin-top: 3px;">Kode Tiket Permohonan</div>
+            </div>
+        </div>
+
+        <!-- TANGGAL & TUJUAN -->
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div style="flex: 1; min-width: 0;">
+                <table class="meta-table" style="font-size: 11pt;">
+                    <tr>
+                        <td style="width: 75px;">Nomor</td>
+                        <td>:</td>
+                        <td><strong><%= surat.nomor_surat %></strong></td>
+                    </tr>
+                    <tr>
+                        <td>Lampiran</td>
+                        <td>:</td>
+                        <td><%= surat.berkas_lampiran ? '1 (satu) Berkas' : 'Terlampir dalam sistem' %></td>
+                    </tr>
+                    <tr>
+                        <td>Perihal</td>
+                        <td>:</td>
+                        <td><strong><%= surat.jenis_surat %></strong></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="text-end text-nowrap flex-shrink-0 ps-3" style="font-size: 11pt; white-space: nowrap;">
+                <span>Bekasi, <%= new Date(surat.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>
+            </div>
+        </div>
+
+        <div class="mb-4" style="font-size: 11pt;">
+            Kepada Yth.<br>
+            <strong>Kepala Dinas Komunikasi, Informatika, Persandian dan Statistik</strong><br>
+            <strong>Kabupaten Bekasi</strong><br>
+            di -<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Tempat
+        </div>
+
+        <!-- ISI SURAT PERMOHONAN -->
+        <div class="mb-3" style="text-align: justify;">
+            <p>Dengan hormat,</p>
+            <p>Sehubungan dengan kebutuhan administrasi dan kedinasan, bersama ini saya yang bertanda tangan di bawah ini:</p>
+            
+            <table class="meta-table w-100 mb-3 ms-3" style="font-size: 11pt;">
+                <tr>
+                    <td style="width: 200px;">Nama Lengkap</td>
+                    <td style="width: 15px;">:</td>
+                    <td><strong><%= surat.nama_pemohon %></strong></td>
+                </tr>
+                <tr>
+                    <td>Nomor Induk (NIK/NIM/NIP)</td>
+                    <td>:</td>
+                    <td><%= surat.nik %></td>
+                </tr>
+                <tr>
+                    <td>Asal Instansi / Universitas / Lembaga</td>
+                    <td>:</td>
+                    <td><%= surat.asal_instansi || 'Masyarakat Umum' %></td>
+                </tr>
+                <tr>
+                    <td>Nomor Kontak / WhatsApp</td>
+                    <td>:</td>
+                    <td><%= surat.no_hp %></td>
+                </tr>
+                <tr>
+                    <td>Alamat Posel (Email)</td>
+                    <td>:</td>
+                    <td><%= surat.email || '-' %></td>
+                </tr>
+            </table>
+
+            <!-- NARASI DAN RINCIAN FORMAL BERDASARKAN KEPERLUAN SURAT -->
+            <% if (surat.jenis_surat && surat.jenis_surat.includes('Magang')) { %>
+                <p>
+                    Dengan ini bermaksud mengajukan permohonan izin pelaksanaan <strong>Praktik Kerja Lapangan (PKL) / Magang</strong> di lingkungan Dinas Komunikasi, Informatika, Persandian dan Statistik Kabupaten Bekasi dalam rangka mengaplikasikan ilmu pengetahuan akademis serta memperluas wawasan kerja kedinasan.
+                </p>
+                <p class="mb-1">Adapun rincian permohonan yang diajukan adalah sebagai berikut:</p>
+                <table class="meta-table w-100 mb-3 ms-3" style="font-size: 11pt;">
+                    <tr>
+                        <td style="width: 200px;">Bentuk Kegiatan</td>
+                        <td style="width: 15px;">:</td>
+                        <td>Praktik Kerja Lapangan (PKL) / Magang Mahasiswa/Siswa</td>
+                    </tr>
+                    <tr>
+                        <td>Institusi Asal</td>
+                        <td>:</td>
+                        <td><strong><%= surat.asal_instansi || '-' %></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Maksud & Keperluan</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td style="white-space: pre-line; vertical-align: top;"><%= (surat.keperluan && surat.keperluan.trim().toLowerCase() !== 'magang' && surat.keperluan.trim().toLowerCase() !== 'pkl') ? surat.keperluan : 'Melaksanakan program magang/PKL untuk memenuhi kurikulum pendidikan dan pendalaman kompetensi praktis di bidang TIK, komunikasi publik, dan statistik daerah.' %></td>
+                    </tr>
+                </table>
+            <% } else if (surat.jenis_surat && (surat.jenis_surat.includes('Data') || surat.jenis_surat.includes('PPID') || surat.jenis_surat.includes('Informasi'))) { %>
+                <p>
+                    Dengan ini bermaksud mengajukan permohonan <strong>Permintaan Data dan Informasi Publik</strong> kepada Layanan Informasi Publik Dinas Komunikasi, Informatika, Persandian dan Statistik Kabupaten Bekasi sebagaimana diatur dalam Undang-Undang Nomor 14 Tahun 2008 tentang Keterbukaan Informasi Publik.
+                </p>
+                <p class="mb-1">Adapun rincian permohonan yang diajukan adalah sebagai berikut:</p>
+                <table class="meta-table w-100 mb-3 ms-3" style="font-size: 11pt;">
+                    <tr>
+                        <td style="width: 200px;">Kategori Permohonan</td>
+                        <td style="width: 15px;">:</td>
+                        <td>Permintaan Akses Data & Informasi Publik</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Rincian Data yang Diminta</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td style="white-space: pre-line; vertical-align: top;"><%= surat.keperluan || 'Data publik daerah Kabupaten Bekasi sesuai lingkup tugas Diskominfo.' %></td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Tujuan Penggunaan</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td>Bahan kajian ilmiah, penelitian, atau referensi resmi yang dapat dipertanggungjawabkan.</td>
+                    </tr>
+                </table>
+            <% } else if (surat.jenis_surat && (surat.jenis_surat.includes('Jaringan') || surat.jenis_surat.includes('Domain') || surat.jenis_surat.includes('Website'))) { %>
+                <p>
+                    Dengan ini bermaksud mengajukan permohonan <strong>Rekomendasi Teknis Fasilitasi Jaringan Internet dan Website Dinas</strong> kepada Dinas Komunikasi, Informatika, Persandian dan Statistik Kabupaten Bekasi guna mendukung optimalisasi pelayanan digital masyarakat dan pemerintahan daerah.
+                </p>
+                <p class="mb-1">Adapun rincian kebutuhan teknis yang diajukan adalah sebagai berikut:</p>
+                <table class="meta-table w-100 mb-3 ms-3" style="font-size: 11pt;">
+                    <tr>
+                        <td style="width: 200px;">Layanan Teknis</td>
+                        <td style="width: 15px;">:</td>
+                        <td>Fasilitasi Website Dinas / Sambungan Jaringan Internet Pemerintah</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Deskripsi Kebutuhan</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td style="white-space: pre-line; vertical-align: top;"><%= surat.keperluan || 'Pengajuan subdomain dan konfigurasi routing jaringan kedinasan.' %></td>
+                    </tr>
+                </table>
+            <% } else if (surat.jenis_surat && surat.jenis_surat.includes('Liputan')) { %>
+                <p>
+                    Dengan ini bermaksud mengajukan permohonan <strong>Izin Peliputan dan Publikasi Kegiatan Resmi</strong> kepada Dinas Komunikasi, Informatika, Persandian dan Statistik Kabupaten Bekasi dalam rangka penyebarluasan informasi program Pemerintah Kabupaten Bekasi.
+                </p>
+                <p class="mb-1">Adapun rincian kegiatan liputan yang diajukan adalah sebagai berikut:</p>
+                <table class="meta-table w-100 mb-3 ms-3" style="font-size: 11pt;">
+                    <tr>
+                        <td style="width: 200px;">Nama Media / Pers</td>
+                        <td style="width: 15px;">:</td>
+                        <td><%= surat.asal_instansi || 'Media Massa / Jurnalis' %></td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">Agenda Liputan</td>
+                        <td style="vertical-align: top;">:</td>
+                        <td style="white-space: pre-line; vertical-align: top;"><%= surat.keperluan || 'Peliputan kegiatan kedinasan Pemerintah Kabupaten Bekasi.' %></td>
+                    </tr>
+                </table>
+            <% } else { %>
+                <p>
+                    Dengan ini bermaksud mengajukan permohonan <strong><%= surat.jenis_surat %></strong> kepada Kepala Dinas Komunikasi, Informatika, Persandian dan Statistik Kabupaten Bekasi dengan maksud dan keperluan sebagai berikut:
+                </p>
+                <table class="meta-table w-100 mb-3 ms-3" style="font-size: 11pt;">
+                    <tr>
+                        <td style="width: 200px; vertical-align: top;">Maksud & Keperluan</td>
+                        <td style="width: 15px; vertical-align: top;">:</td>
+                        <td style="white-space: pre-line; vertical-align: top;"><%= surat.keperluan %></td>
+                    </tr>
+                </table>
+            <% } %>
+
+            <p>Sebagai bahan pertimbangan dan kelengkapan administrasi, rincian data diri dan dokumen pendukung telah diunggah dan terverifikasi pada sistem portal pelayanan digital.</p>
+
+            <p>Demikian surat permohonan ini saya sampaikan dengan sebenar-benarnya. Atas perhatian, bantuan, dan kerja sama Bapak/Ibu, saya mengucapkan terima kasih.</p>
+        </div>
+
+        <!-- TANDA TANGAN PEMOHON & QR VERIFIKASI -->
+        <div class="row align-items-center mt-4 pt-3">
+            <div class="col-7">
+                <div class="d-flex align-items-center gap-3 p-2 rounded-1 border border-secondary-subtle">
+                    <% if (typeof qrImage !== 'undefined' && qrImage) { %>
+                        <img src="<%= qrImage %>" alt="QR Verifikasi" style="width: 82px; height: 82px;" class="border p-1 bg-white">
+                    <% } %>
+                    <div style="font-size: 8.5pt; line-height: 1.4;" class="text-secondary">
+                        <strong class="text-dark d-block mb-1">Registrasi Surat Permohonan Digital</strong>
+                        Nomor Tiket: <span class="fw-bold text-dark font-monospace"><%= surat.nomor_surat %></span><br>
+                        Dokumen ini dibuat otomatis dan terdaftar resmi di Portal DISKOMINFOSANTIK Kab. Bekasi.
+                    </div>
+                </div>
+            </div>
+            <div class="col-5 text-center">
+                <p class="mb-1" style="font-size: 11pt;">Hormat Saya,</p>
+                <p class="text-muted small mb-4">Pemohon,</p>
+                <br>
+                <p class="fw-bold text-decoration-underline mb-0" style="font-size: 11pt;"><%= surat.nama_pemohon %></p>
+                <small class="text-muted">NIK/NIM: <%= surat.nik %></small>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

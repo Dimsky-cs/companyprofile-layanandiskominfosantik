@@ -1,0 +1,1613 @@
+<% 
+    const listNodes = (typeof allNodes !== 'undefined' && Array.isArray(allNodes)) ? allNodes : [];
+    const dataProfil = (typeof profil !== 'undefined' && profil) ? profil : {};
+    const configBagan = (typeof baganConfig !== 'undefined' && baganConfig) ? baganConfig : (dataProfil.bagan_config ? (typeof dataProfil.bagan_config === 'string' ? JSON.parse(dataProfil.bagan_config) : dataProfil.bagan_config) : null);
+%>
+
+<!-- BANNER HEADER -->
+<section class="hero-mesh text-white py-5">
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb small mb-2">
+                        <li class="breadcrumb-item"><a href="/" class="text-white opacity-75 text-decoration-none">Beranda</a></li>
+                        <li class="breadcrumb-item active text-warning" style="color: var(--orange-primary) !important;">Profil & Struktur</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2"><%= dataProfil.nama_instansi || 'Profil & Struktur Organisasi' %></h1>
+                <p class="lead text-light opacity-75 fs-6 mb-0">
+                    Mengenal susunan pimpinan dan pembagian tugas dinas.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <span class="badge py-2 px-3 fs-6 rounded-pill shadow-sm" style="background-color: var(--orange-primary); color: white;">
+                    <i class="bi bi-diagram-3-fill me-1"></i> Bagan Resmi Susunan Dinas
+                </span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STYLES FOR ORG CHART + PAGE — see below section for CSS -->
+
+<div class="container py-5">
+
+    <!-- 1. BENTO GRID: VISI & MISI (DATA ASLI DARI DATABASE) -->
+    <div class="row g-4 mb-5">
+        <!-- Visi Card -->
+        <div class="col-lg-6">
+            <div class="card-modern p-4 p-md-5 h-100 border-0 shadow-sm position-relative overflow-hidden" style="background: linear-gradient(145deg, #071527 0%, #0A2540 60%, #163D66 100%); color: white; border-radius: 20px;">
+                <div class="d-flex align-items-center gap-3 mb-4 position-relative" style="z-index: 2;">
+                    <div class="profil-icon-box icon-box-orange">
+                        <i class="bi bi-eye-fill"></i>
+                    </div>
+                    <div>
+                        <span class="badge px-2.5 py-1 rounded-pill fw-bold text-uppercase" style="background: rgba(255, 107, 0, 0.25); color: #FF9B42; font-size: 0.72rem; letter-spacing: 0.8px;">Visi Strategis</span>
+                        <h4 class="fw-bold mb-0 text-white mt-1">Visi Instansi</h4>
+                    </div>
+                </div>
+
+                <% if (dataProfil && dataProfil.visi && dataProfil.visi.trim() !== '') { %>
+                    <div class="position-relative p-4 rounded-3 mt-2" style="background: rgba(255, 255, 255, 0.06); border-left: 4px solid var(--orange-primary, #FF6B00); backdrop-filter: blur(8px);">
+                        <i class="bi bi-quote fs-1 position-absolute top-0 end-0 me-3 mt-1 opacity-25 text-warning" style="color: var(--orange-primary) !important;"></i>
+                        <div class="fs-5 fw-medium mb-0 position-relative profil-visi-text" style="line-height: 1.75; color: #F8FAFC; font-style: italic;">
+                            <%- dataProfil.visi %>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div class="p-4 rounded-3 text-center d-flex flex-column align-items-center justify-content-center my-auto" style="background: rgba(255, 255, 255, 0.04); border: 1.5px dashed rgba(255, 255, 255, 0.15); min-height: 150px;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mb-2" style="width: 48px; height: 48px; background: rgba(255, 107, 0, 0.15); color: #FF9B42;">
+                            <i class="bi bi-eye-slash fs-4"></i>
+                        </div>
+                        <h6 class="text-white fw-bold mb-1">Visi Instansi Belum Diisi</h6>
+                        <p class="text-white-50 small mb-0" style="max-width: 320px;">
+                            Visi strategis kedinasan saat ini belum dikonfigurasi melalui panel administrator CMS.
+                        </p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Misi Card -->
+        <div class="col-lg-6">
+            <div class="card-modern p-4 p-md-5 h-100 border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="profil-icon-box icon-box-navy">
+                        <i class="bi bi-crosshair2"></i>
+                    </div>
+                    <div>
+                        <span class="badge px-2.5 py-1 rounded-pill fw-bold text-uppercase badge-misi-pembangunan">Misi Pembangunan</span>
+                        <h4 class="fw-bold mb-0 text-dark mt-1">Misi Instansi</h4>
+                    </div>
+                </div>
+
+                <% if (dataProfil && dataProfil.misi && dataProfil.misi.trim() !== '') { 
+                    const hasHtml = /<[a-z][\s\S]*>/i.test(dataProfil.misi);
+                %>
+                    <% if (hasHtml) { %>
+                        <div class="profil-misi-rich small text-secondary" style="line-height: 1.8;">
+                            <%- dataProfil.misi %>
+                        </div>
+                    <% } else { 
+                        const rawMisiLines = dataProfil.misi.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+                    %>
+                        <% if (rawMisiLines.length > 1) { %>
+                            <div class="d-flex flex-column gap-2">
+                                <% rawMisiLines.forEach((line, idx) => { 
+                                    const cleanText = line.replace(/^(\d+[\.\)]|\-|\*)\s*/, '');
+                                %>
+                                    <div class="misi-item p-3 rounded-3 d-flex align-items-start gap-3">
+                                        <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 mt-0.5 misi-badge-number">
+                                            <%= idx + 1 %>
+                                        </span>
+                                        <span class="small text-secondary fw-medium flex-grow-1" style="line-height: 1.6;">
+                                            <%= cleanText %>
+                                        </span>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        <% } else { %>
+                            <div class="p-4 rounded-3 bg-light text-secondary small" style="line-height: 1.8;">
+                                <%= dataProfil.misi %>
+                            </div>
+                        <% } %>
+                    <% } %>
+                <% } else { %>
+                    <div class="p-4 rounded-3 text-center d-flex flex-column align-items-center justify-content-center my-auto empty-misi-box" style="min-height: 150px;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mb-2 empty-misi-icon shadow-sm border" style="width: 48px; height: 48px;">
+                            <i class="bi bi-crosshair2 fs-4"></i>
+                        </div>
+                        <h6 class="text-dark fw-bold mb-1">Misi Pembangunan Belum Diisi</h6>
+                        <p class="text-muted small mb-0" style="max-width: 320px;">
+                            Butir-butir misi pembangunan kedinasan belum ditambahkan melalui panel administrator CMS.
+                        </p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS BAGAN STRUKTUR ORGANISASI - WORD TREE STYLE -->
+<style>
+    /* ICON BOXES */
+    .profil-icon-box {
+        width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+        display: inline-flex !important; align-items: center !important;
+        justify-content: center !important; border-radius: 12px;
+        font-size: 1.15rem; line-height: 1; transition: all 0.25s ease;
+    }
+    .profil-icon-box i { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+    .icon-box-orange { background: linear-gradient(135deg, var(--orange-primary, #FF6B00) 0%, #E05E00 100%); color: #FFFFFF !important; box-shadow: 0 4px 12px rgba(255, 107, 0, 0.28); }
+    .icon-box-navy   { background: linear-gradient(135deg, #0A2540 0%, #071527 100%); color: var(--orange-primary, #FF6B00) !important; box-shadow: 0 4px 12px rgba(10, 37, 64, 0.2); }
+    .icon-box-blue   { background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color: #FFFFFF !important; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); }
+    .icon-box-emerald{ background: linear-gradient(135deg, #10B981 0%, #047857 100%); color: #FFFFFF !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); }
+    /* CONTACT */
+    .contact-info-card { background: #FFFFFF; border-color: #E2E8F0 !important; transition: all 0.25s ease; }
+    .contact-info-card:hover { border-color: var(--orange-primary, #FF6B00) !important; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06); }
+    [data-theme="dark"] .contact-info-card { background: #142a44 !important; border-color: #1e3d63 !important; }
+    [data-theme="dark"] .contact-info-card:hover { background: #1a3658 !important; border-color: var(--orange-primary) !important; }
+    [data-theme="dark"] .contact-info-card .text-dark { color: #f8fafc !important; }
+
+    .hover-orange { transition: color 0.2s ease; }
+    .hover-orange:hover { color: var(--orange-primary, #FF6B00) !important; }
+    .misi-item { background-color: #F8FAFC; border: 1px solid #F1F5F9; transition: all 0.2s ease; }
+    .misi-item:hover { background-color: #FFFFFF; border-color: #E2E8F0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04); transform: translateX(3px); }
+    [data-theme="dark"] .misi-item { background-color: #142a44 !important; border-color: #1e3d63 !important; }
+    [data-theme="dark"] .misi-item:hover { background-color: #1a3658 !important; border-color: var(--orange-primary) !important; }
+    [data-theme="dark"] .misi-item .text-secondary { color: #e2e8f0 !important; }
+
+    .profil-visi-text p { margin-bottom: 0; display: inline; }
+    .profil-misi-rich ol { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0; }
+    .profil-misi-rich ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0; }
+    .profil-misi-rich li { margin-bottom: 0.6rem; line-height: 1.7; }
+    .profil-misi-rich li::marker { font-weight: 700; color: var(--text-navy-heading, #0A2540); }
+    .profil-misi-rich p { margin-bottom: 0.6rem; }
+    .profil-misi-rich blockquote { border-left: 3px solid var(--orange-primary, #FF6B00); padding-left: 1rem; font-style: italic; color: var(--text-muted, #475569); margin: 0.5rem 0; }
+    /* ===== MODERN ULTRA DINAMIS SVG CANVAS SOTK STYLES ===== */
+    .public-viewport {
+        position: relative;
+        width: 100%;
+        min-height: 540px;
+        height: 65vh;
+        max-height: 720px;
+        background-color: #F8FAFC;
+        background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.25) 1px, transparent 0);
+        background-size: 24px 24px;
+        overflow: hidden;
+        border-radius: 20px;
+        border: 1px solid #E2E8F0;
+        cursor: grab;
+        user-select: none;
+    }
+    .public-viewport.is-dragging {
+        cursor: grabbing !important;
+    }
+    .public-stage {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform-origin: 0 0;
+        transition: transform 0.05s ease-out;
+    }
+    .public-svg-connectors {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 1;
+    }
+    .public-cards-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+    }
+    .public-tree-line {
+        stroke: #0F172A;
+        stroke-width: 2;
+        stroke-linecap: round;
+        fill: none;
+    }
+    [data-theme="dark"] .public-viewport {
+        background-color: #071321 !important;
+        background-image: radial-gradient(circle at 1px 1px, rgba(30, 59, 94, 0.6) 1px, transparent 0) !important;
+        border-color: #1a3654 !important;
+    }
+    [data-theme="dark"] .public-tree-line {
+        stroke: #38BDF8 !important;
+        stroke-width: 2.2;
+    }
+
+    /* CARD STYLING KANVAS */
+    .public-cards-container .org-card {
+        position: absolute;
+        background: #FFFFFF;
+        border: 2px solid #CBD5E1;
+        border-radius: 16px;
+        padding: 12px 14px;
+        width: 220px;
+        min-height: 88px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+        text-align: left;
+        user-select: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        box-sizing: border-box;
+    }
+    .public-cards-container .org-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+        border-color: var(--orange-primary, #FF6B00);
+        z-index: 10;
+    }
+    .btn-public-collapse {
+        margin-top: 6px;
+        background: #F1F5F9;
+        border: 1px solid #E2E8F0;
+        border-radius: 9999px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #334155;
+        padding: 2px 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        transition: all 0.2s ease;
+        align-self: flex-start;
+    }
+    .btn-public-collapse:hover {
+        background: #E2E8F0;
+        color: #0F172A;
+    }
+    .btn-public-collapse.collapsed {
+        background: #FEF3C7;
+        color: #B45309;
+        border-color: #FDE68A;
+    }
+    [data-theme="dark"] .btn-public-collapse {
+        background: #1e3b5e;
+        border-color: #2b5282;
+        color: #93c5fd;
+    }
+    [data-theme="dark"] .btn-public-collapse:hover {
+        background: #2b5282;
+        color: #ffffff;
+    }
+    [data-theme="dark"] .btn-public-collapse.collapsed {
+        background: #78350f;
+        border-color: #92400e;
+        color: #fde68a;
+    }
+
+    /* KEPALA DINAS (ROOT) */
+    .public-cards-container .org-card.org-card-root {
+        background: linear-gradient(135deg, #071527 0%, #0A2540 60%, #163D66 100%);
+        border: 2px solid var(--orange-primary, #FF6B00);
+        box-shadow: 0 10px 24px rgba(10, 37, 64, 0.28);
+        width: 220px;
+        min-height: 88px;
+        padding: 12px 14px;
+    }
+    .org-card-root .org-card-title {
+        color: #FFFFFF;
+        font-weight: 800;
+        font-size: 0.95rem;
+    }
+    .org-card-root .org-card-name {
+        color: #FED7AA;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    /* SEKRETARIAT */
+    .org-card-sekretariat {
+        border-top: 3.5px solid #2563EB;
+    }
+    /* BIDANG */
+    .org-card-bidang {
+        border-top: 3.5px solid var(--orange-primary, #FF6B00);
+    }
+    /* TIM / SUBBAG */
+    .org-card-tim {
+        border-top: 3.5px solid #0D9488;
+    }
+    /* PELAKSANA / STAF */
+    .org-card-pelaksana {
+        border-top: 3px dashed #10B981;
+        background: #FAFCFF;
+    }
+
+    .org-card-title {
+        color: #0F172A;
+        font-weight: 700;
+        font-size: 0.86rem;
+        line-height: 1.35;
+        margin-bottom: 0;
+    }
+    .org-card-name {
+        color: #475569;
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.3;
+        margin-top: 4px;
+        margin-bottom: 0;
+    }
+
+    /* DARK MODE STYLES KHUSUS SOTK & VISUAL TREE */
+    [data-theme="dark"] .org-chart-box {
+        background-color: #071321 !important;
+        background-image: radial-gradient(#1e3b5e 1.2px, transparent 1.2px) !important;
+        border-color: #1a3654 !important;
+    }
+    [data-theme="dark"] .org-card {
+        background: #0f2238 !important;
+        background-color: #0f2238 !important;
+        border: 1.5px solid #234875 !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    }
+    [data-theme="dark"] .org-card:hover {
+        border-color: var(--orange-primary, #ff781f) !important;
+        background: #142d4a !important;
+        background-color: #142d4a !important;
+        box-shadow: 0 10px 25px rgba(255, 120, 31, 0.28) !important;
+    }
+    [data-theme="dark"] .org-card.org-card-root {
+        background: linear-gradient(135deg, #091a2e 0%, #0d2847 100%) !important;
+        border: 2.5px solid #FF781F !important;
+        box-shadow: 0 8px 24px rgba(255, 120, 31, 0.35) !important;
+    }
+    [data-theme="dark"] .org-card.org-card-root .org-card-title {
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+    [data-theme="dark"] .org-card.org-card-root .org-card-name {
+        color: #FED7AA !important; /* Radiant peach-gold terang dan jelas terbaca */
+        font-weight: 600 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+    [data-theme="dark"] .org-card-sekretariat {
+        border-top: 3.5px solid #3B82F6 !important;
+    }
+    [data-theme="dark"] .org-card-bidang {
+        border-top: 3.5px solid #FF781F !important;
+    }
+    [data-theme="dark"] .org-card-tim {
+        border-top: 3.5px solid #14B8A6 !important;
+    }
+    [data-theme="dark"] .org-card-pelaksana {
+        border-top: 3px dashed #10B981 !important;
+        background: #0b1a2d !important;
+        background-color: #0b1a2d !important;
+    }
+    [data-theme="dark"] .org-card .org-card-title {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    [data-theme="dark"] .org-card .org-card-name {
+        color: #93C5FD !important; /* Sky blue cerah, sangat kontras di atas dark navy */
+        font-weight: 600 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+    [data-theme="dark"] .org-tree li::before,
+    [data-theme="dark"] .org-tree li::after,
+    [data-theme="dark"] .org-tree ul ul::before,
+    [data-theme="dark"] .org-tree li:only-child::before {
+        border-color: #3b6ba5 !important;
+    }
+    [data-theme="dark"] #containerModeVisual .btn-light {
+        background-color: #0f2238 !important;
+        border-color: #1e3e64 !important;
+        color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] #containerModeVisual .btn-light:hover {
+        background-color: #19385c !important;
+        border-color: #ff781f !important;
+        color: #ffffff !important;
+    }
+    [data-theme="dark"] #containerModeVisual .text-muted {
+        color: #94a3b8 !important;
+    }
+
+    /* MISI INSTANSI BADGES & EMPTY STATES */
+    .badge-misi-pembangunan {
+        background: rgba(10, 37, 64, 0.08);
+        color: #0A2540;
+        font-size: 0.72rem;
+        letter-spacing: 0.8px;
+    }
+    .misi-badge-number {
+        width: 26px; height: 26px; min-width: 26px;
+        background: #0A2540; color: #FFFFFF;
+        font-size: 0.75rem; font-weight: 700;
+    }
+    .empty-misi-box {
+        background: #F8FAFC;
+        border: 1.5px dashed #CBD5E1;
+    }
+    .empty-misi-icon {
+        background: #ffffff;
+        color: #0A2540;
+    }
+    [data-theme="dark"] .badge-misi-pembangunan {
+        background: rgba(56, 189, 248, 0.15) !important;
+        color: #38bdf8 !important;
+        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    }
+    [data-theme="dark"] .misi-badge-number {
+        background: var(--orange-primary, #ff781f) !important;
+        color: #ffffff !important;
+    }
+    [data-theme="dark"] .empty-misi-box {
+        background: #0d1e33 !important;
+        border-color: #1e3d63 !important;
+    }
+    [data-theme="dark"] .empty-misi-icon {
+        background: #142a44 !important;
+        color: #38bdf8 !important;
+        border-color: #1e3d63 !important;
+    }
+
+    /* OUTLINE TREE VIEW (GARIS HIRARKI LIST) */
+    .outline-tree-card {
+        background: #FFFFFF;
+        border-radius: 16px;
+        border: 1px solid #E2E8F0;
+        padding: 1.5rem;
+    }
+    .outline-tree-row {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .outline-tree-row:hover {
+        background: #FFFFFF;
+        border-color: var(--orange-primary, #FF6B00);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        transform: translateX(4px);
+    }
+    .outline-tree-row[data-level="1"] { margin-left: 24px; }
+    .outline-tree-row[data-level="2"] { margin-left: 48px; }
+    .outline-tree-row[data-level="3"] { margin-left: 72px; }
+    .outline-tree-row[data-level="4"] { margin-left: 96px; }
+    .outline-tree-row[data-level="5"] { margin-left: 120px; }
+    .outline-tree-row[data-level="6"] { margin-left: 144px; }
+    .outline-tree-row[data-level="7"] { margin-left: 168px; }
+    .outline-tree-row[data-level="8"] { margin-left: 192px; }
+
+    /* BADGES HIRARKI PADA OUTLINE */
+    .badge-tree-root {
+        background: #FEF3C7;
+        color: #92400E;
+        border: 1px solid #FCD34D;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+    .badge-tree-parent {
+        background: #E0F2FE;
+        color: #0369A1;
+        border: 1px solid #BAE6FD;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+    .badge-tree-leaf {
+        background: #D1FAE5;
+        color: #065F46;
+        border: 1px solid #A7F3D0;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+
+    [data-theme="dark"] .outline-tree-card {
+        background: var(--bg-card, #0f2238) !important;
+        border-color: var(--border-color, #1e3d63) !important;
+        color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .outline-tree-row {
+        background: #112641 !important;
+        border-color: #1e3d63 !important;
+        color: #f1f5f9 !important;
+    }
+    [data-theme="dark"] .outline-tree-row:hover {
+        background: #18365c !important;
+        border-color: var(--orange-primary, #ff781f) !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    }
+    [data-theme="dark"] .outline-tree-row .text-dark {
+        color: #ffffff !important;
+    }
+    [data-theme="dark"] .outline-tree-row .text-secondary {
+        color: #93c5fd !important;
+    }
+    [data-theme="dark"] .outline-tree-row .text-muted {
+        color: #94a3b8 !important;
+    }
+    [data-theme="dark"] .badge-tree-root {
+        background: rgba(245, 158, 11, 0.2) !important;
+        color: #FCD34D !important;
+        border: 1px solid rgba(245, 158, 11, 0.45) !important;
+    }
+    [data-theme="dark"] .badge-tree-parent {
+        background: rgba(56, 189, 248, 0.2) !important;
+        color: #7DD3FC !important;
+        border: 1px solid rgba(56, 189, 248, 0.45) !important;
+    }
+    [data-theme="dark"] .badge-tree-leaf {
+        background: rgba(16, 185, 129, 0.2) !important;
+        color: #6EE7B7 !important;
+        border: 1px solid rgba(16, 185, 129, 0.45) !important;
+    }
+
+    /* MODAL INSPECTOR STYLING (SUPER JERNIH LIGHT & DARK MODE) */
+    #modalNodeInspector .modal-content {
+        background: #FFFFFF;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
+    }
+    #modalNodeInspector .inspector-header {
+        background: linear-gradient(135deg, #0A2540 0%, #163861 100%);
+        padding: 1.5rem;
+    }
+    #modalNodeInspector .inspector-body {
+        padding: 1.5rem;
+        background: #FFFFFF;
+    }
+    #modalNodeInspector .inspector-desc-card {
+        background: #F8FAFC;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+    #modalNodeInspector .inspector-desc-title {
+        color: #0F172A;
+        font-weight: 700;
+        font-size: 0.92rem;
+        letter-spacing: 0.3px;
+    }
+    #modalNodeInspector .inspector-desc-text {
+        color: #334155;
+        font-size: 1rem;
+        line-height: 1.7;
+        font-weight: 500;
+    }
+    #modalNodeInspector .inspector-footer {
+        background: #F8FAFC;
+        border-top: 1px solid #E2E8F0;
+        padding: 1rem 1.5rem;
+    }
+
+    /* DARK MODE MODAL INSPECTOR */
+    [data-theme="dark"] #modalNodeInspector .modal-content {
+        background: #0B192C !important;
+        border: 1.5px solid #1E3D63 !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
+    }
+    [data-theme="dark"] #modalNodeInspector .inspector-header {
+        background: linear-gradient(135deg, #071527 0%, #0d2847 100%) !important;
+        border-bottom: 1px solid #1E3D63 !important;
+    }
+    [data-theme="dark"] #modalNodeInspector .inspector-body {
+        background: #0B192C !important;
+    }
+    [data-theme="dark"] #modalNodeInspector .inspector-desc-card {
+        background: #112641 !important;
+        border: 1.5px solid #234875 !important;
+    }
+    [data-theme="dark"] #modalNodeInspector .inspector-desc-title {
+        color: #38BDF8 !important; /* Sky blue cerah, sangat kontras */
+    }
+    [data-theme="dark"] #modalNodeInspector .inspector-desc-text {
+        color: #F8FAFC !important; /* Putih terang, sangat jelas & nyaman dibaca */
+    }
+    [data-theme="dark"] #modalNodeInspector .inspector-footer {
+        background: #071527 !important;
+        border-top: 1px solid #1E3D63 !important;
+    }
+</style>
+
+    <!-- 2. SECTION BAGAN STRUKTUR ORGANISASI (SOTK) -->
+    <div class="card-modern p-4 p-md-5 border-0 shadow-sm mb-5" style="border-radius: 24px;">
+        
+        <!-- HEADER BAGAN & DESKRIPSI -->
+        <div class="mb-4">
+            <span class="badge px-3 py-1.5 rounded-pill text-uppercase fw-bold mb-2" style="background: rgba(255, 107, 0, 0.12); color: var(--orange-primary, #FF6B00); font-size: 0.72rem; letter-spacing: 0.8px;">
+                <i class="bi bi-diagram-3-fill me-1"></i> Struktur Organisasi
+            </span>
+            <h3 class="fw-bold text-dark mb-1">Struktur Organisasi</h3>
+            <p class="text-secondary small mb-0">
+                Bagan resmi susunan pimpinan dan pembagian unit kerja dinas.
+            </p>
+        </div>
+
+        <% if (listNodes.length > 0) { %>
+            <!-- EMBED DATA JSON -->
+            <script id="allNodesData" type="application/json">
+                <%- JSON.stringify(listNodes) %>
+            </script>
+            <script id="publicBaganConfig" type="application/json">
+                <%- JSON.stringify(configBagan || null) %>
+            </script>
+
+            <!-- TAMPILAN: BAGAN VISUAL (ULTRA DINAMIS SVG CANVAS SINKRON ADMIN) -->
+            <div id="containerModeVisual">
+                <!-- TOOLBAR NAVIGASI SIMPEL -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 px-1">
+                    <div class="small text-muted d-flex align-items-center gap-1.5">
+                        <i class="bi bi-arrows-move text-primary"></i>
+                        <span>Geser kanvas (drag / scroll) untuk eksplorasi • Klik kartu posisi untuk rincian</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-1.5">
+                        <button type="button" onclick="treeZoomIn()" class="btn btn-sm btn-light border px-2.5 py-1 rounded-2 shadow-sm" title="Perbesar (Zoom In)">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                        <button type="button" onclick="treeZoomOut()" class="btn btn-sm btn-light border px-2.5 py-1 rounded-2 shadow-sm" title="Perkecil (Zoom Out)">
+                            <i class="bi bi-dash-lg"></i>
+                        </button>
+                        <button type="button" onclick="treeResetView()" class="btn btn-sm btn-light border px-2.5 py-1 rounded-2 shadow-sm font-semibold" title="Kembalikan Tampilan Normal (100%)">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> 100%
+                        </button>
+                        <button type="button" onclick="treeCenterFit()" class="btn btn-sm btn-light border px-2.5 py-1 rounded-2 shadow-sm font-semibold" title="Posisikan ke Tengah Layar">
+                            <i class="bi bi-bullseye me-1"></i> Fit Layar
+                        </button>
+                        <button type="button" onclick="treeExpandAll()" class="btn btn-sm btn-light border px-2.5 py-1 rounded-2 shadow-sm font-semibold" title="Buka Semua Cabang">
+                            <i class="bi bi-arrows-angle-expand me-1"></i> Buka Semua
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEWPORT KANVAS INTERAKTIF (SINKRON DENGAN ADMIN ENGINE) -->
+                <div id="publicTreeViewport" class="public-viewport">
+                    <div id="publicTreeStage" class="public-stage">
+                        <svg id="publicTreeSvg" class="public-svg-connectors"></svg>
+                        <div id="publicTreeCardsBox" class="public-cards-container"></div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mt-3 text-muted small px-1">
+                    <span>
+                        <i class="bi bi-info-circle me-1"></i> Klik kartu posisi untuk melihat rincian jabatan dan unit kerja terkait.
+                    </span>
+                    <span class="badge bg-light text-secondary border">
+                        <i class="bi bi-check-circle me-1 text-success"></i> Bagan Resmi Aktif
+                    </span>
+                </div>
+            </div>
+
+            <!-- TAMPILAN 2: GARIS HIRARKI (OUTLINE TREE VIEW RAMAH MOBILE & PRINT) -->
+            <div id="containerModeOutline" class="d-none">
+                <div class="outline-tree-card shadow-sm">
+                    <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-diagram-2 me-2 text-primary"></i>Susunan Organisasi Dinas</span>
+                        <button type="button" onclick="window.print()" class="btn btn-sm btn-light border rounded-pill px-3">
+                            <i class="bi bi-printer me-1"></i> Cetak Dokumen
+                        </button>
+                    </h5>
+                    
+                    <div class="d-flex flex-column gap-2" id="outlineTreeContainer">
+                        <% if (typeof flatHierarchy !== 'undefined' && flatHierarchy.length > 0) { %>
+                            <% flatHierarchy.forEach(item => { %>
+                                <div class="outline-tree-row" data-level="<%= item.level || 0 %>" data-id="<%= item.id %>" onclick="openNodeInspectorById(this.dataset.id)">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="font-monospace text-muted small"><%= item.treePrefix %></span>
+                                        <div>
+                                            <span class="fw-bold text-dark"><%= item.jabatan %></span>
+                                            <% if (item.nama_pejabat) { %>
+                                                <span class="small text-secondary ms-1">(&bull; <%= item.nama_pejabat %>)</span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <% if (item.isRoot) { %>
+                                            <span class="badge badge-tree-root">👑 PIMPINAN</span>
+                                        <% } else if (item.isParent) { %>
+                                            <span class="badge badge-tree-parent">🏢 UNIT KERJA</span>
+                                        <% } else { %>
+                                            <span class="badge badge-tree-leaf">👤 PELAKSANA</span>
+                                        <% } %>
+                                        <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" title="Lihat Rincian">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+        <% } else { %>
+            <!-- EMPTY STATE ELEGAN -->
+            <div class="text-center py-5 px-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 shadow-sm border" style="width: 72px; height: 72px; background: var(--bg-card-subtle, #F8FAFC); color: var(--text-muted, #64748B);">
+                    <i class="bi bi-diagram-3 fs-2"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Bagan Struktur Organisasi Belum Dikonfigurasi</h5>
+                <p class="text-muted small mb-3 mx-auto" style="max-width: 480px;">
+                    Hierarki kepemimpinan dan staf pelaksana saat ini belum ditambahkan ke dalam database oleh administrator.
+                </p>
+                <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small fw-medium">
+                    <i class="bi bi-shield-lock me-1"></i> Dikelola Melalui Panel Admin
+                </span>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL INSPECTOR DETAIL NODE TREE -->
+    <!-- ============================================================== -->
+    <div class="modal fade" id="modalNodeInspector" tabindex="-1" aria-labelledby="modalNodeInspectorLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header inspector-header text-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div id="inspectorIconBox" class="rounded-3 d-flex align-items-center justify-content-center p-2" style="background: rgba(255, 107, 0, 0.2); color: #FF9B42; width: 44px; height: 44px;">
+                            <i class="bi bi-diagram-3-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <span id="inspectorRoleBadge" class="badge rounded-pill text-uppercase px-2.5 py-1 mb-1 small fw-bold">PIMPINAN DINAS</span>
+                            <h5 class="modal-title fw-bold text-white mb-0" id="inspectorJabatan">Nama Jabatan</h5>
+                            <div id="inspectorPejabatSub" class="small mt-1 text-warning d-none">
+                                <i class="bi bi-person-fill me-1"></i> <span id="inspectorPejabatName">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body inspector-body">
+                    <!-- Deskripsi & Tugas Kedinasan (Satu-satunya fokus sesuai permintaan) -->
+                    <div class="inspector-desc-card">
+                        <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom border-secondary border-opacity-25">
+                            <i class="bi bi-card-text text-primary fs-5"></i>
+                            <span class="inspector-desc-title">Penjelasan Posisi & Tugas Dinas</span>
+                        </div>
+                        <p class="mb-0 inspector-desc-text" id="inspectorRoleDesc">
+                            -
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer inspector-footer">
+                    <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill fw-bold" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT INTERAKTIF SOTK SIMPEL & ROBUST -->
+    <script>
+    (function() {
+        const rawEl = document.getElementById('allNodesData');
+        if (!rawEl) return;
+
+        let allNodes = [];
+        try {
+            allNodes = JSON.parse(rawEl.textContent || '[]');
+        } catch(e) {
+            allNodes = [];
+        }
+
+        // Map lookup untuk rincian modal inspector
+        const nodeMap = new Map();
+        allNodes.forEach(n => {
+            nodeMap.set(Number(n.id), Object.assign({}, n, {
+                id: Number(n.id),
+                parent_id: (n.parent_id !== null && n.parent_id !== undefined && n.parent_id !== '') ? Number(n.parent_id) : null,
+                children: []
+            }));
+        });
+
+        // Hubungkan relasi anak & atasan
+        const roots = [];
+        nodeMap.forEach(n => {
+            if (n.parent_id !== null && nodeMap.has(n.parent_id)) {
+                nodeMap.get(n.parent_id).children.push(n);
+            } else {
+                roots.push(n);
+            }
+        });
+
+        // ==============================================================
+        // ENGINE ULTRA DINAMIS KANVAS SVG (SINKRON 100% IDENTIK DENGAN ADMIN)
+        // ==============================================================
+        let PUB_CARD_W = 220;
+        let PUB_CARD_H = 88;
+        let PUB_H_GAP  = 36;
+        let PUB_V_GAP  = 72;
+        let PUB_PAD    = 40;
+        let pubElbowRatio = 0.50;
+        let pubLineStyle  = 'orthogonal';
+        let pubCustomPositions = new Map();
+        let pubWingNodeIds = new Set();
+        let pubNonWingNodeIds = new Set();
+
+        let publicZoom = 1;
+        let publicPanX = 0;
+        let publicPanY = 0;
+        let publicIsDragging = false;
+        let publicStartX = 0;
+        let publicStartY = 0;
+        let publicNodeMap = new Map();
+        let publicRoots = [];
+        let publicRootTree = null;
+
+        function applyPublicDefaultCoordinates(nodes, posMap) {
+            if (!nodes || nodes.length === 0) return;
+            const kadin = nodes.find(n => n.parent_id === null || (n.jabatan || '').toLowerCase().includes('kepala dinas')) || nodes[0];
+            const sek = nodes.find(n => (n.jabatan || '').toLowerCase().includes('sekretar') || n.tipe_posisi === 'STAFF_SAYAP');
+            const subbag = (sek ? nodes.find(n => n.parent_id === sek.id) : null) || nodes.find(n => (n.jabatan || '').toLowerCase().includes('sub') || (n.jabatan || '').toLowerCase().includes('kasubag'));
+            const fung = nodes.find(n => (n.jabatan || '').toLowerCase().includes('fungsional') || (n.jabatan || '').toLowerCase().includes('koordinator'));
+            
+            let bidangList = nodes.filter(n => {
+                if (kadin && n.id === kadin.id) return false;
+                if (sek && n.id === sek.id) return false;
+                if (subbag && n.id === subbag.id) return false;
+                if (fung && n.id === fung.id) return false;
+                return n.parent_id === (kadin ? kadin.id : null) || (n.jabatan || '').toLowerCase().includes('bidang');
+            });
+
+            bidangList.sort((a, b) => {
+                const getRank = (item) => {
+                    const j = (item.jabatan || '').toLowerCase();
+                    if (j.includes('informasi dan komunikasi') || j.includes('ikp')) return 1;
+                    if (j.includes('teknologi')) return 2;
+                    if (j.includes('statistik')) return 3;
+                    if (j.includes('persandian')) return 4;
+                    return 5 + (Number(item.urutan) || 1);
+                };
+                return getRank(a) - getRank(b);
+            });
+
+            const startX = 60;
+            const bGap = 36;
+            const bY = 420;
+
+            bidangList.forEach((b, idx) => {
+                const bx = startX + idx * (PUB_CARD_W + bGap);
+                posMap.set(Number(b.id), { x: bx, y: bY });
+            });
+
+            const totalSpan = bidangList.length > 0 ? (bidangList.length * PUB_CARD_W + (bidangList.length - 1) * bGap) : 988;
+            const centerSpineX = startX + totalSpan / 2;
+            const kadinX = Math.round(centerSpineX - PUB_CARD_W / 2);
+
+            if (kadin) {
+                posMap.set(Number(kadin.id), { x: kadinX, y: 40 });
+            }
+            if (sek) {
+                const sekX = Math.round(centerSpineX + 180);
+                posMap.set(Number(sek.id), { x: Math.max(sekX, 740), y: 160 });
+            }
+            if (subbag) {
+                const subX = Math.round(centerSpineX + 268);
+                posMap.set(Number(subbag.id), { x: Math.max(subX, 828), y: 290 });
+            }
+            if (fung) {
+                posMap.set(Number(fung.id), { x: kadinX, y: 230 });
+            }
+        }
+
+        // Baca config tersimpan dari admin dashboard
+        let pubHasSavedPositions = false;
+        const savedConfigEl = document.getElementById('publicBaganConfig');
+        if (savedConfigEl && savedConfigEl.textContent) {
+            try {
+                const cfg = JSON.parse(savedConfigEl.textContent);
+                if (cfg && typeof cfg === 'object') {
+                    if (Array.isArray(cfg.wingNodes)) {
+                        pubWingNodeIds = new Set(cfg.wingNodes.map(Number));
+                    }
+                    if (Array.isArray(cfg.nonWingNodes)) {
+                        pubNonWingNodeIds = new Set(cfg.nonWingNodes.map(Number));
+                    }
+                    if (typeof cfg.elbowRatio === 'number') pubElbowRatio = cfg.elbowRatio;
+                    if (typeof cfg.vGap === 'number') PUB_V_GAP = cfg.vGap;
+                    if (typeof cfg.hGap === 'number') PUB_H_GAP = cfg.hGap;
+                    if (cfg.lineStyle) pubLineStyle = (cfg.lineStyle === 'kedinasan' ? 'orthogonal' : cfg.lineStyle);
+                    if (cfg.customPositions && typeof cfg.customPositions === 'object' && Object.keys(cfg.customPositions).length > 0) {
+                        pubCustomPositions.clear();
+                        for (const [k, v] of Object.entries(cfg.customPositions)) {
+                            if (v && typeof v.x === 'number' && typeof v.y === 'number') {
+                                pubCustomPositions.set(Number(k), { x: v.x, y: v.y });
+                            }
+                        }
+                        pubHasSavedPositions = true;
+                    }
+                }
+            } catch(e) {
+                console.warn('Error parse publicBaganConfig:', e);
+            }
+        }
+        if (!pubHasSavedPositions && allNodes && allNodes.length > 0) {
+            applyPublicDefaultCoordinates(allNodes, pubCustomPositions);
+        }
+
+        // Siapkan struktur node hierarki untuk kanvas
+        allNodes.forEach(n => {
+            publicNodeMap.set(Number(n.id), Object.assign({}, n, {
+                id: Number(n.id),
+                parent_id: (n.parent_id !== null && n.parent_id !== undefined && n.parent_id !== '') ? Number(n.parent_id) : null,
+                children: [],
+                isCollapsed: false,
+                isRoot: false,
+                isParent: false,
+                isLeaf: false,
+                level: 0
+            }));
+        });
+
+        publicRoots = [];
+        publicNodeMap.forEach(n => {
+            if (n.parent_id !== null && publicNodeMap.has(n.parent_id)) {
+                publicNodeMap.get(n.parent_id).children.push(n);
+            } else {
+                publicRoots.push(n);
+            }
+        });
+
+        publicNodeMap.forEach(n => {
+            n.children.sort((a, b) => (Number(a.urutan) || 1) - (Number(b.urutan) || 1) || a.id - b.id);
+        });
+        publicRoots.sort((a, b) => (Number(a.urutan) || 1) - (Number(b.urutan) || 1) || a.id - b.id);
+
+        function markPublicMeta(n, lvl) {
+            n.level = lvl;
+            n.isRoot = n.parent_id === null;
+            n.isParent = n.children.length > 0;
+            n.isLeaf = n.children.length === 0;
+            n.children.forEach(c => markPublicMeta(c, lvl + 1));
+        }
+        publicRoots.forEach(r => markPublicMeta(r, 0));
+
+        if (publicRoots.length === 1) {
+            publicRootTree = publicRoots[0];
+        } else {
+            publicRootTree = {
+                id: '__pub_virtual__',
+                jabatan: 'Pimpinan Kedinasan',
+                nama_pejabat: '',
+                isRoot: true,
+                isParent: true,
+                isLeaf: false,
+                level: 0,
+                children: publicRoots,
+                isCollapsed: false,
+                isVirtual: true
+            };
+        }
+
+        function measurePublicWidth(node) {
+            if (node.isCollapsed || node.children.length === 0) {
+                node._w = PUB_CARD_W;
+            } else {
+                let total = 0;
+                node.children.forEach((c, idx) => {
+                    measurePublicWidth(c);
+                    total += c._w + (idx > 0 ? PUB_H_GAP : 0);
+                });
+                node._w = Math.max(PUB_CARD_W, total);
+            }
+            return node._w;
+        }
+
+        function assignPublicCoords(node, leftX, topY) {
+            if (pubCustomPositions.has(node.id)) {
+                const saved = pubCustomPositions.get(node.id);
+                node._x = saved.x;
+                node._y = saved.y;
+            } else {
+                node._y = topY;
+                node._x = leftX + (node._w - PUB_CARD_W) / 2;
+            }
+
+            if (!node.isCollapsed && node.children.length > 0) {
+                let curX = leftX;
+                node.children.forEach(c => {
+                    assignPublicCoords(c, curX, topY + PUB_CARD_H + PUB_V_GAP);
+                    curX += c._w + PUB_H_GAP;
+                });
+            }
+        }
+
+        let pubMaxRight = 0;
+        let pubMaxBottom = 0;
+        function computePublicBounds(node) {
+            pubMaxRight = Math.max(pubMaxRight, node._x + PUB_CARD_W);
+            pubMaxBottom = Math.max(pubMaxBottom, node._y + PUB_CARD_H);
+            if (!node.isCollapsed && node.children.length > 0) {
+                node.children.forEach(computePublicBounds);
+            }
+        }
+
+        function renderPublicTree() {
+            if (!publicRootTree) return;
+            const stage    = document.getElementById('publicTreeStage');
+            const svg      = document.getElementById('publicTreeSvg');
+            const cardsBox = document.getElementById('publicTreeCardsBox');
+            if (!stage || !svg || !cardsBox) return;
+
+            measurePublicWidth(publicRootTree);
+            assignPublicCoords(publicRootTree, PUB_PAD, PUB_PAD);
+
+            pubMaxRight = 0;
+            pubMaxBottom = 0;
+            computePublicBounds(publicRootTree);
+
+            const canvasW = Math.max(1400, pubMaxRight + PUB_PAD * 3);
+            const canvasH = Math.max(800, pubMaxBottom + PUB_PAD * 3);
+
+            stage.style.width = canvasW + 'px';
+            stage.style.height = canvasH + 'px';
+            svg.setAttribute('width', canvasW);
+            svg.setAttribute('height', canvasH);
+
+            cardsBox.innerHTML = '';
+            renderPublicCards(publicRootTree, cardsBox);
+            redrawPublicSvgOnly();
+            updatePublicStageTransform();
+        }
+
+        function renderPublicCards(node, cardsBox) {
+            if (!node.isVirtual) {
+                const card = document.createElement('div');
+                const roleClass = getPublicNodeClass(node);
+                card.className = `org-card ${roleClass}`;
+                card.style.left = node._x + 'px';
+                card.style.top  = node._y + 'px';
+                card.setAttribute('data-id', node.id);
+
+                const personHtml = node.nama_pejabat 
+                    ? `<div class="org-card-name">${escapeHtml(node.nama_pejabat)}</div>` 
+                    : '';
+
+                card.innerHTML = `
+                    <div class="org-card-title">${escapeHtml(node.jabatan)}</div>
+                    ${personHtml}
+                `;
+
+                card.addEventListener('click', () => {
+                    openNodeInspectorById(node.id);
+                });
+
+                cardsBox.appendChild(card);
+            }
+
+            if (!node.isCollapsed && node.children.length > 0) {
+                node.children.forEach(c => renderPublicCards(c, cardsBox));
+            }
+        }
+
+        function redrawPublicSvgOnly() {
+            const svg = document.getElementById('publicTreeSvg');
+            if (!svg || !publicRootTree) return;
+            svg.innerHTML = '';
+            renderPublicLinesRecursive(publicRootTree, svg);
+        }
+
+        function isPublicWingChild(c, allChildren) {
+            if (!c) return false;
+            const cId = Number(c.id);
+            if (pubWingNodeIds.has(cId)) return true;
+            if (pubNonWingNodeIds.has(cId)) return false;
+
+            const tip = (c.tipe_posisi || '').toUpperCase();
+            if (tip === 'STAFF_SAYAP') return true;
+            if (tip === 'LINE_BIDANG' || tip === 'ROOT') return false;
+
+            const jab = (c.jabatan || '').toLowerCase();
+            if (jab.includes('sekretar') || jab.includes('staf ahli') || jab.includes('fungsional') || jab.includes('koordinator')) {
+                return true;
+            }
+            if (allChildren && allChildren.length > 1) {
+                const maxY = Math.max(...allChildren.map(ch => ch._y));
+                if (maxY - c._y > PUB_CARD_H * 0.7) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function renderPublicLinesRecursive(node, svg) {
+            if (!node.isCollapsed && node.children.length > 0) {
+                const parentBottomX = node._x + PUB_CARD_W / 2;
+                const parentBottomY = node.isVirtual ? node._y : node._y + PUB_CARD_H;
+                const elbowY = parentBottomY + PUB_V_GAP * pubElbowRatio;
+
+                if (pubLineStyle === 'curve') {
+                    node.children.forEach(c => {
+                        const childX = c._x + PUB_CARD_W / 2;
+                        drawPublicSvgBezier(svg, parentBottomX, parentBottomY, childX, c._y);
+                    });
+                } else if (pubLineStyle === 'direct') {
+                    node.children.forEach(c => {
+                        const childX = c._x + PUB_CARD_W / 2;
+                        drawPublicSvgLine(svg, parentBottomX, parentBottomY, childX, c._y);
+                    });
+                } else {
+                    // Orthogonal / Siku Standar & Sayap Menyatu Dinamis
+                    if (node.children.length === 1) {
+                        const child = node.children[0];
+                        const childX = child._x + PUB_CARD_W / 2;
+                        if (Math.abs(parentBottomX - childX) < 8) {
+                            drawPublicSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, child._y);
+                        } else {
+                            const stepY = parentBottomY + (child._y - parentBottomY) * pubElbowRatio;
+                            drawPublicSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, stepY);
+                            drawPublicSvgLine(svg, parentBottomX, stepY, childX, stepY);
+                            drawPublicSvgLine(svg, childX, stepY, childX, child._y);
+                        }
+                    } else {
+                        const wingChildren = node.children.filter(c => isPublicWingChild(c, node.children));
+                        const lineChildren = node.children.filter(c => !isPublicWingChild(c, node.children));
+
+                        if (wingChildren.length > 0 && lineChildren.length > 0) {
+                            // HIERARKI KEDINASAN DUA TIER: SAYAP MENYATU + LINI BAWAH
+                            const minLineY = Math.min(...lineChildren.map(c => c._y));
+                            const lineBarY = minLineY - Math.max(22, Math.round(PUB_V_GAP * (1 - pubElbowRatio)));
+
+                            // 1. Tulang Punggung Vertikal Menyatu (Central Spine)
+                            drawPublicSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, lineBarY);
+
+                            // 2. Cabang ke Sayap (Menyatu dari Tulang Vertikal)
+                            wingChildren.forEach(w => {
+                                const wCenterX = w._x + PUB_CARD_W / 2;
+                                const wingBranchY = parentBottomY + (w._y - parentBottomY) * pubElbowRatio;
+                                drawPublicSvgLine(svg, parentBottomX, wingBranchY, wCenterX, wingBranchY);
+                                drawPublicSvgLine(svg, wCenterX, wingBranchY, wCenterX, w._y);
+
+                                // Garis koordinasi putus-putus untuk fungsional jika ada sekretariat
+                                const isFung = (w.jabatan || '').toLowerCase().includes('fungsional') || (w.jabatan || '').toLowerCase().includes('koordinator');
+                                if (isFung) {
+                                    const sek = wingChildren.find(item => (item.jabatan || '').toLowerCase().includes('sekretar'));
+                                    if (sek) {
+                                        const sekBottomX = sek._x + PUB_CARD_W / 2;
+                                        const sekBottomY = sek._y + PUB_CARD_H;
+                                        const fMidY = sekBottomY + 16;
+                                        drawPublicSvgDashedLine(svg, sekBottomX, sekBottomY, sekBottomX, fMidY);
+                                        drawPublicSvgDashedLine(svg, sekBottomX, fMidY, wCenterX, fMidY);
+                                        drawPublicSvgDashedLine(svg, wCenterX, fMidY, wCenterX, w._y);
+                                    }
+                                }
+                            });
+
+                            // 3. Garis Busbar Horizontal Distribusi Bidang
+                            const lineXs = lineChildren.map(c => c._x + PUB_CARD_W / 2);
+                            const minLineX = Math.min(parentBottomX, ...lineXs);
+                            const maxLineX = Math.max(parentBottomX, ...lineXs);
+                            drawPublicSvgLine(svg, minLineX, lineBarY, maxLineX, lineBarY);
+
+                            // 4. Drop Garis Vertikal Menuju Atap Masing-Masing Bidang
+                            lineChildren.forEach(c => {
+                                const cX = c._x + PUB_CARD_W / 2;
+                                drawPublicSvgLine(svg, cX, lineBarY, cX, c._y);
+                            });
+                        } else if (wingChildren.length > 0 && lineChildren.length === 0) {
+                            // Semua anak sayap menyatu
+                            const maxWingY = Math.max(...wingChildren.map(w => w._y));
+                            const lastBranchY = parentBottomY + (maxWingY - parentBottomY) * pubElbowRatio;
+                            drawPublicSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, lastBranchY);
+
+                            wingChildren.forEach(w => {
+                                const wCenterX = w._x + PUB_CARD_W / 2;
+                                const wingBranchY = parentBottomY + (w._y - parentBottomY) * pubElbowRatio;
+                                drawPublicSvgLine(svg, parentBottomX, wingBranchY, wCenterX, wingBranchY);
+                                drawPublicSvgLine(svg, wCenterX, wingBranchY, wCenterX, w._y);
+                            });
+                        } else {
+                            // Semua anak lini bawah standar busbar
+                            drawPublicSvgLine(svg, parentBottomX, parentBottomY, parentBottomX, elbowY);
+
+                            const childXs = node.children.map(c => c._x + PUB_CARD_W / 2);
+                            const minX = Math.min(parentBottomX, ...childXs);
+                            const maxX = Math.max(parentBottomX, ...childXs);
+                            drawPublicSvgLine(svg, minX, elbowY, maxX, elbowY);
+
+                            node.children.forEach(c => {
+                                const childX = c._x + PUB_CARD_W / 2;
+                                drawPublicSvgLine(svg, childX, elbowY, childX, c._y);
+                            });
+                        }
+                    }
+                }
+
+                node.children.forEach(c => renderPublicLinesRecursive(c, svg));
+            }
+        }
+
+        function drawPublicSvgLine(svg, x1, y1, x2, y2) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', Math.round(x1));
+            line.setAttribute('y1', Math.round(y1));
+            line.setAttribute('x2', Math.round(x2));
+            line.setAttribute('y2', Math.round(y2));
+            line.setAttribute('class', 'public-tree-line');
+            svg.appendChild(line);
+        }
+
+        function drawPublicSvgDashedLine(svg, x1, y1, x2, y2) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', Math.round(x1));
+            line.setAttribute('y1', Math.round(y1));
+            line.setAttribute('x2', Math.round(x2));
+            line.setAttribute('y2', Math.round(y2));
+            line.setAttribute('class', 'public-tree-line');
+            line.setAttribute('stroke-dasharray', '5,4');
+            svg.appendChild(line);
+        }
+
+        function drawPublicSvgBezier(svg, x1, y1, x2, y2) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const midY = (y1 + y2) / 2;
+            const d = `M ${Math.round(x1)} ${Math.round(y1)} C ${Math.round(x1)} ${Math.round(midY)}, ${Math.round(x2)} ${Math.round(midY)}, ${Math.round(x2)} ${Math.round(y2)}`;
+            path.setAttribute('d', d);
+            path.setAttribute('class', 'public-tree-line');
+            svg.appendChild(path);
+        }
+
+        function getPublicNodeClass(node) {
+            const jab = (node.jabatan || '').toLowerCase();
+            const tip = (node.tipe_posisi || '').toUpperCase();
+            if (node.isRoot || tip === 'ROOT' || jab.includes('kepala dinas')) {
+                return 'org-card-root';
+            }
+            if (tip === 'STAFF_SAYAP' || jab.includes('sekretar')) {
+                return 'org-card-sekretariat';
+            }
+            if (jab.startsWith('kepala bidang') || jab.startsWith('kabid') || (tip === 'LINE_BIDANG' && node.isParent)) {
+                return 'org-card-bidang';
+            }
+            if (jab.includes('kasubag') || jab.includes('subbag') || jab.includes('ketua tim') || jab.includes('seksi')) {
+                return 'org-card-tim';
+            }
+            return 'org-card-pelaksana';
+        }
+
+        function updatePublicStageTransform() {
+            const stage = document.getElementById('publicTreeStage');
+            if (stage) {
+                stage.style.transform = `translate(${publicPanX}px, ${publicPanY}px) scale(${publicZoom})`;
+            }
+        }
+
+        // Interaksi Drag Pan & Zoom Kanvas
+        const publicViewport = document.getElementById('publicTreeViewport');
+        if (publicViewport) {
+            publicViewport.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.org-card') || e.target.closest('button') || e.target.closest('a')) return;
+                publicIsDragging = true;
+                publicViewport.classList.add('is-dragging');
+                publicStartX = e.clientX - publicPanX;
+                publicStartY = e.clientY - publicPanY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!publicIsDragging) return;
+                publicPanX = e.clientX - publicStartX;
+                publicPanY = e.clientY - publicStartY;
+                updatePublicStageTransform();
+            });
+
+            window.addEventListener('mouseup', () => {
+                publicIsDragging = false;
+                publicViewport.classList.remove('is-dragging');
+            });
+
+            publicViewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? 0.1 : -0.1;
+                publicZoom = Math.min(Math.max(0.4, publicZoom + delta), 2.2);
+                updatePublicStageTransform();
+            }, { passive: false });
+        }
+
+        // Kontrol Tombol Navigasi
+        window.treeCenterFit = function() {
+            const viewport = document.getElementById('publicTreeViewport');
+            const stage    = document.getElementById('publicTreeStage');
+            if (!viewport || !stage) return;
+            const vpW = viewport.clientWidth;
+            const stageW = parseInt(stage.style.width) || 800;
+            publicZoom = Math.min(1, Math.max(0.45, (vpW - 60) / stageW));
+            publicPanX = Math.max(10, (vpW - stageW * publicZoom) / 2);
+            publicPanY = 20;
+            updatePublicStageTransform();
+        };
+
+        window.treeZoomIn = function() {
+            publicZoom = Math.min(2.2, publicZoom + 0.15);
+            updatePublicStageTransform();
+        };
+
+        window.treeZoomOut = function() {
+            publicZoom = Math.max(0.4, publicZoom - 0.15);
+            updatePublicStageTransform();
+        };
+
+        window.treeResetView = function() {
+            publicZoom = 1;
+            publicPanX = 0;
+            publicPanY = 0;
+            updatePublicStageTransform();
+        };
+
+        window.treeExpandAll = function() {
+            publicNodeMap.forEach(n => { n.isCollapsed = false; });
+            renderPublicTree();
+        };
+
+        window.togglePublicNodeCollapse = function(id) {
+            const node = publicNodeMap.get(Number(id));
+            if (node) {
+                node.isCollapsed = !node.isCollapsed;
+                renderPublicTree();
+            }
+        };
+
+        // Render Pohon saat inisialisasi
+        renderPublicTree();
+        setTimeout(treeCenterFit, 50);
+
+        // Atur indentasi Outline Tree jika level > 8
+        document.querySelectorAll('.outline-tree-row[data-level]').forEach(el => {
+            const lvl = parseInt(el.dataset.level, 10);
+            if (!isNaN(lvl)) el.style.marginLeft = (lvl * 24) + 'px';
+        });
+
+        // Switch Mode: Bagan Visual vs Daftar Hirarki
+        window.switchTreeDisplayMode = function(mode) {
+            const vContainer = document.getElementById('containerModeVisual');
+            const oContainer = document.getElementById('containerModeOutline');
+            const btnVisual  = document.getElementById('btnModeVisual');
+            const btnOutline = document.getElementById('btnModeOutline');
+
+            if (mode === 'visual') {
+                vContainer.classList.remove('d-none');
+                oContainer.classList.add('d-none');
+                btnVisual.classList.add('active', 'btn-primary');
+                btnVisual.classList.remove('text-secondary');
+                btnOutline.classList.remove('active', 'btn-primary');
+                btnOutline.classList.add('text-secondary');
+                setTimeout(treeCenterFit, 60);
+            } else {
+                vContainer.classList.add('d-none');
+                oContainer.classList.remove('d-none');
+                btnOutline.classList.add('active', 'btn-primary');
+                btnOutline.classList.remove('text-secondary');
+                btnVisual.classList.remove('active', 'btn-primary');
+                btnVisual.classList.add('text-secondary');
+            }
+        };
+
+        // Helper: Penjelasan Tugas yang Membumi & Realistis untuk Warga
+        function getPenjelasanTugasDinas(jabatan, node) {
+            const j = (jabatan || '').toLowerCase();
+            if (j.includes('kepala dinas')) {
+                return 'Memimpin, mengarahkan, dan menetapkan kebijakan strategis penyelenggaraan urusan komunikasi, informatika, statistik, dan persandian Kabupaten Bekasi.';
+            }
+            if (j.includes('sekretar')) {
+                return 'Mengoordinasikan perencanaan program kerja, pengelolaan anggaran dinas, ketatausahaan, dan pelayanan administrasi umum ke seluruh bidang dinas.';
+            }
+            if (j.includes('umum') || j.includes('kepegawaian') || j.includes('kasubag') || j.includes('sub bagian')) {
+                return 'Mengurus keperluan surat-menyurat, data pegawai, perlengkapan kantor, dan urusan rumah tangga dinas.';
+            }
+            if (j.includes('teknologi') || j.includes('tik') || j.includes('komunikasi & teknologi')) {
+                return 'Mengelola jaringan internet kantor dinas/desa, pusat data (data center), pengembangan aplikasi daerah, dan integrasi sistem digital pemerintahan.';
+            }
+            if (j.includes('informasi') || j.includes('ikp') || j.includes('publik')) {
+                return 'Mengelola publikasi berita resmi daerah, dokumentasi liputan, hubungan media pers, dan layanan pengaduan aspirasi warga.';
+            }
+            if (j.includes('statistik')) {
+                return 'Mengumpulkan, mengolah, dan menyajikan data statistik daerah yang akurat sebagai bahan perencanaan pembangunan Kabupaten Bekasi.';
+            }
+            if (j.includes('persandian') || j.includes('keamanan informasi')) {
+                return 'Menjaga keamanan data dan sistem informasi daerah, pengamanan persandian, serta penerbitan tanda tangan elektronik (TTE) resmi.';
+            }
+            if (node && node.children && node.children.length > 0) {
+                return 'Mengoordinasikan pelaksanaan program kerja teknis dan pelayanan kedinasan pada unit kerja di bawahnya.';
+            }
+            return 'Melaksanakan tugas teknis operasional dan pelayanan administrasi kedinasan sesuai lingkup bidang tugas.';
+        }
+
+        // Modal Node Inspector (Fokus murni Deskripsi & Tugas)
+        window.openNodeInspectorById = function(id) {
+            const node = nodeMap.get(Number(id));
+            if (!node) return;
+
+            document.getElementById('inspectorJabatan').textContent = node.jabatan || 'Jabatan';
+            
+            // Nama Pejabat di Subtitle Header jika ada
+            const pejabatSub = document.getElementById('inspectorPejabatSub');
+            const pejabatName = document.getElementById('inspectorPejabatName');
+            if (pejabatSub && pejabatName) {
+                if (node.nama_pejabat && node.nama_pejabat.trim() !== '' && node.nama_pejabat.trim() !== '-') {
+                    pejabatName.textContent = node.nama_pejabat.trim();
+                    pejabatSub.classList.remove('d-none');
+                } else {
+                    pejabatSub.classList.add('d-none');
+                }
+            }
+
+            // Role Badge & Penjelasan Tugas yang Membumi
+            const badgeEl = document.getElementById('inspectorRoleBadge');
+            const descEl  = document.getElementById('inspectorRoleDesc');
+            const iconBox = document.getElementById('inspectorIconBox');
+
+            const jLower = (node.jabatan || '').toLowerCase();
+            if (descEl) {
+                descEl.textContent = getPenjelasanTugasDinas(node.jabatan, node);
+            }
+
+            if (badgeEl && iconBox) {
+                if (!node.parent_id || jLower.includes('kepala dinas')) {
+                    badgeEl.className = 'badge rounded-pill text-uppercase px-2.5 py-1 mb-1 small fw-bold bg-warning-subtle text-warning-emphasis border border-warning';
+                    badgeEl.textContent = '👑 PIMPINAN DINAS';
+                    iconBox.style.background = 'rgba(255, 107, 0, 0.2)';
+                    iconBox.style.color = '#FF9B42';
+                } else if (jLower.includes('sekretar') || jLower.includes('bidang') || jLower.includes('sub bagian')) {
+                    badgeEl.className = 'badge rounded-pill text-uppercase px-2.5 py-1 mb-1 small fw-bold bg-primary-subtle text-primary border border-primary';
+                    badgeEl.textContent = '🏢 STRUKTURAL DINAS';
+                    iconBox.style.background = 'rgba(37, 99, 235, 0.2)';
+                    iconBox.style.color = '#3B82F6';
+                } else {
+                    badgeEl.className = 'badge rounded-pill text-uppercase px-2.5 py-1 mb-1 small fw-bold bg-success-subtle text-success border border-success';
+                    badgeEl.textContent = '👤 PELAKSANA / FUNGSIONAL';
+                    iconBox.style.background = 'rgba(16, 185, 129, 0.2)';
+                    iconBox.style.color = '#10B981';
+                }
+            }
+
+            // Tampilkan Modal
+            if (window.bootstrap && bootstrap.Modal) {
+                const modal = new bootstrap.Modal(document.getElementById('modalNodeInspector'));
+                modal.show();
+            } else {
+                const mEl = document.getElementById('modalNodeInspector');
+                mEl.classList.add('show');
+                mEl.style.display = 'block';
+            }
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // Posisikan ke tengah saat pertama kali dimuat
+        setTimeout(treeCenterFit, 100);
+    })();
+    </script>
+
+
+    <!-- 3. SECTION LOKASI & GOOGLE MAPS -->
+    <div class="card-modern p-4 p-md-5 border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
+        <div class="row g-4 align-items-stretch">
+            <!-- Kolom Kiri: Informasi Kontak Kedinasan -->
+            <div class="col-lg-5 d-flex flex-column justify-content-between">
+                <div>
+                    <span class="badge px-3 py-1.5 rounded-pill text-uppercase fw-bold mb-2" style="background: rgba(255, 107, 0, 0.12); color: var(--orange-primary, #FF6B00); font-size: 0.72rem; letter-spacing: 0.8px;">
+                        Pusat Komunikasi & Layanan
+                    </span>
+                    <h3 class="fw-bold mb-2 text-dark">Kantor & Lokasi Kedinasan</h3>
+                    <p class="text-secondary small mb-4">
+                        Akses saluran komunikasi resmi dan panduan rute menuju kantor kedinasan.
+                    </p>
+
+                    <div class="d-flex flex-column gap-3 mb-4">
+                        <!-- Alamat Gedung -->
+                        <div class="contact-info-card d-flex align-items-start gap-3 p-3 rounded-3 border">
+                            <div class="profil-icon-box icon-box-orange flex-shrink-0">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.5px;">Alamat Gedung</span>
+                                <div class="text-dark small fw-semibold mt-1" style="line-height: 1.5;">
+                                    <%= dataProfil.alamat || 'Belum diisi oleh administrator di CMS.' %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Layanan Telepon -->
+                        <div class="contact-info-card d-flex align-items-center gap-3 p-3 rounded-3 border">
+                            <div class="profil-icon-box icon-box-blue flex-shrink-0">
+                                <i class="bi bi-telephone-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.5px;">Layanan Telepon</span>
+                                <% if (dataProfil && dataProfil.telepon && dataProfil.telepon.trim() !== '') { %>
+                                    <a href="tel:<%= dataProfil.telepon %>" class="text-dark fw-bold text-decoration-none small hover-orange d-inline-flex align-items-center gap-1 mt-1">
+                                        <%= dataProfil.telepon %>
+                                        <i class="bi bi-arrow-up-right small text-muted"></i>
+                                    </a>
+                                <% } else { %>
+                                    <span class="text-muted small">Belum diisi oleh administrator.</span>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <!-- Surat Elektronik (Email) -->
+                        <div class="contact-info-card d-flex align-items-center gap-3 p-3 rounded-3 border">
+                            <div class="profil-icon-box icon-box-emerald flex-shrink-0">
+                                <i class="bi bi-envelope-at-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.5px;">Surat Elektronik (Email)</span>
+                                <% if (dataProfil && dataProfil.email && dataProfil.email.trim() !== '') { %>
+                                    <a href="mailto:<%= dataProfil.email %>" class="text-dark fw-bold text-decoration-none small hover-orange d-inline-flex align-items-center gap-1 mt-1">
+                                        <%= dataProfil.email %>
+                                        <i class="bi bi-arrow-up-right small text-muted"></i>
+                                    </a>
+                                <% } else { %>
+                                    <span class="text-muted small">Belum diisi oleh administrator.</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Jam Operasional Kedinasan -->
+                <div class="p-3 rounded-3 bg-light border d-flex align-items-center justify-content-between mt-auto">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-white shadow-sm border d-flex align-items-center justify-content-center text-primary flex-shrink-0" style="width: 38px; height: 38px;">
+                            <i class="bi bi-clock-history fs-6"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small text-dark">Jam Operasional Pelayanan</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Senin – Jumat : 08.00 – 16.00 WIB</div>
+                        </div>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 small fw-semibold">
+                        Hari Kerja
+                    </span>
+                </div>
+            </div>
+
+            <!-- Kolom Kanan: Peta Google Maps Asli dari Database -->
+            <div class="col-lg-7">
+                <div class="h-100 rounded-4 overflow-hidden border shadow-sm position-relative d-flex flex-column" style="min-height: 420px; background: var(--bg-card-subtle, #F1F5F9);">
+                    <!-- Badge Floating Lokasi -->
+                    <div class="position-absolute top-0 start-0 m-3" style="z-index: 2;">
+                        <span class="badge shadow-sm px-3 py-2 rounded-pill fw-semibold border d-inline-flex align-items-center gap-1.5" style="font-size: 0.78rem; background: var(--bg-card, #ffffff); color: var(--text-main, #0f172a);">
+                            <i class="bi bi-geo-alt-fill text-danger"></i> Titik Lokasi Resmi
+                        </span>
+                    </div>
+
+                    <% 
+                        let cleanMapSrc = '';
+                        if (dataProfil && dataProfil.gmaps_iframe && dataProfil.gmaps_iframe.trim() !== '') {
+                            const m = dataProfil.gmaps_iframe.match(/src=["'](.*?)["']/);
+                            cleanMapSrc = m ? m[1] : (dataProfil.gmaps_iframe.startsWith('http') ? dataProfil.gmaps_iframe.trim() : '');
+                        }
+                    %>
+                    <% if (cleanMapSrc) { %>
+                        <iframe src="<%= cleanMapSrc %>" width="100%" height="100%" style="border:0; min-height: 420px; flex-grow: 1; display: block;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <% } else { %>
+                        <div class="d-flex flex-column align-items-center justify-content-center text-muted p-5 text-center flex-grow-1" style="min-height: 420px;">
+                            <div class="rounded-circle shadow-sm border d-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; background: var(--bg-card, #ffffff);">
+                                <i class="bi bi-geo-alt fs-2 text-danger opacity-75"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1">Titik Lokasi Peta Belum Dikonfigurasi</h6>
+                            <p class="small text-muted mb-0" style="max-width: 380px;">Tautan Google Maps Embed belum dimasukkan pada menu pengaturan Profil di CMS.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

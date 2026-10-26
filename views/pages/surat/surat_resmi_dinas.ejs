@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Resmi Balasan Diskominfo - <%= surat.nomor_surat %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Anti-flicker Theme Initialization -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('diskominfo_theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            color: #000;
+            background: #f1f5f9;
+            padding: 30px 15px;
+            font-size: 11.5pt;
+            line-height: 1.5;
+            transition: background 0.3s ease;
+        }
+        .page-container {
+            max-width: 820px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px 60px 50px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            position: relative;
+        }
+        /* KOP SURAT RESMI PEMKAB BEKASI */
+        .kop-surat {
+            border-bottom: 3px double #000;
+            padding-bottom: 8px;
+            margin-bottom: 22px;
+            position: relative;
+        }
+        .kop-logo {
+            width: 75px;
+            height: auto;
+            position: absolute;
+            left: 5px;
+            top: 2px;
+        }
+        .kop-text {
+            text-align: center;
+            padding-left: 70px;
+            padding-right: 20px;
+        }
+        .meta-table td {
+            padding: 2px 5px;
+            vertical-align: top;
+        }
+        /* STEMPEL DIGITAL & TTE */
+        .tte-box {
+            position: relative;
+            display: inline-block;
+            text-align: center;
+        }
+        .stempel-digital {
+            position: absolute;
+            top: -20px;
+            left: -35px;
+            width: 110px;
+            height: 110px;
+            opacity: 0.82;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .qr-tte {
+            width: 95px;
+            height: 95px;
+            border: 1px solid #cbd5e1;
+            padding: 2px;
+            background: #fff;
+            position: relative;
+            z-index: 2;
+        }
+        /* DESK TEMA DARK NAVY UNTUK SURAT RESMI */
+        [data-theme="dark"] body {
+            background: #071527;
+        }
+        [data-theme="dark"] .action-toolbar-box {
+            background: #0f2238 !important;
+            border-color: #1e3d63 !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+        }
+        [data-theme="dark"] .action-toolbar-box .btn-outline-secondary {
+            color: #cbd5e1 !important;
+            border-color: #1e3d63 !important;
+        }
+        [data-theme="dark"] .action-toolbar-box .btn-outline-secondary:hover {
+            background: #1e3d63 !important;
+            color: #ffffff !important;
+        }
+        [data-theme="dark"] .page-container {
+            background: #ffffff !important;
+            color: #000000 !important;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6) !important;
+        }
+        @media print {
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+            }
+            .page-container {
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 15mm 20mm 15mm 20mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ACTION TOOLBAR (NON-PRINTABLE) -->
+    <div class="no-print mb-4 text-center">
+        <div class="d-inline-flex gap-2 p-2 bg-white action-toolbar-box rounded-pill shadow-sm border align-items-center">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill small fw-bold">
+                <i class="bi bi-shield-check me-1"></i> Surat Resmi Terverifikasi
+            </span>
+            <button onclick="window.print()" class="btn btn-primary btn-sm rounded-pill px-3">
+                <i class="bi bi-printer-fill me-1"></i> Cetak / Simpan PDF
+            </button>
+            <a href="/surat/verifikasi/<%= surat.nomor_surat %>" target="_blank" class="btn btn-outline-info btn-sm rounded-pill px-3">
+                <i class="bi bi-patch-check-fill me-1"></i> Validasi QR
+            </a>
+            <button onclick="window.close()" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <div class="page-container">
+
+        <!-- KOP RESMI DINAS -->
+        <div class="kop-surat">
+            <img src="/images/logo.png" alt="Logo Kabupaten Bekasi" class="kop-logo">
+            <div class="kop-text">
+                <h5 class="mb-0 fw-bold" style="letter-spacing: 0.8px; font-size: 13pt;">PEMERINTAH KABUPATEN BEKASI</h5>
+                <h4 class="mb-0 fw-bold" style="letter-spacing: 0.5px; font-size: 14pt;">DINAS KOMUNIKASI, INFORMATIKA, PERSANDIAN DAN STATISTIK</h4>
+                <p class="mb-0" style="font-size: 9pt;">Komplek Perkantoran Pemerintah Daerah Kabupaten Bekasi</p>
+                <p class="mb-0" style="font-size: 9pt;">Desa Sukamahi, Kecamatan Cikarang Pusat, Kabupaten Bekasi, Jawa Barat 17530</p>
+                <p class="mb-0" style="font-size: 8.5pt;">Telepon: (021) 89970000 | Posel: diskominfo@bekasikab.go.id | Laman: diskominfo.bekasikab.go.id</p>
+            </div>
+        </div>
+
+        <!-- TANGGAL, NOMOR SURAT & TUJUAN -->
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div style="flex: 1; min-width: 0;">
+                <table class="meta-table" style="font-size: 11pt;">
+                    <tr>
+                        <td style="width: 75px;">Nomor</td>
+                        <td style="width: 10px;">:</td>
+                        <td><strong>500.12.7/<%= Number(surat.id) + 120 %>/DISKOMINFOSANTIK/<%= new Date().getFullYear() %></strong></td>
+                    </tr>
+                    <tr>
+                        <td>Sifat</td>
+                        <td>:</td>
+                        <td>Penting</td>
+                    </tr>
+                    <tr>
+                        <td>Lampiran</td>
+                        <td>:</td>
+                        <td>1 (satu) Berkas</td>
+                    </tr>
+                    <tr>
+                        <td>Perihal</td>
+                        <td>:</td>
+                        <td><strong class="text-decoration-underline">Surat Keterangan / Balasan Resmi <%= surat.jenis_surat %></strong></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="text-end text-nowrap flex-shrink-0 ps-3" style="font-size: 11pt; white-space: nowrap;">
+                <span>Bekasi, <%= new Date(surat.updated_at || surat.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>
+            </div>
+        </div>
+
+        <div class="mb-3" style="font-size: 11pt;">
+            Kepada Yth.<br>
+            <strong><%= surat.nama_pemohon %></strong><br>
+            d/a <%= surat.asal_instansi || 'Masyarakat Kabupaten Bekasi' %><br>
+            di -<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;TEMPAT
+        </div>
+
+        <!-- BADAN SURAT RESMI -->
+        <div style="text-align: justify; font-size: 11pt;">
+            <p class="mb-2">
+                Menindaklanjuti permohonan Saudara yang teregistrasi melalui Sistem Pelayanan Persuratan Mandiri Elektronik DISKOMINFOSANTIK Kabupaten Bekasi dengan Nomor Tiket <strong><%= surat.nomor_surat %></strong> tertanggal <%= new Date(surat.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %>, dengan rincian pemohon sebagai berikut:
+            </p>
+
+            <table class="meta-table w-100 mb-2 ms-3" style="font-size: 10.5pt;">
+                <tr>
+                    <td style="width: 200px;">Nama Lengkap</td>
+                    <td style="width: 12px;">:</td>
+                    <td><strong><%= surat.nama_pemohon %></strong></td>
+                </tr>
+                <tr>
+                    <td>Nomor Induk (NIK/NIM/NIP)</td>
+                    <td>:</td>
+                    <td><%= surat.nik %></td>
+                </tr>
+                <tr>
+                    <td>Asal Instansi / Universitas</td>
+                    <td>:</td>
+                    <td><%= surat.asal_instansi || '-' %></td>
+                </tr>
+                <tr>
+                    <td>Jenis Permohonan</td>
+                    <td>:</td>
+                    <td><strong><%= surat.jenis_surat %></strong></td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: top;">Maksud / Keperluan</td>
+                    <td style="vertical-align: top;">:</td>
+                    <td style="white-space: pre-line; vertical-align: top;"><%= (surat.jenis_surat && surat.jenis_surat.includes('Magang') && (surat.keperluan.trim().toLowerCase() === 'magang' || surat.keperluan.trim().toLowerCase() === 'pkl')) ? 'Pelaksanaan Praktik Kerja Lapangan (PKL) / Magang Kedinasan' : surat.keperluan %></td>
+                </tr>
+            </table>
+
+            <!-- PERNYATAAN KEPUTUSAN RESMI DINAS BERDASARKAN KATEGORI -->
+            <p class="mb-2">
+                Berdasarkan hasil verifikasi kelengkapan berkas serta disposisi pimpinan, bersama ini Dinas Komunikasi, Informatika, Persandian dan Statistik Kabupaten Bekasi menyatakan:
+            </p>
+
+            <div class="mb-3" style="font-size: 11pt;">
+                <% if (surat.jenis_surat && surat.jenis_surat.includes('Magang')) { %>
+                    <p class="fw-bold mb-2">MENYETUJUI & MEMBERIKAN REKOMENDASI PELAKSANAAN MAGANG / PKL:</p>
+                    <ol class="mb-3 ps-4" style="line-height: 1.6;">
+                        <li class="mb-1">Mahasiswa/Siswa yang bersangkutan <strong>DITERIMA</strong> untuk melaksanakan Praktik Kerja Lapangan (PKL) / Magang di lingkungan Diskominfo Kabupaten Bekasi.</li>
+                        <li class="mb-1">Peserta magang diwajibkan mematuhi jam kerja kedinasan (Senin – Jumat, pukul 08.00 – 16.00 WIB) serta mentaati peraturan tata tertib kedinasan yang berlaku.</li>
+                        <li class="mb-1">Penempatan bidang teknis serta pembimbing lapangan akan ditentukan pada hari pertama pelaksanaan kegiatan.</li>
+                    </ol>
+                <% } else if (surat.jenis_surat && (surat.jenis_surat.includes('Data') || surat.jenis_surat.includes('PPID') || surat.jenis_surat.includes('Informasi'))) { %>
+                    <p class="fw-bold mb-2">MEMENUHI & MENYETUJUI PERMINTAAN INFORMASI PUBLIK:</p>
+                    <ol class="mb-3 ps-4" style="line-height: 1.6;">
+                        <li class="mb-1">Data dan informasi publik yang dimohonkan dinyatakan <strong>TERBUKA</strong> dan dapat dipergunakan sesuai asas kepatutan serta ketentuan peraturan perundang-undangan.</li>
+                        <li class="mb-1">Pemohon dilarang menyalahgunakan data yang diperoleh untuk hal-hal yang bertentangan dengan hukum dan ketertiban umum.</li>
+                    </ol>
+                <% } else if (surat.jenis_surat && (surat.jenis_surat.includes('Jaringan') || surat.jenis_surat.includes('Domain') || surat.jenis_surat.includes('Website'))) { %>
+                    <p class="fw-bold mb-2">MEMBERIKAN REKOMENDASI TEKNIS FASILITASI WEBSITE DINAS & JARINGAN INTERNET:</p>
+                    <ol class="mb-3 ps-4" style="line-height: 1.6;">
+                        <li class="mb-1">Permohonan pembuatan website dinas / sambungan jaringan internet telah melalui kajian teknis dan dinyatakan <strong>LAYAK</strong>.</li>
+                        <li class="mb-1">Tim teknis infrastruktur jaringan Diskominfo akan melakukan pendampingan teknis dan implementasi sesuai standar keamanan informasi daerah.</li>
+                    </ol>
+                <% } else if (surat.jenis_surat && surat.jenis_surat.includes('Liputan')) { %>
+                    <p class="fw-bold mb-2">MEMBERIKAN REKOMENDASI IZIN PELIPUTAN & PUBLIKASI MEDIA:</p>
+                    <ol class="mb-3 ps-4" style="line-height: 1.6;">
+                        <li class="mb-1">Media massa / pemohon <strong>DIBERIKAN AKSES</strong> untuk melakukan peliputan agenda resmi pemerintah Kabupaten Bekasi.</li>
+                        <li class="mb-1">Wajib mematuhi kode etik jurnalistik dan berkoordinasi dengan Bidang Informasi dan Komunikasi Publik (IKP).</li>
+                    </ol>
+                <% } else { %>
+                    <p class="fw-bold mb-2">MENYETUJUI DAN MEMBERIKAN REKOMENDASI KEDINASAN:</p>
+                    <p class="mb-3" style="line-height: 1.6;">Dinas Komunikasi, Informatika, Persandian dan Statistik Kabupaten Bekasi menyetujui dan memfasilitasi permohonan tersebut di atas sesuai prosedur dan ketentuan kedinasan yang berlaku.</p>
+                <% } %>
+
+                <% if (surat.catatan_petugas) { %>
+                    <p class="mb-2"><strong>Catatan Disposisi Tambahan:</strong> <%= surat.catatan_petugas %></p>
+                <% } %>
+            </div>
+
+            <p class="mb-0">
+                Demikian surat balasan/keterangan resmi ini diterbitkan untuk dipergunakan sebagaimana mestinya oleh pihak yang berkepentingan.
+            </p>
+        </div>
+
+        <!-- TANDA TANGAN ELEKTRONIK RESMI KEPALA DINAS (TTE BSrE STYLE) -->
+        <div class="row align-items-center mt-4 pt-2">
+            <div class="col-6">
+                <!-- LEGAL DISCLAIMER -->
+                <div class="p-2 border rounded bg-light" style="font-size: 7.8pt; line-height: 1.35; color: #475569;">
+                    <div class="d-flex align-items-center gap-1.5 fw-bold text-dark mb-1">
+                        <i class="bi bi-shield-check text-success fs-6"></i>
+                        <span>SERTIFIKASI TANDA TANGAN ELEKTRONIK (TTE)</span>
+                    </div>
+                    Dokumen ini telah ditandatangani secara elektronik resmi menggunakan sertifikat digital yang diterbitkan oleh Balai Sertifikasi Elektronik (BSrE), BSSN.<br>
+                    Surat ini sah secara hukum sesuai dengan UU ITE No. 11 Tahun 2008 Pasal 5 Ayat 1 tanpa memerlukan tanda tangan basah dan cap fisik.
+                </div>
+            </div>
+
+            <div class="col-6 text-center">
+                <p class="mb-1" style="font-size: 10pt;">
+                    KEPALA DINAS KOMUNIKASI, INFORMATIKA,<br>
+                    PERSANDIAN DAN STATISTIK KABUPATEN BEKASI
+                </p>
+
+                <!-- TTE QR & STEMPEL -->
+                <div class="my-2 tte-box">
+                    <!-- SVG Stempel Resmi Kedinasan Diskominfo -->
+                    <svg class="stempel-digital" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="80" cy="80" r="72" fill="none" stroke="#2563eb" stroke-width="3" stroke-dasharray="10 3" />
+                        <circle cx="80" cy="80" r="64" fill="none" stroke="#2563eb" stroke-width="1.8" />
+                        <path id="curveTop" d="M 22,80 A 58,58 0 0,1 138,80" fill="none" />
+                        <text font-size="9" font-weight="bold" fill="#1e40af" letter-spacing="1.2">
+                            <textPath href="#curveTop" startOffset="50%" text-anchor="middle">PEMERINTAH KAB. BEKASI</textPath>
+                        </text>
+                        <path id="curveBottom" d="M 22,80 A 58,58 0 0,0 138,80" fill="none" />
+                        <text font-size="8" font-weight="bold" fill="#1e40af" letter-spacing="0.8">
+                            <textPath href="#curveBottom" startOffset="50%" text-anchor="middle">DISKOMINFOSANTIK</textPath>
+                        </text>
+                        <!-- Center Badge -->
+                        <polygon points="80,52 86,66 100,66 89,75 93,89 80,80 67,89 71,75 60,66 74,66" fill="#3b82f6" opacity="0.6"/>
+                        <text x="80" y="104" font-size="7.5" font-weight="bold" text-anchor="middle" fill="#1e40af">TERVERIFIKASI</text>
+                    </svg>
+
+                    <!-- QR TTE -->
+                    <% if (typeof qrImage !== 'undefined' && qrImage) { %>
+                        <img src="<%= qrImage %>" alt="QR TTE Resmi" class="qr-tte shadow-xs">
+                    <% } %>
+                </div>
+
+                <p class="fw-bold text-decoration-underline mb-0" style="font-size: 11pt;">Drs. YAN YANUAR, M.M.</p>
+                <p class="mb-0" style="font-size: 9.5pt;">Pembina Utama Muda (IV/c)</p>
+                <small class="text-secondary" style="font-size: 8.5pt;">NIP. 19710815 199303 1 004</small>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

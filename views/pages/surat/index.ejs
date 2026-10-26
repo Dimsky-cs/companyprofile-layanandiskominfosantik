@@ -1,0 +1,905 @@
+<!-- BANNER HEADER -->
+<section class="hero-mesh text-white py-5">
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb small mb-2">
+                        <li class="breadcrumb-item"><a href="/" class="text-white opacity-75 text-decoration-none">Beranda</a></li>
+                        <li class="breadcrumb-item active text-warning" style="color: var(--orange-primary) !important;">Pelayanan Surat</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Pelayanan Persuratan Digital Mandiri</h1>
+                <p class="lead text-light opacity-75 fs-6 mb-0">
+                    Pengajuan permohonan surat dinas mandiri tanpa perlu antre, lengkap dengan QR Code & Live Dispatch Tracking.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a href="#section-form" class="btn btn-orange btn-lg px-4">
+                    <i class="bi bi-pencil-square me-1"></i> Ajukan Surat Sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+
+    <!-- ALERT PESAN -->
+    <% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> <%= errorMsg %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+    <% if (typeof successMsg !== 'undefined' && successMsg) { %>
+        <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> <strong>Permohonan Berhasil Dikirim!</strong> Simpan Nomor Tracking Anda di bawah untuk memantau proses verifikasi.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+
+    <!-- 1. LIVE DISPATCH TRACKER HASIL PENCARIAN -->
+    <% if (typeof hasilTracking !== 'undefined' && hasilTracking) { %>
+        <div class="card-modern p-4 p-md-5 mb-5 border-warning" style="border: 2px solid var(--orange-primary) !important;">
+            <div class="row align-items-center justify-content-between g-4 mb-4 pb-3 border-bottom">
+                <div class="col-md-8">
+                    <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">LIVE TRACKING DISPATCH</span>
+                    <h3 class="fw-bold mb-1 text-navy-title"><%= hasilTracking.nomor_surat %></h3>
+                    <p class="small text-muted mb-0">Pemohon: <strong><%= hasilTracking.nama_pemohon %></strong> (<%= hasilTracking.asal_instansi %>) | Diajukan: <%= new Date(hasilTracking.created_at).toLocaleString('id-ID') %></p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <% if (typeof qrImage !== 'undefined' && qrImage) { %>
+                        <img src="<%= qrImage %>" alt="QR Validasi" class="img-thumbnail rounded-3 shadow-sm" style="width: 100px; height: 100px;">
+                    <% } %>
+                    <div class="mt-2 d-flex flex-wrap gap-2 justify-content-md-end">
+                        <!-- Surat Permohonan Pemohon (Auto-Generated dari Form) -->
+                        <a href="/surat/cetak-permohonan/<%= hasilTracking.nomor_surat %>" target="_blank" class="btn btn-outline-primary btn-sm fw-bold shadow-xs">
+                            <i class="bi bi-file-earmark-text-fill me-1"></i> Cetak Surat Permohonan Saya
+                        </a>
+
+                        <!-- Bukti Tanda Terima Registrasi -->
+                        <a href="/surat/cetak/<%= hasilTracking.nomor_surat %>" target="_blank" class="btn btn-navy btn-sm">
+                            <i class="bi bi-printer-fill me-1 text-warning" style="color: var(--orange-primary) !important;"></i> Bukti Tanda Terima
+                        </a>
+
+                        <!-- Surat Balasan Resmi Dinas (Aktif jika Disetujui) -->
+                        <% if (hasilTracking.status === 'Disetujui') { %>
+                            <a href="/surat/cetak-resmi/<%= hasilTracking.nomor_surat %>" target="_blank" class="btn btn-success btn-sm text-white fw-bold shadow-sm">
+                                <i class="bi bi-patch-check-fill me-1"></i> Unduh / Cetak Surat Resmi Dinas
+                            </a>
+                        <% } %>
+
+                        <!-- File Dokumen PDF Tambahan (Jika Diunggah Manual oleh Admin) -->
+                        <% if (hasilTracking.file_surat_hasil && !hasilTracking.file_surat_hasil.startsWith('/surat/cetak-resmi/')) { %>
+                            <a href="<%= hasilTracking.file_surat_hasil %>" target="_blank" download class="btn btn-orange btn-sm text-white fw-bold shadow-sm">
+                                <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Unduh Berkas Lampiran Dinas
+                            </a>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISUALISASI PROGRESS TIMELINE 4 TAHAP -->
+            <div class="py-3">
+                <h6 class="fw-bold mb-4 text-navy-title">
+                    <i class="bi bi-diagram-3-fill text-warning me-2" style="color: var(--orange-primary) !important;"></i> Progress Status Permohonan:
+                </h6>
+                
+                <% 
+                    let currentStep = 1;
+                    if (hasilTracking.status === 'Diproses') currentStep = 2;
+                    if (hasilTracking.status === 'Disetujui') currentStep = 4;
+                    if (hasilTracking.status === 'Ditolak') currentStep = -1;
+                %>
+
+                <div class="row g-1 g-sm-2 text-center position-relative">
+                    <div class="col-3">
+                        <div class="p-1.5 p-sm-2.5 p-md-3 rounded-3 <%= currentStep >= 1 ? 'timeline-active' : 'timeline-inactive' %>">
+                            <i class="bi bi-send-check fs-4 d-block mb-1"></i>
+                            <span class="d-block fw-bold" style="font-size: clamp(0.68rem, 2.2vw, 0.85rem); line-height: 1.25;">1. Terkirim</span>
+                            <span class="small opacity-75 d-none d-md-block" style="font-size: 0.7rem;">Berkas Masuk</span>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-1.5 p-sm-2.5 p-md-3 rounded-3 <%= currentStep >= 2 ? 'timeline-active' : 'timeline-inactive' %>">
+                            <i class="bi bi-person-check fs-4 d-block mb-1"></i>
+                            <span class="d-block fw-bold" style="font-size: clamp(0.68rem, 2.2vw, 0.85rem); line-height: 1.25;">2. Verifikasi</span>
+                            <span class="small opacity-75 d-none d-md-block" style="font-size: 0.7rem;">Cek Kelengkapan</span>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-1.5 p-sm-2.5 p-md-3 rounded-3 <%= currentStep >= 3 ? 'timeline-active' : 'timeline-inactive' %>">
+                            <i class="bi bi-journal-text fs-4 d-block mb-1"></i>
+                            <span class="d-block fw-bold" style="font-size: clamp(0.68rem, 2.2vw, 0.85rem); line-height: 1.25;">3. Disposisi</span>
+                            <span class="small opacity-75 d-none d-md-block" style="font-size: 0.7rem;">Penandatanganan</span>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <% 
+                            let step4Class = 'timeline-inactive';
+                            if (currentStep === 4) step4Class = 'timeline-success';
+                            if (hasilTracking.status === 'Ditolak') step4Class = 'timeline-danger';
+                        %>
+                        <div class="p-1.5 p-sm-2.5 p-md-3 rounded-3 <%= step4Class %>">
+                            <i class="bi <%= hasilTracking.status === 'Ditolak' ? 'bi-x-circle' : 'bi-check-all' %> fs-4 d-block mb-1"></i>
+                            <span class="d-block fw-bold" style="font-size: clamp(0.68rem, 2.2vw, 0.85rem); line-height: 1.25;"><%= hasilTracking.status === 'Ditolak' ? 'Ditolak' : '4. Selesai' %></span>
+                            <span class="small opacity-75 d-none d-md-block" style="font-size: 0.7rem;">Siap Diambil/Unduh</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BANNER STATUS RESMI -->
+            <% if (hasilTracking.status === 'Disetujui') { %>
+                <div class="banner-status-disetujui p-3.5 rounded-3 border mt-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0" style="width: 42px; height: 42px; background: #10B981;">
+                            <i class="bi bi-check-circle-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="status-title">Permohonan Surat Telah Disetujui & Diterbitkan!</div>
+                            <div class="status-desc small">Dokumen resmi bertanda tangan digital kedinasan telah selesai diproses dan siap diunduh.</div>
+                        </div>
+                    </div>
+                    <% if (hasilTracking.file_surat_hasil) { %>
+                        <a href="<%= hasilTracking.file_surat_hasil %>" target="_blank" download class="btn btn-success btn-sm px-3.5 py-2 rounded-pill fw-bold text-nowrap shadow-sm">
+                            <i class="bi bi-download me-1"></i> Unduh Surat Balasan Resmi
+                        </a>
+                    <% } else { %>
+                        <span class="badge bg-white text-secondary border px-3 py-2 rounded-pill small">
+                            <i class="bi bi-info-circle me-1"></i> Silakan hubungi petugas untuk pengambilan fisik surat
+                        </span>
+                    <% } %>
+                </div>
+            <% } else if (hasilTracking.status === 'Ditolak') { %>
+                <div class="banner-status-ditolak p-3.5 rounded-3 border mt-4 d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0" style="width: 42px; height: 42px; background: #E11D48;">
+                        <i class="bi bi-x-circle-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="status-title">Permohonan Surat Belum Dapat Disetujui</div>
+                        <div class="status-desc small">Silakan periksa catatan dari petugas di bawah ini mengenai alasan atau kekurangan berkas.</div>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- CATATAN PETUGAS DISKOMINFO -->
+            <% if (hasilTracking.catatan_petugas) { %>
+                <div class="p-3 rounded-3 bg-light border mt-4">
+                    <strong class="text-dark small d-block mb-1"><i class="bi bi-chat-left-dots text-warning me-1" style="color: var(--orange-primary) !important;"></i> Catatan Petugas Diskominfo:</strong>
+                    <p class="small text-secondary mb-0"><%= hasilTracking.catatan_petugas %></p>
+                </div>
+            <% } %>
+        </div>
+    <% } %>
+
+    <!-- 2. KATALOG 4 LAYANAN SURAT PUBLIK -->
+    <div class="text-center mb-5">
+        <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">KATALOG PELAYANAN</span>
+        <h2 class="fw-bold text-navy-title">Jenis Layanan Surat Dinas</h2>
+        <p class="text-muted small">Pilih kategori surat yang ingin diajukan sesuai dengan kebutuhan Anda</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-3 col-md-6">
+            <div class="bento-card text-center h-100">
+                <div>
+                    <div class="icon-box-orange mx-auto mb-3"><i class="bi bi-mortarboard-fill"></i></div>
+                    <h6 class="fw-bold mb-2">Permohonan Magang / PKL</h6>
+                    <p class="small text-muted mb-3">Untuk mahasiswa & pelajar yang ingin melaksanakan Praktik Kerja Lapangan di Diskominfo.</p>
+                </div>
+                <button class="btn btn-outline-dark btn-sm rounded-pill w-100 select-layanan-btn" data-layanan="Permohonan Magang / PKL di Diskominfo">Pilih Layanan</button>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="bento-card text-center h-100">
+                <div>
+                    <div class="icon-box-orange mx-auto mb-3"><i class="bi bi-camera-reels-fill"></i></div>
+                    <h6 class="fw-bold mb-2">Izin Liputan & Publikasi</h6>
+                    <p class="small text-muted mb-3">Rekomendasi peliputan media massa, konferensi pers, dan publikasi agenda pemerintah.</p>
+                </div>
+                <button class="btn btn-outline-dark btn-sm rounded-pill w-100 select-layanan-btn" data-layanan="Permohonan Izin Liputan / Publikasi Media">Pilih Layanan</button>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="bento-card text-center h-100">
+                <div>
+                    <div class="icon-box-orange mx-auto mb-3"><i class="bi bi-globe-americas"></i></div>
+                    <h6 class="fw-bold mb-2">Website Dinas & Jaringan</h6>
+                    <p class="small text-muted mb-3">Pengajuan pembuatan website dinas/desa resmi atau integrasi jaringan internet pemerintah.</p>
+                </div>
+                <button class="btn btn-outline-dark btn-sm rounded-pill w-100 select-layanan-btn" data-layanan="Permohonan Fasilitasi Jaringan / Website Dinas">Pilih Layanan</button>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="bento-card text-center h-100">
+                <div>
+                    <div class="icon-box-orange mx-auto mb-3"><i class="bi bi-file-earmark-text-fill"></i></div>
+                    <h6 class="fw-bold mb-2">Permintaan Informasi Publik</h6>
+                    <p class="small text-muted mb-3">Permintaan data statistik daerah dan arsip informasi publik resmi secara terbuka untuk warga.</p>
+                </div>
+                <button class="btn btn-outline-dark btn-sm rounded-pill w-100 select-layanan-btn" data-layanan="Permohonan Permintaan Data & Informasi Publik">Pilih Layanan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. STEPPER MULTI-STEP WIZARD FORM -->
+    <div class="card-modern p-4 p-md-5" id="section-form">
+        <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+            <div class="icon-box-orange"><i class="bi bi-pencil-fill"></i></div>
+            <div>
+                <h4 class="fw-bold mb-0 text-navy-title">Formulir Pengajuan Surat Mandiri</h4>
+                <p class="small text-muted mb-0">Isi data permohonan dengan benar sesuai kartu identitas</p>
+            </div>
+        </div>
+
+        <!-- Wizard Nav Indicators -->
+        <div class="d-flex justify-content-between mb-4 position-relative">
+            <div class="text-center w-100 step-item active" id="stepIndicator1">
+                <span class="badge rounded-circle p-2 fs-6 mb-1" style="background-color: var(--orange-primary); color: white;">1</span>
+                <span class="d-block small fw-bold">Data Pemohon</span>
+            </div>
+            <div class="text-center w-100 step-item" id="stepIndicator2">
+                <span class="badge rounded-circle p-2 fs-6 mb-1 bg-light text-muted border">2</span>
+                <span class="d-block small fw-bold">Detail & Dokumen</span>
+            </div>
+            <div class="text-center w-100 step-item" id="stepIndicator3">
+                <span class="badge rounded-circle p-2 fs-6 mb-1 bg-light text-muted border">3</span>
+                <span class="d-block small fw-bold">Verifikasi & Kirim</span>
+            </div>
+        </div>
+
+        <form action="/surat/ajukan" method="POST" enctype="multipart/form-data" id="wizardSuratForm">
+            <!-- STEP 1: Data Diri -->
+            <div class="wizard-step" id="step1">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Nama Lengkap Pemohon <span class="text-danger">*</span></label>
+                        <input type="text" name="nama_pemohon" class="form-control" placeholder="Contoh: Budi Pratama" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">NIK / NIM / NIP <span class="text-danger">*</span></label>
+                        <input type="text" name="nik" class="form-control" placeholder="16 Digit NIK atau Nomor Induk" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Asal Instansi / Universitas / Desa <span class="text-danger">*</span></label>
+                        <input type="text" name="asal_instansi" class="form-control" placeholder="Contoh: Universitas Indonesia / Desa Sukamahi" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">No. WhatsApp / HP Aktif <span class="text-danger">*</span></label>
+                        <input type="tel" name="no_hp" class="form-control" placeholder="0812xxxxxxxx" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Alamat Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="nama@email.com">
+                    </div>
+                </div>
+                <div class="text-end mt-4">
+                    <button type="button" class="btn btn-orange px-4" onclick="nextStep(2)">Lanjut ke Langkah 2 →</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Detail Surat & Upload Berkas -->
+            <div class="wizard-step d-none" id="step2">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Jenis Layanan Surat <span class="text-danger">*</span></label>
+                        <select name="jenis_surat" id="jenis_surat" class="form-select" required>
+                            <option value="">-- Pilih Jenis Layanan Surat --</option>
+                            <option value="Permohonan Magang / PKL di Diskominfo">Permohonan Magang / PKL di Diskominfo</option>
+                            <option value="Permohonan Izin Liputan / Publikasi Media">Permohonan Izin Liputan / Publikasi Media</option>
+                            <option value="Permohonan Fasilitasi Jaringan / Website Dinas">Permohonan Fasilitasi Jaringan / Website Dinas</option>
+                            <option value="Permohonan Permintaan Data & Informasi Publik">Permohonan Permintaan Data & Informasi Publik</option>
+                        </select>
+                    </div>
+                    <!-- TEMPLATE GUIDED FORM CONTAINER -->
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                            <label class="form-label small fw-bold mb-0">
+                                <i class="bi bi-ui-checks-grid text-warning me-1" style="color: var(--orange-primary) !important;"></i>
+                                Formulir Rincian & Keperluan Surat <span class="text-danger">*</span>
+                            </label>
+                            <span class="badge bg-primary bg-opacity-10 text-primary small px-2.5 py-1 rounded-pill" id="badgeActiveTemplate">
+                                Template Terpandu: Magang / PKL
+                            </span>
+                        </div>
+
+                        <!-- Template Quick Chips -->
+                        <div class="template-chip-box p-2.5 rounded-3 mb-3 border">
+                            <div class="d-flex flex-wrap gap-1.5 align-items-center">
+                                <span class="text-secondary small fw-bold me-1" style="font-size: 0.75rem;">
+                                    <i class="bi bi-magic text-warning me-1" style="color: var(--orange-primary) !important;"></i>Pilih Template:
+                                </span>
+                                <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 small tpl-chip-btn active" data-template="magang">
+                                    🎓 Magang / PKL
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 small tpl-chip-btn" data-template="liputan">
+                                    🎥 Izin Liputan Media
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 small tpl-chip-btn" data-template="jaringan">
+                                    🌐 Jaringan & Website Dinas
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 small tpl-chip-btn" data-template="ppid">
+                                    📊 Informasi & Data Publik
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-pill px-2.5 py-1 small tpl-chip-btn" data-template="manual">
+                                    ✍️ Format Bebas / Mandiri
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SUB-FORM CARD INTERAKTIF -->
+                        <div class="template-form-card mb-3">
+                            <!-- PANEL 1: MAGANG / PKL -->
+                            <div class="tpl-panel" id="panel_magang">
+                                <div class="row g-2.5">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Program Studi / Jurusan <span class="text-danger">*</span></label>
+                                        <input type="text" id="magang_jurusan" class="form-control form-control-sm tpl-field" placeholder="Contoh: Teknik Informatika / Ilmu Komunikasi" data-label="Program Studi / Jurusan">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Jenjang & Semester <span class="text-danger">*</span></label>
+                                        <input type="text" id="magang_semester" class="form-control form-control-sm tpl-field" placeholder="Contoh: S1 Semester 6 / D3 Semester 4" data-label="Jenjang & Semester">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Periode Pelaksanaan Magang <span class="text-danger">*</span></label>
+                                        <input type="text" id="magang_periode" class="form-control form-control-sm tpl-field" placeholder="Contoh: 1 November 2026 s.d. 31 Desember 2026" data-label="Periode Pelaksanaan Magang">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Jumlah Peserta Magang <span class="text-danger">*</span></label>
+                                        <input type="text" id="magang_peserta" class="form-control form-control-sm tpl-field" placeholder="Contoh: 1 Orang / 2 Orang" data-label="Jumlah Peserta Magang">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Fokus Bidang yang Diminati di Diskominfo <span class="text-danger">*</span></label>
+                                        <select id="magang_fokus" class="form-select form-select-sm tpl-field" data-label="Fokus Bidang Peminatan">
+                                            <option value="">-- Pilih Bidang Peminatan Magang --</option>
+                                            <option value="Jaringan Komputer & Infrastruktur TIK">Jaringan Komputer & Infrastruktur TIK (GovNet)</option>
+                                            <option value="Pengembangan Website & Sistem Aplikasi Daerah">Pengembangan Website & Sistem Aplikasi Daerah</option>
+                                            <option value="Keamanan Informasi & Cyber Security (CSIRT)">Keamanan Informasi & Cyber Security (CSIRT)</option>
+                                            <option value="Desain Komunikasi Visual, Grafis & Multimedia">Desain Komunikasi Visual, Grafis & Multimedia</option>
+                                            <option value="Pengelolaan Statistik Daerah & Satu Data">Pengelolaan Statistik Daerah & Satu Data</option>
+                                            <option value="Hubungan Media & Pelayanan Informasi Publik (PPID)">Hubungan Media & Pelayanan Informasi Publik (PPID)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Maksud & Tujuan Khusus Permohonan <span class="text-danger">*</span></label>
+                                        <textarea id="magang_tujuan" class="form-control form-control-sm tpl-field" rows="2" placeholder="Contoh: Memenuhi kurikulum akademik dan riset tugas akhir" data-label="Maksud & Tujuan Khusus"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PANEL 2: IZIN LIPUTAN MEDIA -->
+                            <div class="tpl-panel d-none" id="panel_liputan">
+                                <div class="row g-2.5">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Nama Media / Saluran Publikasi <span class="text-danger">*</span></label>
+                                        <input type="text" id="liputan_media" class="form-control form-control-sm tpl-field" placeholder="Contoh: Radar Bekasi / Berita Cikarang TV" data-label="Nama Media">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Jenis Media <span class="text-danger">*</span></label>
+                                        <select id="liputan_jenis" class="form-select form-select-sm tpl-field" data-label="Jenis Media">
+                                            <option value="Media Online / Siber">Media Online / Siber</option>
+                                            <option value="Media Cetak / Koran">Media Cetak / Koran</option>
+                                            <option value="Televisi (Broadcasting)">Televisi (Broadcasting)</option>
+                                            <option value="Radio">Radio</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Agenda / Acara yang Diliput <span class="text-danger">*</span></label>
+                                        <input type="text" id="liputan_agenda" class="form-control form-control-sm tpl-field" placeholder="Contoh: Rapat Koordinasi Smart City / Agenda Kegiatan Pemkab" data-label="Agenda Liputan">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Tanggal & Waktu Peliputan <span class="text-danger">*</span></label>
+                                        <input type="text" id="liputan_waktu" class="form-control form-control-sm tpl-field" placeholder="Contoh: 20 Oktober 2026, Pukul 09.00 WIB" data-label="Tanggal & Waktu Liputan">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Lokasi Peliputan <span class="text-danger">*</span></label>
+                                        <input type="text" id="liputan_lokasi" class="form-control form-control-sm tpl-field" placeholder="Contoh: Gedung Diskominfosantik / Plaza Pemkab Bekasi" data-label="Lokasi Peliputan">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Nama Wartawan & Kru Peliput <span class="text-danger">*</span></label>
+                                        <input type="text" id="liputan_kru" class="form-control form-control-sm tpl-field" placeholder="Contoh: 1 Reporter, 1 Juru Kamera" data-label="Nama Wartawan & Kru">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PANEL 3: FASILITASI JARINGAN & WEBSITE DINAS -->
+                            <div class="tpl-panel d-none" id="panel_jaringan">
+                                <div class="row g-2.5">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Nama Instansi / Perangkat Daerah <span class="text-danger">*</span></label>
+                                        <input type="text" id="jaringan_instansi" class="form-control form-control-sm tpl-field" placeholder="Contoh: Kantor Camat Cikarang Pusat / Kantor Desa Sukamahi" data-label="Nama Instansi Pemohon">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Nama Layanan / Website yang Diajukan <span class="text-danger">*</span></label>
+                                        <input type="text" id="jaringan_nama" class="form-control form-control-sm tpl-field" placeholder="Contoh: Website Pelayanan Publik Warga" data-label="Nama Layanan / Website">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Usulan Alamat Domain / Subdomain <span class="text-danger">*</span></label>
+                                        <input type="text" id="jaringan_domain" class="form-control form-control-sm tpl-field" placeholder="Contoh: sipadu.bekasikab.go.id" data-label="Usulan Alamat Domain">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Kebutuhan Fasilitas Teknis <span class="text-danger">*</span></label>
+                                        <select id="jaringan_fasilitas" class="form-select form-select-sm tpl-field" data-label="Kebutuhan Fasilitas Teknis">
+                                            <option value="Pembuatan Website Resmi Dinas / Desa">Pembuatan Website Resmi Dinas / Desa</option>
+                                            <option value="Integrasi Sambungan Jaringan Internet (GovNet)">Integrasi Sambungan Jaringan Internet (GovNet)</option>
+                                            <option value="Penyediaan Akses Server & Data Center">Penyediaan Akses Server & Data Center</option>
+                                            <option value="Rekomendasi Teknis Keamanan Siber">Rekomendasi Teknis Keamanan Siber</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Kontak Penanggung Jawab Teknis <span class="text-danger">*</span></label>
+                                        <input type="text" id="jaringan_kontak" class="form-control form-control-sm tpl-field" placeholder="Contoh: Andi Pratama - 08123456789" data-label="Kontak Penanggung Jawab">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PANEL 4: PERMINTAAN DATA & INFORMASI PUBLIK (PPID) -->
+                            <div class="tpl-panel d-none" id="panel_ppid">
+                                <div class="row g-2.5">
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Topik Data & Informasi yang Dimohon <span class="text-danger">*</span></label>
+                                        <input type="text" id="ppid_topik" class="form-control form-control-sm tpl-field" placeholder="Contoh: Data Statistik Penggunaan Internet / Data Menara Sinyal" data-label="Topik Data yang Dimohon">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Periode / Tahun Data <span class="text-danger">*</span></label>
+                                        <input type="text" id="ppid_periode" class="form-control form-control-sm tpl-field" placeholder="Contoh: Tahun 2023 s.d. 2025" data-label="Periode Tahun Data">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Format Data yang Diinginkan <span class="text-danger">*</span></label>
+                                        <select id="ppid_format" class="form-select form-select-sm tpl-field" data-label="Format Data">
+                                            <option value="File Excel (.xlsx) Spreadsheet">File Excel (.xlsx) Spreadsheet</option>
+                                            <option value="File CSV (Comma Separated Values)">File CSV</option>
+                                            <option value="Dokumen PDF Resmi">Dokumen PDF Resmi</option>
+                                            <option value="Salinan Cetak Fisik (Hardcopy)">Salinan Cetak Fisik (Hardcopy)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Tujuan Penggunaan Data <span class="text-danger">*</span></label>
+                                        <input type="text" id="ppid_tujuan" class="form-control form-control-sm tpl-field" placeholder="Contoh: Riset Akademis / Kajian Publik / Keperluan Warga" data-label="Tujuan Penggunaan Data">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PANEL 5: FORMAT BEBAS / MANDIRI -->
+                            <div class="tpl-panel d-none" id="panel_manual">
+                                <label class="form-label small fw-bold">Tulis Rincian Permohonan Secara Mandiri</label>
+                                <textarea id="manual_keperluan" class="form-control form-control-sm tpl-field" rows="5" placeholder="Tuliskan maksud, rincian permohonan, atau kebutuhan Anda secara lengkap..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- HIDDEN TEXTAREA UNTUK INTEGRASI DATABASE & HASIL SURAT -->
+                        <textarea name="keperluan" id="keperluanInput" class="d-none" required></textarea>
+
+                        <!-- KOTAK PRATINJAU REALTIME HASIL CETAK SURAT -->
+                        <div class="preview-assembled-box">
+                            <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                <span class="small fw-bold text-navy-title">
+                                    <i class="bi bi-file-earmark-check-fill text-success me-1"></i>
+                                    Pratinjau Format Dokumen Resmi yang Dihasilkan:
+                                </span>
+                                <span class="badge bg-success bg-opacity-10 text-success small" style="font-size: 0.72rem;">
+                                    Otomatis Disusun Sistem
+                                </span>
+                            </div>
+                            <div id="keperluanPreviewText" class="text-secondary small font-monospace lh-base" style="font-size: 0.8rem; white-space: pre-line;"></div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Unggah Berkas Pendukung (Surat Pengantar / Proposal) <span class="text-muted">(Opsional, PDF / JPG / PNG, Max 2MB)</span></label>
+                        <input type="file" name="berkas_lampiran" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted" style="font-size: 0.75rem;">Jika belum memiliki berkas, sistem website tetap dapat menerbitkan Surat Permohonan Digital resmi untuk Anda.</small>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-secondary px-4" onclick="prevStep(1)">← Kembali</button>
+                    <button type="button" class="btn btn-orange px-4" onclick="nextStep(3)">Lanjut ke Verifikasi →</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Anti-Spam & Submit -->
+            <div class="wizard-step d-none" id="step3">
+                <div class="p-4 bg-light rounded-4 mb-4">
+                    <h6 class="fw-bold mb-3 text-navy-title"><i class="bi bi-shield-check text-warning me-1" style="color: var(--orange-primary) !important;"></i> Verifikasi Keamanan Anti-Spam</h6>
+                    
+                    <!-- Math Challenge Otomatis -->
+                    <% 
+                        const num1 = Math.floor(Math.random() * 9) + 1;
+                        const num2 = Math.floor(Math.random() * 9) + 1;
+                        const totalMath = num1 + num2;
+                    %>
+                    <div class="d-flex align-items-center gap-3">
+                        <label class="fw-bold">Berapa hasil dari: <span class="badge bg-dark fs-6 py-1 px-3"><%= num1 %> + <%= num2 %></span> = </label>
+                        <input type="number" name="math_answer" class="form-control" style="max-width: 120px;" placeholder="Jawaban..." required>
+                        <input type="hidden" name="math_real" value="<%= totalMath %>">
+                    </div>
+                </div>
+
+                <div class="alert alert-info py-2 small border-0">
+                    <i class="bi bi-info-circle-fill me-1"></i> Dengan menekan tombol Kirim, Anda menyatakan bahwa data yang diisikan adalah benar dan dapat dipertanggungjawabkan.
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-secondary px-4" onclick="prevStep(2)">← Kembali</button>
+                    <button type="submit" class="btn btn-orange btn-lg px-5"><i class="bi bi-send-fill me-1"></i> Kirim Permohonan Surat</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SCRIPT WIZARD STEPPER, FORM TEMPLATE ENGINE & VALIDATOR KUSTOM -->
+<script>
+    // 1. DAFTAR MAPPING LAYANAN KE TEMPLATE KEY
+    let currentTemplateKey = 'magang';
+
+    const templateMeta = {
+        magang: {
+            title: 'Template Terpandu: Magang / PKL',
+            serviceValue: 'Permohonan Magang / PKL di Diskominfo'
+        },
+        liputan: {
+            title: 'Template Terpandu: Izin Liputan Media',
+            serviceValue: 'Permohonan Izin Liputan / Publikasi Media'
+        },
+        jaringan: {
+            title: 'Template Terpandu: Jaringan & Website Dinas',
+            serviceValue: 'Permohonan Fasilitasi Jaringan / Website Dinas'
+        },
+        ppid: {
+            title: 'Template Terpandu: Permintaan Data Publik',
+            serviceValue: 'Permohonan Permintaan Data & Informasi Publik'
+        },
+        manual: {
+            title: 'Format Bebas / Tulis Mandiri',
+            serviceValue: ''
+        }
+    };
+
+    function getKeyFromLayanan(layanan) {
+        if (!layanan) return 'magang';
+        if (layanan.includes('Magang')) return 'magang';
+        if (layanan.includes('Liputan')) return 'liputan';
+        if (layanan.includes('Jaringan') || layanan.includes('Domain') || layanan.includes('Website')) return 'jaringan';
+        if (layanan.includes('Data') || layanan.includes('PPID') || layanan.includes('Informasi')) return 'ppid';
+        return 'manual';
+    }
+
+    // 2. FUNGSI SINKRONISASI FIELD SUB-FORM MENJADI FORMAT RESMI SURAT
+    function syncKeperluan() {
+        let compiled = '';
+        const previewEl = document.getElementById('keperluanPreviewText');
+        const hiddenInput = document.getElementById('keperluanInput');
+
+        if (currentTemplateKey === 'magang') {
+            const jurusan = (document.getElementById('magang_jurusan').value || '').trim();
+            const semester = (document.getElementById('magang_semester').value || '').trim();
+            const periode = (document.getElementById('magang_periode').value || '').trim();
+            const peserta = (document.getElementById('magang_peserta').value || '').trim();
+            const fokus = (document.getElementById('magang_fokus').value || '').trim();
+            const tujuan = (document.getElementById('magang_tujuan').value || '').trim();
+
+            compiled = `Program Studi / Jurusan: ${jurusan}\n` +
+                       `Jenjang / Semester: ${semester}\n` +
+                       `Periode Magang: ${periode}\n` +
+                       `Jumlah Peserta: ${peserta}\n` +
+                       `Fokus Bidang yang Diminati: ${fokus}\n` +
+                       `Tujuan Khusus: ${tujuan}`;
+        } else if (currentTemplateKey === 'liputan') {
+            const media = (document.getElementById('liputan_media').value || '').trim();
+            const jenis = (document.getElementById('liputan_jenis').value || '').trim();
+            const agenda = (document.getElementById('liputan_agenda').value || '').trim();
+            const waktu = (document.getElementById('liputan_waktu').value || '').trim();
+            const lokasi = (document.getElementById('liputan_lokasi').value || '').trim();
+            const kru = (document.getElementById('liputan_kru').value || '').trim();
+
+            compiled = `Nama Media / Saluran Publikasi: ${media}\n` +
+                       `Jenis Media: ${jenis}\n` +
+                       `Agenda / Acara yang Diliput: ${agenda}\n` +
+                       `Tanggal & Waktu Liputan: ${waktu}\n` +
+                       `Lokasi Peliputan: ${lokasi}\n` +
+                       `Nama Wartawan & Kru Peliput: ${kru}`;
+        } else if (currentTemplateKey === 'jaringan') {
+            const instansi = (document.getElementById('jaringan_instansi').value || '').trim();
+            const nama = (document.getElementById('jaringan_nama').value || '').trim();
+            const domain = (document.getElementById('jaringan_domain').value || '').trim();
+            const fasilitas = (document.getElementById('jaringan_fasilitas').value || '').trim();
+            const kontak = (document.getElementById('jaringan_kontak').value || '').trim();
+
+            compiled = `Nama Instansi / Dinas: ${instansi}\n` +
+                       `Nama Layanan / Website: ${nama}\n` +
+                       `Usulan Alamat Website: ${domain}\n` +
+                       `Kebutuhan Fasilitas: ${fasilitas}\n` +
+                       `Kontak Penanggung Jawab: ${kontak}`;
+        } else if (currentTemplateKey === 'ppid') {
+            const topik = (document.getElementById('ppid_topik').value || '').trim();
+            const periode = (document.getElementById('ppid_periode').value || '').trim();
+            const format = (document.getElementById('ppid_format').value || '').trim();
+            const tujuan = (document.getElementById('ppid_tujuan').value || '').trim();
+
+            compiled = `Topik Data & Informasi yang Dimohon: ${topik}\n` +
+                       `Periode / Tahun Data: ${periode}\n` +
+                       `Format Data yang Diinginkan: ${format}\n` +
+                       `Tujuan Permohonan: ${tujuan}`;
+        } else {
+            compiled = (document.getElementById('manual_keperluan').value || '').trim();
+        }
+
+        if (hiddenInput) hiddenInput.value = compiled.trim();
+        if (previewEl) {
+            previewEl.textContent = compiled.trim() || '(Silakan isi kolom formulir di atas)';
+        }
+    }
+
+    // 3. FUNGSI GANTI PANEL TEMPLATE FORM SECARA INTERAKTIF
+    function switchTemplatePanel(key) {
+        currentTemplateKey = key;
+
+        // Update badge
+        const badge = document.getElementById('badgeActiveTemplate');
+        if (badge && templateMeta[key]) {
+            badge.textContent = templateMeta[key].title;
+        }
+
+        // Update tombol chip aktif
+        document.querySelectorAll('.tpl-chip-btn').forEach(btn => {
+            if (btn.getAttribute('data-template') === key) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Tampilkan panel yang sesuai
+        document.querySelectorAll('.tpl-panel').forEach(panel => {
+            panel.classList.add('d-none');
+        });
+        const activePanel = document.getElementById(`panel_${key}`);
+        if (activePanel) {
+            activePanel.classList.remove('d-none');
+        }
+
+        // Cocokkan dropdown jenis_surat
+        const selectSurat = document.getElementById('jenis_surat');
+        if (selectSurat && templateMeta[key] && templateMeta[key].serviceValue) {
+            selectSurat.value = templateMeta[key].serviceValue;
+        }
+
+        syncKeperluan();
+    }
+
+    // Pasang Event Listener Input pada Semua Kolom Form Template
+    document.querySelectorAll('.tpl-field, #manual_keperluan').forEach(input => {
+        input.addEventListener('input', syncKeperluan);
+        input.addEventListener('change', syncKeperluan);
+    });
+
+    // Event Listener Ganti Jenis Surat Dropdown
+    const jenisSuratSelect = document.getElementById('jenis_surat');
+    if (jenisSuratSelect) {
+        jenisSuratSelect.addEventListener('change', function() {
+            if (this.value) {
+                const key = getKeyFromLayanan(this.value);
+                switchTemplatePanel(key);
+            }
+        });
+    }
+
+    // Event Listener Klik Tombol Quick Template Chips
+    document.querySelectorAll('.tpl-chip-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const key = this.getAttribute('data-template');
+            switchTemplatePanel(key);
+        });
+    });
+
+    // 4. KONTROL WIZARD STEP DENGAN ALERT KUSTOM (BEBAS ALERT BROWSER)
+    function nextStep(step) {
+        // VALIDASI LANGKAH 1 (DATA PEMOHON)
+        if (step === 2) {
+            const namaInput = document.querySelector('input[name="nama_pemohon"]');
+            const nikInput = document.querySelector('input[name="nik"]');
+            const instansiInput = document.querySelector('input[name="asal_instansi"]');
+            const hpInput = document.querySelector('input[name="no_hp"]');
+            const emailInput = document.querySelector('input[name="email"]');
+
+            if (!namaInput.value.trim()) {
+                window.showCustomAlert({
+                    title: 'Nama Pemohon Belum Diisi',
+                    message: 'Harap masukkan nama lengkap Anda sesuai kartu identitas resmi.',
+                    icon: 'warning',
+                    targetInput: namaInput
+                });
+                return;
+            }
+
+            if (!nikInput.value.trim()) {
+                window.showCustomAlert({
+                    title: 'Nomor Identitas Belum Diisi',
+                    message: 'Harap masukkan nomor NIK (KTP), NIM (Mahasiswa), atau NIP pegawai Anda.',
+                    icon: 'warning',
+                    targetInput: nikInput
+                });
+                return;
+            }
+
+            if (nikInput.value.trim().length < 8) {
+                window.showCustomAlert({
+                    title: 'Nomor Identitas Terlalu Pendek',
+                    message: 'Nomor NIK / NIM yang dimasukkan minimal harus 8 hingga 16 digit.',
+                    icon: 'warning',
+                    targetInput: nikInput
+                });
+                return;
+            }
+
+            if (!instansiInput.value.trim()) {
+                window.showCustomAlert({
+                    title: 'Asal Instansi Belum Diisi',
+                    message: 'Harap isi asal universitas, instansi, kantor dinas, atau desa pemohon.',
+                    icon: 'warning',
+                    targetInput: instansiInput
+                });
+                return;
+            }
+
+            if (!hpInput.value.trim()) {
+                window.showCustomAlert({
+                    title: 'Nomor WhatsApp Belum Diisi',
+                    message: 'Harap masukkan nomor telepon atau WhatsApp aktif untuk notifikasi status berkas.',
+                    icon: 'warning',
+                    targetInput: hpInput
+                });
+                return;
+            }
+
+            if (emailInput.value.trim() && !emailInput.value.includes('@')) {
+                window.showCustomAlert({
+                    title: 'Format Email Tidak Valid',
+                    message: 'Alamat email yang dimasukkan harus memiliki tanda @ dan domain yang benar.',
+                    icon: 'warning',
+                    targetInput: emailInput
+                });
+                return;
+            }
+
+            // Sync rincian template awal
+            syncKeperluan();
+        }
+
+        // VALIDASI LANGKAH 2 (DETAIL SURAT & TEMPLATE FORM)
+        if (step === 3) {
+            const selectSurat = document.getElementById('jenis_surat');
+            if (!selectSurat.value) {
+                window.showCustomAlert({
+                    title: 'Jenis Layanan Belum Dipilih',
+                    message: 'Silakan pilih jenis permohonan surat kedinasan yang ingin diajukan.',
+                    icon: 'warning',
+                    targetInput: selectSurat
+                });
+                return;
+            }
+
+            // Validasi kolom sub-form yang sedang aktif
+            const activePanel = document.getElementById(`panel_${currentTemplateKey}`);
+            if (activePanel) {
+                const inputs = activePanel.querySelectorAll('input, select, textarea');
+                for (let el of inputs) {
+                    if (!el.value.trim()) {
+                        const label = el.getAttribute('data-label') || 'Rincian Formulir';
+                        window.showCustomAlert({
+                            title: 'Rincian Surat Belum Lengkap',
+                            message: `Harap lengkapi kolom <strong>"${label}"</strong> pada formulir permohonan.`,
+                            icon: 'warning',
+                            targetInput: el
+                        });
+                        return;
+                    }
+                }
+            }
+
+            // Pastikan hidden keperluan terisi
+            syncKeperluan();
+            const keperluan = document.getElementById('keperluanInput');
+            if (!keperluan || !keperluan.value.trim()) {
+                window.showCustomAlert({
+                    title: 'Keperluan Surat Kosong',
+                    message: 'Harap isi formulir rincian surat sebelum melanjutkan ke tahap verifikasi.',
+                    icon: 'warning'
+                });
+                return;
+            }
+        }
+
+        // Tampilkan Step berikutnya
+        document.querySelectorAll('.wizard-step').forEach(div => div.classList.add('d-none'));
+        document.getElementById(`step${step}`).classList.remove('d-none');
+
+        // Update indikator nomor
+        for (let i = 1; i <= 3; i++) {
+            const badge = document.querySelector(`#stepIndicator${i} .badge`);
+            if (badge) {
+                if (i <= step) {
+                    badge.style.backgroundColor = 'var(--orange-primary)';
+                    badge.style.color = 'white';
+                    badge.className = 'badge rounded-circle p-2 fs-6 mb-1';
+                } else {
+                    badge.style.backgroundColor = '';
+                    badge.className = 'badge rounded-circle p-2 fs-6 mb-1 bg-light text-muted border';
+                }
+            }
+        }
+
+        // Smooth scroll ke awal form
+        const formSection = document.getElementById('section-form');
+        if (formSection) formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function prevStep(step) {
+        document.querySelectorAll('.wizard-step').forEach(div => div.classList.add('d-none'));
+        document.getElementById(`step${step}`).classList.remove('d-none');
+        
+        for (let i = 1; i <= 3; i++) {
+            const badge = document.querySelector(`#stepIndicator${i} .badge`);
+            if (badge) {
+                if (i <= step) {
+                    badge.style.backgroundColor = 'var(--orange-primary)';
+                    badge.style.color = 'white';
+                } else {
+                    badge.style.backgroundColor = '';
+                    badge.className = 'badge rounded-circle p-2 fs-6 mb-1 bg-light text-muted border';
+                }
+            }
+        }
+    }
+
+    // 5. VALIDASI SUBMIT TERAKHIR (ANTI-SPAM MATH CHALLENGE)
+    const wizardForm = document.getElementById('wizardSuratForm');
+    if (wizardForm) {
+        wizardForm.addEventListener('submit', function(e) {
+            const mathAns = document.querySelector('input[name="math_answer"]');
+            const mathReal = document.querySelector('input[name="math_real"]');
+
+            if (!mathAns || !mathAns.value.trim()) {
+                e.preventDefault();
+                window.showCustomAlert({
+                    title: 'Verifikasi Anti-Spam Belum Diisi',
+                    message: 'Harap hitung dan masukkan hasil penjumlahan verifikasi keamanan sebelum mengirim berkas.',
+                    icon: 'warning',
+                    targetInput: mathAns
+                });
+                return;
+            }
+
+            if (parseInt(mathAns.value.trim()) !== parseInt(mathReal.value.trim())) {
+                e.preventDefault();
+                window.showCustomAlert({
+                    title: 'Jawaban Anti-Spam Salah',
+                    message: 'Hasil hitungan penjumlahan anti-spam tidak cocok. Silakan coba kembali dengan teliti.',
+                    icon: 'error',
+                    targetInput: mathAns
+                });
+                return;
+            }
+        });
+    }
+
+    // Kartu Layanan di Atas untuk Pemilihan Cepat
+    document.querySelectorAll('.select-layanan-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const layanan = this.getAttribute('data-layanan');
+            const key = getKeyFromLayanan(layanan);
+            switchTemplatePanel(key);
+            document.getElementById('section-form').scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    // Inisialisasi awal saat load
+    document.addEventListener('DOMContentLoaded', function() {
+        switchTemplatePanel('magang');
+    });
+</script>

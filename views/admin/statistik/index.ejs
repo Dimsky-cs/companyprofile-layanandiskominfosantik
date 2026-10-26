@@ -1,0 +1,1118 @@
+<% 
+    const ringkasan = (typeof statistikRingkasan !== 'undefined' && statistikRingkasan) ? statistikRingkasan : {};
+    const listKecamatan = (typeof statistikKecamatan !== 'undefined' && Array.isArray(statistikKecamatan)) ? statistikKecamatan : [];
+    const listPenduduk = (typeof statistikPendudukList !== 'undefined' && Array.isArray(statistikPendudukList)) ? statistikPendudukList : [];
+
+    const usiaItems = listPenduduk.filter(p => p.kategori === 'usia');
+    const pekerjaanItems = listPenduduk.filter(p => p.kategori === 'pekerjaan');
+    const pendidikanItems = listPenduduk.filter(p => p.kategori === 'pendidikan');
+    const sosialItems = listPenduduk.filter(p => p.kategori === 'sosial');
+%>
+
+<!-- HEADER ATAS -->
+<header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div>
+        <div class="flex items-center gap-2 mb-1">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200">
+                Satu Data Kependudukan
+            </span>
+            <span class="text-xs text-slate-400">• Open Data Kabupaten Bekasi</span>
+        </div>
+        <h2 class="text-2xl font-bold text-navy-900 mb-1">Statistik & Satu Data Masyarakat</h2>
+        <p class="text-slate-500 text-sm">Kelola indikator makro kependudukan, demografi 23 kecamatan, dan grafik analitik daerah.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+        <!-- Tombol Sinkronkan Otomatis 23 Kecamatan -->
+        <form action="/admin-diskominfo/statistik/sync" method="POST" onsubmit="return confirm('Sinkronkan total penduduk, KK, luas wilayah, dan rata-rata kepadatan secara otomatis dari agregasi data 23 kecamatan?');">
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs transition-all shadow-sm" title="Hitung otomatis total penduduk dari 23 kecamatan">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Sinkronkan Otomatis 23 Kecamatan
+            </button>
+        </form>
+
+        <a href="/statistik/export-csv" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs transition-all border border-slate-200 shadow-sm" download>
+            <i data-lucide="download" class="w-4 h-4 text-emerald-600"></i> Unduh CSV
+        </a>
+        <a href="/statistik" target="_blank" class="bg-navy-900 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs transition-all shadow-sm">
+            <i data-lucide="external-link" class="w-4 h-4 text-orange-400"></i> Portal Publik
+        </a>
+    </div>
+</header>
+
+<!-- TAB KONTROL ADMIN -->
+<div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6 pb-2 overflow-x-auto whitespace-nowrap">
+    <button onclick="switchStatistikSubTab('ringkasan', this)" data-subtab="ringkasan" class="btn-statistik-tab px-4 py-2 text-sm font-bold text-orange-600 dark:text-orange-400 border-b-2 border-orange-500 transition-all flex items-center gap-2">
+        <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Indikator Makro Daerah
+    </button>
+    <button onclick="switchStatistikSubTab('kecamatan', this)" data-subtab="kecamatan" class="btn-statistik-tab px-4 py-2 text-sm font-bold text-slate-500 hover:text-navy-900 dark:hover:text-white border-b-2 border-transparent transition-all flex items-center gap-2">
+        <i data-lucide="map-pin" class="w-4 h-4"></i> Data Induk Kecamatan (<%= listKecamatan.length %>)
+    </button>
+    <button onclick="switchStatistikSubTab('grafik', this)" data-subtab="grafik" class="btn-statistik-tab px-4 py-2 text-sm font-bold text-slate-500 hover:text-navy-900 dark:hover:text-white border-b-2 border-transparent transition-all flex items-center gap-2">
+        <i data-lucide="pie-chart" class="w-4 h-4"></i> Grafik Demografi & Sosial (<%= listPenduduk.length %>)
+    </button>
+</div>
+
+<!-- ============================================================== -->
+<!-- SUB-TAB 1: FORM INDIKATOR MAKRO KEPENDUDUKAN -->
+<!-- ============================================================== -->
+<div id="subtab-ringkasan" class="statistik-subtab-pane space-y-6">
+
+    <!-- 1. QUICK STATS CARDS INDIKATOR MAKRO KEPENDUDUKAN -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Penduduk -->
+        <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Jumlah Penduduk</span>
+                <div class="w-9 h-9 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-2xl font-black text-navy-900 mb-1"><%= ringkasan.total_penduduk || '3.249.750' %> <span class="text-xs font-bold text-slate-400">Jiwa</span></h3>
+                <div class="flex items-center gap-2 text-xs text-slate-500 border-t border-slate-100 pt-2.5">
+                    <span class="text-blue-600 font-bold">♂ <%= ringkasan.rasio_laki || '51%' %></span>
+                    <span>•</span>
+                    <span class="text-pink-600 dark:text-pink-400 font-bold">♀ <%= ringkasan.rasio_perempuan || '49%' %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kepala Keluarga -->
+        <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Kepala Keluarga (KK)</span>
+                <div class="w-9 h-9 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-2xl font-black text-navy-900 mb-1"><%= ringkasan.total_kk || '992.950' %> <span class="text-xs font-bold text-slate-400">KK</span></h3>
+                <div class="text-xs text-slate-500 border-t border-slate-100 pt-2.5 truncate">
+                    <span><%= ringkasan.cakupan_wilayah || '23 Kecamatan • 187 Desa/Kel.' %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indeks Pembangunan Manusia (IPM) -->
+        <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Skor IPM Daerah</span>
+                <div class="w-9 h-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="trending-up" class="w-5 h-5"></i>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-2xl font-black text-navy-900 mb-1"><%= ringkasan.skor_ipm || '75.80' %></h3>
+                <div class="flex items-center gap-1.5 text-xs text-slate-500 border-t border-slate-100 pt-2.5">
+                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold text-[10px]">Predikat <%= ringkasan.predikat_ipm || 'Tinggi' %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kepadatan Wilayah -->
+        <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Kepadatan Penduduk</span>
+                <div class="w-9 h-9 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="map" class="w-5 h-5"></i>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-2xl font-black text-navy-900 mb-1"><%= ringkasan.kepadatan || '2.551' %> <span class="text-xs font-bold text-slate-400">Jiwa/km²</span></h3>
+                <div class="text-xs text-slate-500 border-t border-slate-100 pt-2.5 truncate">
+                    <span>Luas: <%= ringkasan.luas_wilayah || '1.273,88 km²' %></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. FORM PENGATURAN INDIKATOR MAKRO KEPENDUDUKAN -->
+    <div class="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
+        <div class="max-w-4xl">
+            <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
+                <div>
+                    <h3 class="font-bold text-navy-900 text-base">Indikator Kependudukan & Sosial Agregat</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Nilai yang Anda simpan di sini akan langsung tampil pada kartu metrik teratas halaman /statistik dan beranda.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 bg-orange-50 text-orange-700 text-xs font-bold rounded-full border border-orange-200">
+                        Tahun <%= ringkasan.tahun_data || '2026' %>
+                    </span>
+                </div>
+            </div>
+
+            <!-- BANNER CALLOUT AUTO SYNC -->
+            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-900">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <i data-lucide="calculator" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold block">Sinkronisasi Otomatis dari Database Wilayah</span>
+                        <span class="text-emerald-700">Hitung total populasi, KK, dan kepadatan langsung dari penjumlahan 23 kecamatan.</span>
+                    </div>
+                </div>
+                <form action="/admin-diskominfo/statistik/sync" method="POST" onsubmit="return confirm('Hitung ulang dan sinkronkan total makro dari 23 kecamatan?');">
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Hitung Ulang Total
+                    </button>
+                </form>
+            </div>
+
+            <form action="/admin-diskominfo/statistik/ringkasan/update" method="POST" class="space-y-6">
+                
+                <!-- Section 1: Demografi Pokok -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-orange-600 mb-3 flex items-center gap-1.5">
+                        <i data-lucide="users" class="w-4 h-4"></i> 1. Kependudukan & Rumah Tangga
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/70 p-5 rounded-2xl border border-slate-200/70">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Jumlah Penduduk (Jiwa)</label>
+                            <input type="text" name="total_penduduk" value="<%= ringkasan.total_penduduk || '3.249.750' %>" placeholder="Contoh: 3.249.750" required class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold text-navy-900 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Rasio Laki-laki</label>
+                            <input type="text" name="rasio_laki" value="<%= ringkasan.rasio_laki || '51%' %>" placeholder="Contoh: 51%" required class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-medium bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Rasio Perempuan</label>
+                            <input type="text" name="rasio_perempuan" value="<%= ringkasan.rasio_perempuan || '49%' %>" placeholder="Contoh: 49%" required class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-medium bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Jumlah Kepala Keluarga (KK)</label>
+                            <input type="text" name="total_kk" value="<%= ringkasan.total_kk || '992.950' %>" placeholder="Contoh: 992.950" required class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold text-orange-600 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Persentase Usia Produktif</label>
+                            <input type="text" name="usia_produktif" value="<%= ringkasan.usia_produktif || '66.8%' %>" placeholder="Contoh: 66.8%" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Cakupan Wilayah</label>
+                            <input type="text" name="cakupan_wilayah" value="<%= ringkasan.cakupan_wilayah || '23 Kecamatan • 187 Desa/Kel.' %>" placeholder="Contoh: 23 Kecamatan • 187 Desa/Kel." class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: IPM & Geografis -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-blue-600 mb-3 flex items-center gap-1.5">
+                        <i data-lucide="award" class="w-4 h-4"></i> 2. Indeks Pembangunan Manusia (IPM) & Wilayah
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50/70 p-5 rounded-2xl border border-slate-200/70">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Skor IPM</label>
+                            <input type="text" name="skor_ipm" value="<%= ringkasan.skor_ipm || '75.80' %>" placeholder="Contoh: 75.80" required class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold text-navy-900 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Predikat IPM</label>
+                            <select name="predikat_ipm" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-semibold bg-white">
+                                <option value="Sangat Tinggi" <%= (ringkasan.predikat_ipm === 'Sangat Tinggi') ? 'selected' : '' %>>Sangat Tinggi</option>
+                                <option value="Tinggi" <%= (ringkasan.predikat_ipm === 'Tinggi' || !ringkasan.predikat_ipm) ? 'selected' : '' %>>Tinggi</option>
+                                <option value="Sedang" <%= (ringkasan.predikat_ipm === 'Sedang') ? 'selected' : '' %>>Sedang</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Kepadatan Rata-rata</label>
+                            <input type="text" name="kepadatan" value="<%= ringkasan.kepadatan || '2.551' %>" placeholder="Contoh: 2.551" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Luas Wilayah Keseluruhan</label>
+                            <input type="text" name="luas_wilayah" value="<%= ringkasan.luas_wilayah || '1.273,88 km²' %>" placeholder="Contoh: 1.273,88 km²" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Sosial & Ketenagakerjaan -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-3 flex items-center gap-1.5">
+                        <i data-lucide="heart-pulse" class="w-4 h-4"></i> 3. Kesehatan, Pendidikan & Ketenagakerjaan
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/70 p-5 rounded-2xl border border-slate-200/70">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Jaminan Kesehatan (UHC Rate)</label>
+                            <input type="text" name="uhc_rate" value="<%= ringkasan.uhc_rate || '99.1%' %>" placeholder="Contoh: 99.1%" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold text-emerald-600 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Angka Melek Huruf</label>
+                            <input type="text" name="melek_huruf" value="<%= ringkasan.melek_huruf || '99.2%' %>" placeholder="Contoh: 99.2%" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Tingkat Partisipasi Kerja (TPAK)</label>
+                            <input type="text" name="tpak" value="<%= ringkasan.tpak || '68.5%' %>" placeholder="Contoh: 68.5%" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Metadata Sumber & Rilis -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3 flex items-center gap-1.5">
+                        <i data-lucide="info" class="w-4 h-4"></i> 4. Metadata & Catatan Sumber Data
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/70 p-5 rounded-2xl border border-slate-200/70">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Lembaga Sumber Data</label>
+                            <input type="text" name="sumber_data" value="<%= ringkasan.sumber_data || 'Disdukcapil & BPS Kabupaten Bekasi' %>" placeholder="Contoh: Disdukcapil & BPS Kabupaten Bekasi" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Tahun Rilis Data</label>
+                            <input type="text" name="tahun_data" value="<%= ringkasan.tahun_data || '2026' %>" placeholder="Contoh: 2026" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Simpan -->
+                <div class="pt-4 flex items-center justify-end border-t border-slate-100">
+                    <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-orange-500/25 transition-all text-sm flex items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Simpan Indikator Makro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SUB-TAB 2: MASTER DATA 23 KECAMATAN -->
+<!-- ============================================================== -->
+<div id="subtab-kecamatan" class="statistik-subtab-pane hidden">
+    <div class="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
+        
+        <!-- Header Filter & Tambah Kecamatan -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div>
+                <h3 class="font-bold text-navy-900 text-base">Tabel Data Induk Wilayah Kecamatan (<%= listKecamatan.length %>)</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Kelola data camat, kependudukan, fasilitas, zona, serta koordinat peta GPS setiap kecamatan.</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Search Input -->
+                <div class="relative min-w-[220px]">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="adminKecamatanSearch" placeholder="Cari nama kecamatan / camat..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+
+                <!-- Filter Zona -->
+                <select id="adminZonaFilter" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 outline-none">
+                    <option value="">Semua Zona</option>
+                    <option value="Sangat Padat">Sangat Padat</option>
+                    <option value="Padat">Padat</option>
+                    <option value="Sedang">Sedang</option>
+                    <option value="Berkembang">Berkembang</option>
+                    <option value="Pesisir">Pesisir / Konservasi</option>
+                </select>
+
+                <!-- Tombol Tambah Kecamatan -->
+                <button type="button" onclick="openModalTambahKecamatan()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-md shadow-orange-500/25 flex items-center gap-1.5">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Kecamatan
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabel Kecamatan -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse" id="adminTabelKecamatan">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wider">
+                        <th class="px-5 py-4 font-bold">Kecamatan</th>
+                        <th class="px-5 py-4 font-bold">Nama Camat</th>
+                        <th class="px-5 py-4 font-bold text-right">Penduduk</th>
+                        <th class="px-5 py-4 font-bold text-right">Jumlah KK</th>
+                        <th class="px-5 py-4 font-bold text-right">Luas (km²)</th>
+                        <th class="px-5 py-4 font-bold text-right">Kepadatan</th>
+                        <th class="px-5 py-4 font-bold text-center">Fasilitas</th>
+                        <th class="px-5 py-4 font-bold text-center">Zona</th>
+                        <th class="px-5 py-4 font-bold text-right">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    <% if (listKecamatan.length > 0) { %>
+                        <% listKecamatan.forEach(k => { %>
+                            <tr class="hover:bg-slate-50/80 transition-colors row-kecamatan">
+                                <td class="px-5 py-4 font-bold text-navy-900 whitespace-nowrap">
+                                    <%= k.nama %>
+                                </td>
+                                <td class="px-5 py-4 text-slate-700 whitespace-nowrap">
+                                    <div class="flex items-center gap-1.5">
+                                        <i data-lucide="user-check" class="w-3.5 h-3.5 text-orange-500"></i>
+                                        <span class="font-medium"><%= k.camat || '—' %></span>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4 text-right font-bold text-navy-900 whitespace-nowrap">
+                                    <%= Number(k.penduduk).toLocaleString('id-ID') %>
+                                </td>
+                                <td class="px-5 py-4 text-right text-slate-600 whitespace-nowrap">
+                                    <%= Number(k.kk).toLocaleString('id-ID') %>
+                                </td>
+                                <td class="px-5 py-4 text-right text-slate-600 whitespace-nowrap">
+                                    <%= Number(k.luas).toLocaleString('id-ID') %>
+                                </td>
+                                <td class="px-5 py-4 text-right font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                                    <%= Number(k.kepadatan).toLocaleString('id-ID') %>/km²
+                                </td>
+                                <td class="px-5 py-4 text-center whitespace-nowrap">
+                                    <div class="inline-flex items-center gap-2 text-xs text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                        <span title="Puskesmas"><i data-lucide="activity" class="w-3 h-3 text-emerald-600 inline"></i> <%= k.puskesmas %></span>
+                                        <span>•</span>
+                                        <span title="Sekolah"><i data-lucide="graduation-cap" class="w-3 h-3 text-blue-600 inline"></i> <%= k.sekolah %></span>
+                                        <span>•</span>
+                                        <span title="Kantor Desa"><i data-lucide="home" class="w-3 h-3 text-amber-600 inline"></i> <%= k.kantor_desa %></span>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4 text-center whitespace-nowrap">
+                                    <% 
+                                        let zonaClass = "bg-slate-100 text-slate-700 border-slate-200";
+                                        if (k.zona === 'Sangat Padat') zonaClass = "bg-rose-100 text-rose-700 border-rose-200";
+                                        else if (k.zona === 'Padat') zonaClass = "bg-orange-100 text-orange-700 border-orange-200";
+                                        else if (k.zona === 'Sedang') zonaClass = "bg-blue-100 text-blue-700 border-blue-200";
+                                        else if (k.zona === 'Berkembang') zonaClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
+                                        else if (k.zona && k.zona.includes('Pesisir')) zonaClass = "bg-indigo-100 text-indigo-700 border-indigo-200";
+                                    %>
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold border <%= zonaClass %>">
+                                        <%= k.zona %>
+                                    </span>
+                                </td>
+                                <td class="px-5 py-4 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button type="button" 
+                                                class="btn-edit-kecamatan px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 shadow-sm"
+                                                data-id="<%= k.id %>"
+                                                data-nama="<%= k.nama %>"
+                                                data-camat="<%= k.camat %>"
+                                                data-penduduk="<%= k.penduduk %>"
+                                                data-kk="<%= k.kk %>"
+                                                data-luas="<%= k.luas %>"
+                                                data-kepadatan="<%= k.kepadatan %>"
+                                                data-puskesmas="<%= k.puskesmas %>"
+                                                data-sekolah="<%= k.sekolah %>"
+                                                data-desa="<%= k.kantor_desa %>"
+                                                data-zona="<%= k.zona %>"
+                                                data-lat="<%= k.lat %>"
+                                                data-lng="<%= k.lng %>">
+                                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Ubah
+                                        </button>
+                                        <button type="button"
+                                                data-id="<%= k.id %>"
+                                                data-nama="<%= k.nama %>"
+                                                onclick="openModalHapusKecamatan(this.dataset.id, this.dataset.nama)"
+                                                class="px-2.5 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/30 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-200 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1"
+                                                title="Hapus Kecamatan <%= k.nama %>">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="9" class="text-center py-10 text-slate-400 text-xs">
+                                Belum ada data kecamatan di database.
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SUB-TAB 3: GRAFIK DEMOGRAFI & SOSIAL (CHART.JS DATA) -->
+<!-- ============================================================== -->
+<div id="subtab-grafik" class="statistik-subtab-pane hidden space-y-6">
+    
+    <div class="bg-gradient-to-r from-navy-900 to-slate-900 text-white p-6 rounded-3xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-orange-500 text-white tracking-wider mb-2 inline-block">
+                Grafik Analitik Dinamis
+            </span>
+            <h3 class="text-lg font-bold text-white mb-1">Pengaturan 4 Grafik Visual Demografi & Sosial</h3>
+            <p class="text-xs text-slate-300">Setiap perubahan nilai di bawah ini langsung memperbarui tampilan grafik analitik di portal publik.</p>
+        </div>
+        <div class="text-xs text-slate-400">
+            Jumlah <strong><%= listPenduduk.length %></strong> Indikator Terdaftar
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- CARD 1: KELOMPOK USIA -->
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 border border-orange-200 flex items-center justify-center font-bold text-xs">
+                            📊
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-navy-900 text-sm">Piramida Kelompok Usia</h4>
+                            <span class="text-[11px] text-slate-400">Kategori: usia (Horizontal Bar)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <% usiaItems.forEach(item => { %>
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
+                            <div>
+                                <span class="font-bold text-navy-900 block"><%= item.label %></span>
+                                <span class="text-[10px] text-slate-400">Tahun: <%= item.tahun %></span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-extrabold text-orange-600 font-mono text-sm">
+                                    <%= Number(item.jumlah).toLocaleString('id-ID') %> Jiwa
+                                </span>
+                                <button type="button" 
+                                        data-id="<%= item.id %>"
+                                        data-label="<%= item.label %>"
+                                        data-jumlah="<%= item.jumlah %>"
+                                        data-tahun="<%= item.tahun %>"
+                                        onclick="openModalEditGrafik(this.dataset.id, this.dataset.label, this.dataset.jumlah, this.dataset.tahun)"
+                                        class="p-1.5 bg-white hover:bg-slate-100 text-navy-900 rounded-lg border border-slate-200 transition-all shadow-sm">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 2: MATA PENCAHARIAN / PEKERJAAN -->
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-xs">
+                            🏭
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-navy-900 text-sm">Sektor Profesi & Ketenagakerjaan</h4>
+                            <span class="text-[11px] text-slate-400">Kategori: pekerjaan (Bar Chart)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <% pekerjaanItems.forEach(item => { %>
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
+                            <div>
+                                <span class="font-bold text-navy-900 block"><%= item.label %></span>
+                                <span class="text-[10px] text-slate-400">Tahun: <%= item.tahun %></span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-extrabold text-navy-900 font-mono text-sm">
+                                    <%= Number(item.jumlah).toLocaleString('id-ID') %>
+                                </span>
+                                <button type="button" 
+                                        data-id="<%= item.id %>"
+                                        data-label="<%= item.label %>"
+                                        data-jumlah="<%= item.jumlah %>"
+                                        data-tahun="<%= item.tahun %>"
+                                        onclick="openModalEditGrafik(this.dataset.id, this.dataset.label, this.dataset.jumlah, this.dataset.tahun)"
+                                        class="p-1.5 bg-white hover:bg-slate-100 text-navy-900 rounded-lg border border-slate-200 transition-all shadow-sm">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 3: PENDIDIKAN TERAKHIR -->
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-xs">
+                            🎓
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-navy-900 text-sm">Tingkat Pendidikan Terakhir</h4>
+                            <span class="text-[11px] text-slate-400">Kategori: pendidikan (Doughnut Chart)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <% pendidikanItems.forEach(item => { %>
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
+                            <div>
+                                <span class="font-bold text-navy-900 block"><%= item.label %></span>
+                                <span class="text-[10px] text-slate-400">Tahun: <%= item.tahun %></span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-extrabold text-emerald-600 font-mono text-sm">
+                                    <%= Number(item.jumlah) %>%
+                                </span>
+                                <button type="button" 
+                                        data-id="<%= item.id %>"
+                                        data-label="<%= item.label %>"
+                                        data-jumlah="<%= item.jumlah %>"
+                                        data-tahun="<%= item.tahun %>"
+                                        onclick="openModalEditGrafik(this.dataset.id, this.dataset.label, this.dataset.jumlah, this.dataset.tahun)"
+                                        class="p-1.5 bg-white hover:bg-slate-100 text-navy-900 rounded-lg border border-slate-200 transition-all shadow-sm">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 4: KESEHATAN & BANSOS -->
+        <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center font-bold text-xs">
+                            🏥
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-navy-900 text-sm">Kesehatan (UHC) & Bansos</h4>
+                            <span class="text-[11px] text-slate-400">Kategori: sosial (Bar Chart)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <% sosialItems.forEach(item => { %>
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
+                            <div>
+                                <span class="font-bold text-navy-900 block"><%= item.label %></span>
+                                <span class="text-[10px] text-slate-400">Tahun: <%= item.tahun %></span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-extrabold text-purple-700 font-mono text-sm">
+                                    <%= item.label.includes('%') ? Number(item.jumlah) + '%' : Number(item.jumlah).toLocaleString('id-ID') %>
+                                </span>
+                                <button type="button" 
+                                        data-id="<%= item.id %>"
+                                        data-label="<%= item.label %>"
+                                        data-jumlah="<%= item.jumlah %>"
+                                        data-tahun="<%= item.tahun %>"
+                                        onclick="openModalEditGrafik(this.dataset.id, this.dataset.label, this.dataset.jumlah, this.dataset.tahun)"
+                                        class="p-1.5 bg-white hover:bg-slate-100 text-navy-900 rounded-lg border border-slate-200 transition-all shadow-sm">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL TAMBAH KECAMATAN -->
+<!-- ============================================================== -->
+<div id="modalTambahKecamatan" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md p-3 sm:p-4 md:p-6 transition-all duration-300">
+    <div class="fixed inset-0" onclick="closeModalTambahKecamatan()"></div>
+    <div class="relative z-10 bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xl max-h-[90vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 my-auto">
+        
+        <div class="shrink-0 px-6 py-4 sm:py-5 bg-navy-900 text-white flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"></span>
+                <h3 class="text-base font-bold text-white leading-none">Tambah Wilayah Kecamatan Baru</h3>
+            </div>
+            <button type="button" onclick="closeModalTambahKecamatan()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form action="/admin-diskominfo/statistik/kecamatan/tambah" method="POST" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div class="p-5 sm:p-6 space-y-4 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Nama Kecamatan</label>
+                        <input type="text" name="nama" required placeholder="Contoh: Cikarang Selatan" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Nama Camat</label>
+                        <input type="text" name="camat" placeholder="Contoh: Drs. H. Ahmad Fauzi" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Jumlah Warga (Jiwa)</label>
+                        <input type="number" id="tambahKecamatanPenduduk" name="penduduk" required min="0" value="0" class="calc-tambah w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Kepala Keluarga (KK)</label>
+                        <input type="number" name="kk" required min="0" value="0" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Luas Wilayah (km²)</label>
+                        <input type="number" step="0.01" id="tambahKecamatanLuas" name="luas" required min="0.01" value="10.00" class="calc-tambah w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Kepadatan (Jiwa/km²)</label>
+                            <span class="text-[11px] text-slate-400 font-semibold">(Otomatis Terhitung)</span>
+                        </div>
+                        <input type="number" id="tambahKecamatanKepadatan" name="kepadatan" readonly value="0" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-slate-100">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Klasifikasi Zona</label>
+                        <select id="tambahKecamatanZona" name="zona" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold">
+                            <option value="Sangat Padat">Sangat Padat (≥ 5.000)</option>
+                            <option value="Padat">Padat (3.000 - 4.999)</option>
+                            <option value="Sedang" selected>Sedang (1.500 - 2.999)</option>
+                            <option value="Berkembang">Berkembang (< 1.500)</option>
+                            <option value="Pesisir / Konservasi">Pesisir / Konservasi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Fasilitas Publik -->
+                <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/70 dark:border-slate-700">
+                    <span class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-2.5">Jumlah Fasilitas Layanan Publik</span>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">Puskesmas / Faskes</label>
+                            <input type="number" name="puskesmas" min="0" value="1" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">Gedung Sekolah</label>
+                            <input type="number" name="sekolah" min="0" value="20" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">Kantor Desa / Kel.</label>
+                            <input type="number" name="kantor_desa" min="0" value="7" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Titik Peta GIS -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Koordinat Latitude (Peta)</label>
+                        <input type="number" step="0.000001" name="lat" value="-6.280000" placeholder="-6.xxxx" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-orange-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Koordinat Longitude (Peta)</label>
+                        <input type="number" step="0.000001" name="lng" value="107.150000" placeholder="107.xxxx" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-orange-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="shrink-0 px-6 py-4 bg-slate-50 dark:bg-slate-900/95 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeModalTambahKecamatan()" class="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors">Batal</button>
+                <button type="submit" class="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Tambah Kecamatan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL EDIT DATA KECAMATAN -->
+<!-- ============================================================== -->
+<div id="modalEditKecamatan" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md p-3 sm:p-4 md:p-6 transition-all duration-300">
+    <div class="fixed inset-0" onclick="closeModalEditKecamatan()"></div>
+    <div class="relative z-10 bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xl max-h-[90vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 my-auto">
+        
+        <div class="shrink-0 px-6 py-4 sm:py-5 bg-navy-900 text-white flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <i data-lucide="map-pin" class="w-5 h-5 text-orange-400"></i>
+                <h3 class="text-base font-bold text-white leading-none">Ubah Data Kecamatan: <span id="modalKecamatanTitle" class="text-orange-400">-</span></h3>
+            </div>
+            <button type="button" onclick="closeModalEditKecamatan()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form action="/admin-diskominfo/statistik/kecamatan/update" method="POST" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <input type="hidden" id="editKecamatanId" name="id">
+            <input type="hidden" id="editKecamatanNama" name="nama">
+
+            <div class="p-5 sm:p-6 space-y-4 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Nama Kecamatan</label>
+                        <input type="text" id="displayKecamatanNama" disabled class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-navy-900 dark:text-white cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Nama Camat yang Menjabat</label>
+                        <input type="text" id="editKecamatanCamat" name="camat" required placeholder="Contoh: Drs. Sopyan Hadi" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-semibold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Jumlah Warga (Jiwa)</label>
+                        <input type="number" id="editKecamatanPenduduk" name="penduduk" required min="0" class="calc-trigger w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Kepala Keluarga (KK)</label>
+                        <input type="number" id="editKecamatanKK" name="kk" required min="0" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Luas Wilayah (km²)</label>
+                        <input type="number" step="0.01" id="editKecamatanLuas" name="luas" required min="0.01" class="calc-trigger w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Kepadatan (Jiwa/km²)</label>
+                            <span class="text-[11px] text-slate-400 font-semibold">(Otomatis Terhitung)</span>
+                        </div>
+                        <input type="number" id="editKecamatanKepadatan" name="kepadatan" readonly class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-slate-100">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Klasifikasi Zona</label>
+                        <select id="editKecamatanZona" name="zona" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold">
+                            <option value="Sangat Padat">Sangat Padat (≥ 5.000 jiwa/km²)</option>
+                            <option value="Padat">Padat (3.000 - 4.999 jiwa/km²)</option>
+                            <option value="Sedang">Sedang (1.500 - 2.999 jiwa/km²)</option>
+                            <option value="Berkembang">Berkembang (< 1.500 jiwa/km²)</option>
+                            <option value="Pesisir / Konservasi">Pesisir / Konservasi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Fasilitas Publik -->
+                <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/70 dark:border-slate-700">
+                    <span class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-2.5">Jumlah Fasilitas Publik</span>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">Puskesmas / Faskes</label>
+                            <input type="number" id="editKecamatanPuskesmas" name="puskesmas" min="0" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">Gedung Sekolah</label>
+                            <input type="number" id="editKecamatanSekolah" name="sekolah" min="0" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">Kantor Desa / Kel.</label>
+                            <input type="number" id="editKecamatanDesa" name="kantor_desa" min="0" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 outline-none bg-white dark:bg-slate-800 text-navy-900 dark:text-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Titik Peta GIS -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Koordinat Latitude (Peta)</label>
+                        <input type="number" step="0.000001" id="editKecamatanLat" name="lat" placeholder="-6.xxxx" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-orange-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Koordinat Longitude (Peta)</label>
+                        <input type="number" step="0.000001" id="editKecamatanLng" name="lng" placeholder="107.xxxx" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-orange-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="shrink-0 px-6 py-4 bg-slate-50 dark:bg-slate-900/95 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeModalEditKecamatan()" class="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors">Batal</button>
+                <button type="submit" class="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL HAPUS KECAMATAN -->
+<!-- ============================================================== -->
+<div id="modalHapusKecamatan" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md p-4 transition-all duration-300">
+    <div class="fixed inset-0" onclick="closeModalHapusKecamatan()"></div>
+    <div class="relative z-10 bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-center p-6 sm:p-8 my-auto">
+        <div class="w-16 h-16 rounded-3xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4 animate-bounce">
+            <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+        </div>
+
+        <h3 class="text-lg font-bold text-navy-900 dark:text-white mb-2">Hapus Data Kecamatan?</h3>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mb-3">Tindakan ini akan menghapus kecamatan ini beserta titik petanya dari portal Satu Data:</p>
+        
+        <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 mb-6 text-xs font-semibold text-navy-900 dark:text-white" id="deleteKecamatanTitle">
+            -
+        </div>
+
+        <div class="flex items-center justify-center gap-3">
+            <button type="button" onclick="closeModalHapusKecamatan()" class="w-1/2 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all">
+                Batal
+            </button>
+            <a id="btnConfirmDeleteKecamatan" href="#" class="w-1/2 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center">
+                Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL EDIT INDIKATOR GRAFIK CHART.JS -->
+<!-- ============================================================== -->
+<div id="modalEditGrafik" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md p-3 sm:p-4 md:p-6 transition-all duration-300">
+    <div class="fixed inset-0" onclick="closeModalEditGrafik()"></div>
+    <div class="relative z-10 bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md max-h-[90vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 my-auto">
+        <div class="shrink-0 px-6 py-4 sm:py-5 bg-navy-900 text-white flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-2">
+                <i data-lucide="bar-chart" class="w-5 h-5 text-orange-400"></i>
+                <h3 class="text-base font-bold text-white leading-none">Ubah Indikator Grafik</h3>
+            </div>
+            <button type="button" onclick="closeModalEditGrafik()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form action="/admin-diskominfo/statistik/penduduk/update" method="POST" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <input type="hidden" id="editGrafikId" name="id">
+
+            <div class="p-5 sm:p-6 space-y-4 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Label Kategori</label>
+                    <input type="text" id="editGrafikLabel" name="label" required class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-bold">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Nilai / Jumlah Data</label>
+                    <input type="number" step="0.1" id="editGrafikJumlah" name="jumlah" required class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none font-mono font-bold text-orange-600 dark:text-orange-400">
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Masukkan angka bulat untuk jiwa/orang, atau desimal jika persentase (%).</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Tahun Data</label>
+                    <input type="number" id="editGrafikTahun" name="tahun" required class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+            </div>
+
+            <div class="shrink-0 px-6 py-4 bg-slate-50 dark:bg-slate-900/95 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeModalEditGrafik()" class="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors">Batal</button>
+                <button type="submit" class="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Simpan Nilai Grafik
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SCRIPT LOGIKA SUB-TAB & MODAL CMS STATISTIK -->
+<!-- ============================================================== -->
+<script>
+    function activateStatistikSubTab(tabName) {
+        if (!tabName) tabName = 'ringkasan';
+
+        document.querySelectorAll('.btn-statistik-tab').forEach(b => {
+            b.classList.remove('text-orange-600', 'border-orange-500', 'dark:text-orange-400');
+            b.classList.add('text-slate-500', 'border-transparent');
+            if (b.getAttribute('data-subtab') === tabName) {
+                b.classList.add('text-orange-600', 'border-orange-500', 'dark:text-orange-400');
+                b.classList.remove('text-slate-500', 'border-transparent');
+            }
+        });
+
+        document.querySelectorAll('.statistik-subtab-pane').forEach(el => el.classList.add('hidden'));
+        const target = document.getElementById('subtab-' + tabName);
+        if (target) {
+            target.classList.remove('hidden');
+        } else {
+            const fallback = document.getElementById('subtab-ringkasan');
+            if (fallback) fallback.classList.remove('hidden');
+        }
+
+        localStorage.setItem('active_statistik_subtab', tabName);
+    }
+
+    function switchStatistikSubTab(tabName, btn) {
+        activateStatistikSubTab(tabName);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const subtabParam = urlParams.get('subtab');
+        const savedSubtab = subtabParam || localStorage.getItem('active_statistik_subtab') || 'ringkasan';
+        activateStatistikSubTab(savedSubtab);
+    });
+
+    // Pindahkan modal statistik ke document.body agar tidak terperangkap transform parent tab
+    function teleportModalStatistik(el) {
+        if (el && el.parentElement !== document.body) {
+            document.body.appendChild(el);
+        }
+    }
+    ['modalTambahKecamatan', 'modalEditKecamatan', 'modalHapusKecamatan', 'modalEditGrafik'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) teleportModalStatistik(el);
+    });
+
+    // MODAL TAMBAH KECAMATAN
+    function openModalTambahKecamatan() {
+        const m = document.getElementById('modalTambahKecamatan');
+        if (!m) return;
+        teleportModalStatistik(m);
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+    function closeModalTambahKecamatan() {
+        const m = document.getElementById('modalTambahKecamatan');
+        if (!m) return;
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    // AUTO CALC KEPADATAN SAAT TAMBAH KECAMATAN
+    function autoCalcKepadatanTambah() {
+        const p = parseFloat(document.getElementById("tambahKecamatanPenduduk").value) || 0;
+        const l = parseFloat(document.getElementById("tambahKecamatanLuas").value) || 0;
+        if (l > 0) {
+            const kep = Math.round(p / l);
+            document.getElementById("tambahKecamatanKepadatan").value = kep;
+
+            const zonaSelect = document.getElementById("tambahKecamatanZona");
+            if (kep >= 5000) zonaSelect.value = "Sangat Padat";
+            else if (kep >= 3000) zonaSelect.value = "Padat";
+            else if (kep >= 1500) zonaSelect.value = "Sedang";
+            else if (!zonaSelect.value.includes("Pesisir")) zonaSelect.value = "Berkembang";
+        }
+    }
+    document.querySelectorAll(".calc-tambah").forEach(input => {
+        input.addEventListener("input", autoCalcKepadatanTambah);
+    });
+
+    // MODAL EDIT KECAMATAN
+    function openModalEditKecamatan() {
+        const m = document.getElementById('modalEditKecamatan');
+        if (!m) return;
+        teleportModalStatistik(m);
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+    function closeModalEditKecamatan() {
+        const m = document.getElementById('modalEditKecamatan');
+        if (!m) return;
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    document.addEventListener("click", function(e) {
+        const btn = e.target.closest(".btn-edit-kecamatan");
+        if (btn) {
+            const d = btn.dataset;
+            document.getElementById("editKecamatanId").value = d.id;
+            document.getElementById("editKecamatanNama").value = d.nama;
+            document.getElementById("displayKecamatanNama").value = d.nama;
+            document.getElementById("modalKecamatanTitle").textContent = d.nama;
+            document.getElementById("editKecamatanCamat").value = d.camat;
+            document.getElementById("editKecamatanPenduduk").value = d.penduduk;
+            document.getElementById("editKecamatanKK").value = d.kk;
+            document.getElementById("editKecamatanLuas").value = d.luas;
+            document.getElementById("editKecamatanKepadatan").value = d.kepadatan;
+            document.getElementById("editKecamatanPuskesmas").value = d.puskesmas;
+            document.getElementById("editKecamatanSekolah").value = d.sekolah;
+            document.getElementById("editKecamatanDesa").value = d.desa;
+            document.getElementById("editKecamatanZona").value = d.zona;
+            document.getElementById("editKecamatanLat").value = d.lat;
+            document.getElementById("editKecamatanLng").value = d.lng;
+
+            openModalEditKecamatan();
+        }
+    });
+
+    // AUTO CALC KEPADATAN SAAT EDIT KECAMATAN
+    function autoCalcKepadatan() {
+        const p = parseFloat(document.getElementById("editKecamatanPenduduk").value) || 0;
+        const l = parseFloat(document.getElementById("editKecamatanLuas").value) || 0;
+        if (l > 0) {
+            const kep = Math.round(p / l);
+            document.getElementById("editKecamatanKepadatan").value = kep;
+
+            const zonaSelect = document.getElementById("editKecamatanZona");
+            if (kep >= 5000) zonaSelect.value = "Sangat Padat";
+            else if (kep >= 3000) zonaSelect.value = "Padat";
+            else if (kep >= 1500) zonaSelect.value = "Sedang";
+            else if (!zonaSelect.value.includes("Pesisir")) zonaSelect.value = "Berkembang";
+        }
+    }
+    document.querySelectorAll(".calc-trigger").forEach(input => {
+        input.addEventListener("input", autoCalcKepadatan);
+    });
+
+    // MODAL HAPUS KECAMATAN
+    function openModalHapusKecamatan(id, nama) {
+        document.getElementById("deleteKecamatanTitle").textContent = `Kecamatan "${nama}"`;
+        document.getElementById("btnConfirmDeleteKecamatan").href = `/admin-diskominfo/statistik/kecamatan/hapus/${id}`;
+        const m = document.getElementById('modalHapusKecamatan');
+        if (!m) return;
+        teleportModalStatistik(m);
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+    function closeModalHapusKecamatan() {
+        const m = document.getElementById('modalHapusKecamatan');
+        if (!m) return;
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    // MODAL EDIT GRAFIK
+    function openModalEditGrafik(id, label, jumlah, tahun) {
+        document.getElementById("editGrafikId").value = id;
+        document.getElementById("editGrafikLabel").value = label;
+        document.getElementById("editGrafikJumlah").value = jumlah;
+        document.getElementById("editGrafikTahun").value = tahun;
+        const m = document.getElementById('modalEditGrafik');
+        if (!m) return;
+        teleportModalStatistik(m);
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+    function closeModalEditGrafik() {
+        const m = document.getElementById('modalEditGrafik');
+        if (!m) return;
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    // SEARCH & FILTER TABEL KECAMATAN ADMIN
+    const searchAdmin = document.getElementById('adminKecamatanSearch');
+    const filterZonaAdmin = document.getElementById('adminZonaFilter');
+
+    function filterAdminKecamatan() {
+        const q = (searchAdmin.value || '').toLowerCase();
+        const z = filterZonaAdmin.value;
+        const rows = document.querySelectorAll('#adminTabelKecamatan tbody tr.row-kecamatan');
+
+        rows.forEach(r => {
+            const text = r.textContent.toLowerCase();
+            const matchQ = text.includes(q);
+            const matchZ = !z || text.includes(z.toLowerCase());
+            r.style.display = (matchQ && matchZ) ? '' : 'none';
+        });
+    }
+
+    if (searchAdmin) searchAdmin.addEventListener('keyup', filterAdminKecamatan);
+    if (filterZonaAdmin) filterZonaAdmin.addEventListener('change', filterAdminKecamatan);
+
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+</script>

@@ -1,0 +1,660 @@
+<!-- HEADER ATAS -->
+<header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div>
+        <h2 class="text-2xl font-bold text-navy-900 mb-1">Pengelolaan Galeri Multimedia</h2>
+        <p class="text-slate-500 text-sm">Kelola arsip liputan foto dinas, rekaman siniar Smart City, dan infografis edukasi warga.</p>
+    </div>
+    <!-- Tombol Buka Modal Tambah Media -->
+    <button onclick="openModalTambahGaleri()" class="bg-orange-500 hover:bg-orange-600 transition-all text-white font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-orange-500/25 text-sm">
+        <i data-lucide="plus-circle" class="w-5 h-5"></i> Unggah Media Baru
+    </button>
+</header>
+
+<!-- STATISTIK MINI MEDIA -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-slate-100 text-navy-900 flex items-center justify-center font-bold">
+            <i data-lucide="folder" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <p class="text-xs text-slate-400 font-medium">Total Media</p>
+            <h4 class="text-lg font-bold text-navy-900"><%= galeriList ? galeriList.length : 0 %></h4>
+        </div>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <i data-lucide="camera" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <p class="text-xs text-slate-400 font-medium">Foto Kegiatan</p>
+            <h4 class="text-lg font-bold text-navy-900"><%= galeriList ? galeriList.filter(i => i.tipe === 'foto').length : 0 %></h4>
+        </div>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+            <i data-lucide="video" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <p class="text-xs text-slate-400 font-medium">Video Liputan</p>
+            <h4 class="text-lg font-bold text-navy-900"><%= galeriList ? galeriList.filter(i => i.tipe === 'video').length : 0 %></h4>
+        </div>
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+            <i data-lucide="image" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <p class="text-xs text-slate-400 font-medium">Infografis</p>
+            <h4 class="text-lg font-bold text-navy-900"><%= galeriList ? galeriList.filter(i => i.tipe === 'infografis').length : 0 %></h4>
+        </div>
+    </div>
+</div>
+
+<!-- FILTER & PENCARIAN CLIENT SIDE -->
+<div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
+        <button onclick="filterAdminGaleri('semua', this)" class="btn-filter-galeri px-3.5 py-1.5 rounded-xl text-xs font-bold bg-navy-900 text-white transition-all">Semua</button>
+        <button onclick="filterAdminGaleri('foto', this)" class="btn-filter-galeri px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 transition-all">Foto</button>
+        <button onclick="filterAdminGaleri('video', this)" class="btn-filter-galeri px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 transition-all">Video</button>
+        <button onclick="filterAdminGaleri('infografis', this)" class="btn-filter-galeri px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 transition-all">Infografis</button>
+    </div>
+    <div class="relative w-full sm:w-64">
+        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+        <input type="text" id="cariGaleriAdmin" onkeyup="searchGaleriAdmin()" placeholder="Cari judul media..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:ring-2 focus:ring-orange-500 outline-none">
+    </div>
+</div>
+
+<!-- TABEL DAFTAR MEDIA -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[650px] text-left border-collapse" id="tabelGaleriAdmin">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wider">
+                    <th class="px-6 py-4 font-bold">Pratinjau Media</th>
+                    <th class="px-6 py-4 font-bold">Judul & Keterangan</th>
+                    <th class="px-6 py-4 font-bold text-center">Tipe Media</th>
+                    <th class="px-6 py-4 font-bold">Tanggal Unggah</th>
+                    <th class="px-6 py-4 font-bold text-right">Tindakan</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm">
+                <% if (galeriList && galeriList.length > 0) { %>
+                    <% galeriList.forEach(g => { %>
+                        <tr class="hover:bg-slate-50/80 transition-colors row-galeri-item" data-tipe="<%= g.tipe %>">
+                            <!-- PREVIEW THUMBNAIL -->
+                            <td class="px-6 py-4">
+                                <div class="w-20 h-14 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative shrink-0">
+                                    <% if (g.tipe === 'video') { %>
+                                        <div class="w-full h-full flex flex-col items-center justify-center bg-navy-900 text-rose-500">
+                                            <i data-lucide="play-circle" class="w-6 h-6"></i>
+                                            <span class="text-[9px] text-white mt-0.5">Video</span>
+                                        </div>
+                                    <% } else { %>
+                                        <img src="<%= g.file_path %>" alt="<%= g.judul %>" class="w-full h-full object-cover">
+                                    <% } %>
+                                </div>
+                            </td>
+
+                            <!-- JUDUL & KETERANGAN -->
+                            <td class="px-6 py-4 max-w-sm">
+                                <h4 class="font-bold text-navy-900 leading-snug col-judul"><%= g.judul %></h4>
+                                <p class="text-xs text-slate-500 line-clamp-1 mt-0.5"><%= g.keterangan || 'Tidak ada deskripsi' %></p>
+                            </td>
+
+                            <!-- TIPE BADGE -->
+                            <td class="px-6 py-4 text-center">
+                                <% if (g.tipe === 'foto') { %>
+                                    <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-200">Foto</span>
+                                <% } else if (g.tipe === 'video') { %>
+                                    <span class="px-3 py-1 bg-rose-50 text-rose-600 rounded-full text-xs font-bold border border-rose-200">Video</span>
+                                <% } else { %>
+                                    <span class="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-200">Infografis</span>
+                                <% } %>
+                            </td>
+
+                            <!-- TANGGAL -->
+                            <td class="px-6 py-4 text-slate-500 text-xs whitespace-nowrap">
+                                <%= new Date(g.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                            </td>
+
+                            <!-- AKSI BUTTONS -->
+                            <td class="px-6 py-4 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-2">
+                                    <!-- Buka Link / Pratinjau -->
+                                    <a href="<%= g.file_path %>" target="_blank" class="p-2 text-slate-400 hover:text-navy-900 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all" title="Lihat Media Asli">
+                                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                                    </a>
+
+                                    <!-- Tombol Ubah (Aman dari kutip JS) -->
+                                    <button type="button" 
+                                            class="btn-edit-galeri flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all"
+                                            data-id="<%= g.id %>"
+                                            data-tipe="<%= g.tipe %>">
+                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Ubah
+                                        <span class="hidden-judul hidden"><%= g.judul %></span>
+                                        <span class="hidden-filepath hidden"><%= g.file_path %></span>
+                                        <textarea class="hidden-keterangan hidden"><%= g.keterangan || '' %></textarea>
+                                    </button>
+
+                                    <!-- Tombol Hapus (Memicu Modal Kustom) -->
+                                    <button type="button" 
+                                            class="btn-buka-hapus-galeri flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 rounded-xl shadow-sm transition-all"
+                                            data-id="<%= g.id %>">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus
+                                        <span class="hidden-judul-hapus hidden"><%= g.judul %></span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5" class="px-6 py-16 text-center">
+                            <div class="inline-flex items-center justify-center w-14 h-14 bg-slate-50 text-slate-300 rounded-2xl mb-3">
+                                <i data-lucide="images" class="w-8 h-8"></i>
+                            </div>
+                            <h4 class="text-base font-bold text-navy-900">Belum Ada Media</h4>
+                            <p class="text-slate-500 text-xs mt-1">Silakan klik "Unggah Media Baru" untuk menambahkan dokumentasi.</p>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- 1. MODAL TAMBAH MEDIA BARU                                     -->
+<!-- ============================================================== -->
+<!-- 1. MODAL TAMBAH MEDIA BARU                                     -->
+<!-- ============================================================== -->
+<div id="modalTambahGaleri" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md transition-all duration-300 opacity-0 p-3 sm:p-4 md:p-6">
+    <div class="fixed inset-0" onclick="closeModalTambahGaleri()"></div>
+    <div id="boxTambahGaleri" class="relative z-10 bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xl max-h-[90vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 transform transition-all duration-300 scale-95 opacity-0 my-auto">
+        
+        <!-- HEADER (shrink-0) -->
+        <div class="shrink-0 px-6 py-4 sm:py-5 bg-navy-900 text-white flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-orange-500/20 text-orange-400 flex items-center justify-center border border-orange-500/30">
+                    <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white leading-tight">Unggah Media Baru</h3>
+                    <p class="text-slate-300 text-xs mt-0.5">Dokumentasi foto liputan, rekaman video, atau infografis</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModalTambahGaleri()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form action="/admin-diskominfo/galeri/tambah" method="POST" enctype="multipart/form-data" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+            
+            <div class="p-5 sm:p-6 space-y-4 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+                <!-- PILIH TIPE MEDIA -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-2">Pilih Tipe Media</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="cursor-pointer border-2 border-orange-500 bg-orange-50/60 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 transition-all text-center radio-tipe-card">
+                            <input type="radio" name="tipe" value="foto" checked onchange="toggleInputMedia('tambah', this.value)" class="hidden">
+                            <i data-lucide="camera" class="w-5 h-5"></i>
+                            <span class="text-xs font-bold">Foto</span>
+                        </label>
+                        <label class="cursor-pointer border-2 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/60 rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 transition-all text-center text-slate-600 dark:text-slate-300 radio-tipe-card">
+                            <input type="radio" name="tipe" value="video" onchange="toggleInputMedia('tambah', this.value)" class="hidden">
+                            <i data-lucide="video" class="w-5 h-5"></i>
+                            <span class="text-xs font-bold">Tautan Video</span>
+                        </label>
+                        <label class="cursor-pointer border-2 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/60 rounded-2xl p-3 flex flex-col items-center justify-center gap-1.5 transition-all text-center text-slate-600 dark:text-slate-300 radio-tipe-card">
+                            <input type="radio" name="tipe" value="infografis" onchange="toggleInputMedia('tambah', this.value)" class="hidden">
+                            <i data-lucide="image" class="w-5 h-5"></i>
+                            <span class="text-xs font-bold">Infografis</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- JUDUL MEDIA -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Judul Media <span class="text-rose-500">*</span></label>
+                    <input type="text" name="judul" required placeholder="Contoh: Inspeksi Fasilitas Data Center Tier-3" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-3 text-sm focus:ring-4 focus:ring-orange-500/15 focus:border-orange-500 outline-none font-semibold transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                </div>
+
+                <!-- INPUT BERKAS GAMBAR (FOTO / INFOGRAFIS) MODERN DROPZONE -->
+                <div id="tambahBoxFile">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Unggah Berkas Gambar</label>
+                    <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 rounded-2xl p-4 transition-all duration-200 bg-slate-50/70 dark:bg-slate-800/40 hover:bg-orange-50/20 dark:hover:bg-orange-500/10 group cursor-pointer" onclick="document.getElementById('tambahGaleriInputFile').click()">
+                        <input type="file" id="tambahGaleriInputFile" name="file_upload" accept="image/*" class="hidden" onchange="previewUploadImage(event, 'tambahGaleriPreviewImg', 'tambahGaleriPlaceholder', 'tambahBadgeFileGaleri')">
+                        
+                        <div class="flex flex-col sm:flex-row items-center gap-4">
+                            <div class="relative w-32 h-24 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shadow-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i data-lucide="image-plus" class="w-8 h-8 text-slate-300 dark:text-slate-500" id="tambahGaleriPlaceholder"></i>
+                                <img id="tambahGaleriPreviewImg" src="" class="w-full h-full object-cover hidden" alt="Pratinjau Foto">
+                            </div>
+                            <div class="flex-1 text-center sm:text-left">
+                                <div class="flex flex-wrap items-center gap-2 justify-center sm:justify-start mb-1.5">
+                                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 group-hover:border-orange-500 text-slate-700 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 rounded-xl text-xs font-bold shadow-2xs transition-all pointer-events-none">
+                                        <i data-lucide="upload-cloud" class="w-4 h-4 text-orange-500"></i> Pilih Berkas Foto
+                                    </span>
+                                    <span id="tambahBadgeFileGaleri" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hidden truncate max-w-[200px]"></span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 dark:text-slate-400">Klik area ini untuk memilih gambar. Format didukung: JPG, PNG, JPEG, WebP (Maks. 5MB).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INPUT KHUSUS VIDEO URL (YOUTUBE / EMBED) -->
+                <div id="tambahBoxVideo" class="hidden">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Tautan Video (YouTube Embed / URL)</label>
+                    <div class="relative">
+                        <i data-lucide="link" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="url" name="video_url" placeholder="https://www.youtube.com/embed/..." class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-4 focus:ring-orange-500/15 focus:border-orange-500 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                    </div>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-400 mt-1">Gunakan link embed seperti <code>https://www.youtube.com/embed/VIDEO_ID</code>.</p>
+                </div>
+
+                <!-- KETERANGAN / DESKRIPSI -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Keterangan / Deskripsi Singkat</label>
+                    <textarea name="keterangan" rows="3" placeholder="Tuliskan ringkasan liputan atau catatan media ini..." class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-4 focus:ring-orange-500/15 focus:border-orange-500 outline-none leading-relaxed transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"></textarea>
+                </div>
+            </div>
+
+            <!-- FOOTER AKSI -->
+            <div class="shrink-0 px-6 py-4 bg-slate-50 dark:bg-slate-900/95 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeModalTambahGaleri()" class="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors">Batal</button>
+                <button type="submit" class="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Simpan Media
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- 2. MODAL EDIT MEDIA                                            -->
+<!-- ============================================================== -->
+<div id="modalEditGaleri" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md transition-all duration-300 opacity-0 p-3 sm:p-4 md:p-6">
+    <div class="fixed inset-0" onclick="closeModalEditGaleri()"></div>
+    <div id="boxEditGaleri" class="relative z-10 bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xl max-h-[90vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 transform transition-all duration-300 scale-95 opacity-0 my-auto">
+        
+        <!-- HEADER (shrink-0) -->
+        <div class="shrink-0 px-6 py-4 sm:py-5 bg-navy-900 text-white flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+                    <i data-lucide="edit-3" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white leading-tight">Ubah Informasi Media</h3>
+                    <p class="text-slate-300 text-xs mt-0.5">Perbarui judul, deskripsi, atau ganti berkas dokumentasi</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModalEditGaleri()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form action="/admin-diskominfo/galeri/update" method="POST" enctype="multipart/form-data" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <input type="hidden" id="editGaleriId" name="id">
+            <input type="hidden" id="editGaleriFileLama" name="file_lama">
+
+            <div class="p-5 sm:p-6 space-y-4 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+                <!-- PILIH TIPE MEDIA -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Tipe Media</label>
+                    <select id="editGaleriTipe" name="tipe" onchange="toggleInputMedia('edit', this.value)" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-3 text-sm focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 outline-none font-bold transition-all">
+                        <option value="foto">Foto Kegiatan</option>
+                        <option value="video">Video & Rekaman</option>
+                        <option value="infografis">Infografis Edukasi</option>
+                    </select>
+                </div>
+
+                <!-- JUDUL MEDIA -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Judul Media <span class="text-rose-500">*</span></label>
+                    <input type="text" id="editGaleriJudul" name="judul" required class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl px-4 py-3 text-sm focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 outline-none font-semibold transition-all">
+                </div>
+
+                <!-- GANTI FILE GAMBAR MODERN DROPZONE -->
+                <div id="editBoxFile">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Berkas Gambar Media</label>
+                    <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-4 transition-all duration-200 bg-slate-50/70 dark:bg-slate-800/40 hover:bg-blue-50/20 dark:hover:bg-blue-500/10 group cursor-pointer" onclick="document.getElementById('editGaleriInputFile').click()">
+                        <input type="file" id="editGaleriInputFile" name="file_upload" accept="image/*" class="hidden" onchange="previewUploadImage(event, 'editCurrentImg', 'editGaleriPlaceholder', 'editBadgeFileGaleri')">
+                        
+                        <div class="flex flex-col sm:flex-row items-center gap-4">
+                            <div class="relative w-32 h-24 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shadow-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i data-lucide="image" class="w-8 h-8 text-slate-300 dark:text-slate-500 hidden" id="editGaleriPlaceholder"></i>
+                                <img id="editCurrentImg" src="" class="w-full h-full object-cover" alt="Foto">
+                                <span id="editBadgeFotoStatus" class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-navy-900/80 text-white backdrop-blur-xs">Foto Saat Ini</span>
+                            </div>
+                            <div class="flex-1 text-center sm:text-left">
+                                <div class="flex flex-wrap items-center gap-2 justify-center sm:justify-start mb-1.5">
+                                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 group-hover:border-blue-500 text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 rounded-xl text-xs font-bold shadow-2xs transition-all pointer-events-none">
+                                        <i data-lucide="upload-cloud" class="w-4 h-4 text-blue-500"></i> Ganti Berkas Gambar
+                                    </span>
+                                    <span id="editBadgeFileGaleri" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hidden truncate max-w-[200px]"></span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 dark:text-slate-400">Klik area ini untuk memilih berkas gambar baru. Format didukung: JPG, PNG, JPEG, WebP (Maks. 5MB).</p>
+                                <p class="text-[10px] text-slate-400 dark:text-slate-400 italic mt-0.5">Biarkan kosong jika tidak ingin mengubah gambar yang sudah ada.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GANTI VIDEO URL -->
+                <div id="editBoxVideo" class="hidden">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Tautan Video</label>
+                    <div class="relative">
+                        <i data-lucide="link" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="url" id="editGaleriVideoUrl" name="video_url" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- KETERANGAN / DESKRIPSI -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">Keterangan / Deskripsi</label>
+                    <textarea id="editGaleriKeterangan" name="keterangan" rows="3" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 outline-none leading-relaxed transition-all"></textarea>
+                </div>
+            </div>
+
+            <!-- FOOTER AKSI -->
+            <div class="shrink-0 px-6 py-4 bg-slate-50 dark:bg-slate-900/95 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeModalEditGaleri()" class="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-colors">Batal</button>
+                <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Perbarui Media
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- 3. MODAL KONFIRMASI HAPUS MODERN                              -->
+<!-- ============================================================== -->
+<div id="modalHapusGaleri" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md p-4 transition-all duration-300 opacity-0">
+    <div class="fixed inset-0" onclick="closeModalHapusGaleri()"></div>
+    <div id="boxHapusGaleri" class="relative z-10 bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 text-center shadow-2xl border border-slate-100 dark:border-slate-800 transform transition-all scale-95 opacity-0 duration-300 my-auto">
+        <div class="w-16 h-16 rounded-2xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4 animate-bounce">
+            <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+        </div>
+
+        <h3 class="text-xl font-bold text-navy-900 dark:text-white mb-2">Hapus Media Dari Galeri?</h3>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mb-4 leading-relaxed">Apakah Anda yakin ingin menghapus media ini secara permanen?</p>
+        
+        <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 mb-6 text-xs font-semibold text-navy-900 dark:text-white line-clamp-2" id="deleteGaleriJudul">
+            -
+        </div>
+
+        <div class="flex items-center justify-center gap-3">
+            <button type="button" onclick="closeModalHapusGaleri()" class="w-1/2 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all">
+                Batal
+            </button>
+            <a id="btnConfirmDeleteGaleri" href="#" class="w-1/2 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center gap-1.5">
+                <i data-lucide="trash-2" class="w-4 h-4"></i> Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT LOGIKA CMS GALERI ADMIN -->
+<script>
+    // Pindahkan modal ke document.body agar tidak terperangkap transform/overflow parent container
+    function teleportModalGaleri(el) {
+        if (el && el.parentElement !== document.body) {
+            document.body.appendChild(el);
+        }
+    }
+    ['modalTambahGaleri', 'modalEditGaleri', 'modalHapusGaleri'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) teleportModalGaleri(el);
+    });
+
+    // 1. Helper Modal Tambah
+    function openModalTambahGaleri() {
+        const m = document.getElementById('modalTambahGaleri');
+        const box = document.getElementById('boxTambahGaleri');
+        if (!m || !box) return;
+        teleportModalGaleri(m);
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        requestAnimationFrame(() => {
+            m.classList.remove('opacity-0');
+            m.classList.add('opacity-100');
+            box.classList.remove('scale-95', 'opacity-0');
+            box.classList.add('scale-100', 'opacity-100');
+        });
+        if (window.lucide) lucide.createIcons();
+    }
+    function closeModalTambahGaleri() {
+        const m = document.getElementById('modalTambahGaleri');
+        const box = document.getElementById('boxTambahGaleri');
+        if (!m || !box) return;
+        box.classList.remove('scale-100', 'opacity-100');
+        box.classList.add('scale-95', 'opacity-0');
+        m.classList.remove('opacity-100');
+        m.classList.add('opacity-0');
+        document.body.classList.remove('overflow-hidden');
+        setTimeout(() => {
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }, 220);
+    }
+
+    // 2. Helper Modal Edit
+    function openModalEditGaleri() {
+        const m = document.getElementById('modalEditGaleri');
+        const box = document.getElementById('boxEditGaleri');
+        if (!m || !box) return;
+        teleportModalGaleri(m);
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        requestAnimationFrame(() => {
+            m.classList.remove('opacity-0');
+            m.classList.add('opacity-100');
+            box.classList.remove('scale-95', 'opacity-0');
+            box.classList.add('scale-100', 'opacity-100');
+        });
+        if (window.lucide) lucide.createIcons();
+    }
+    function closeModalEditGaleri() {
+        const m = document.getElementById('modalEditGaleri');
+        const box = document.getElementById('boxEditGaleri');
+        if (!m || !box) return;
+        box.classList.remove('scale-100', 'opacity-100');
+        box.classList.add('scale-95', 'opacity-0');
+        m.classList.remove('opacity-100');
+        m.classList.add('opacity-0');
+        document.body.classList.remove('overflow-hidden');
+        setTimeout(() => {
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }, 220);
+    }
+
+    // 3. Helper Modal Hapus
+    function openModalHapusGaleri() {
+        const m = document.getElementById('modalHapusGaleri');
+        const box = document.getElementById('boxHapusGaleri');
+        if (!m || !box) return;
+        teleportModalGaleri(m);
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        requestAnimationFrame(() => {
+            m.classList.remove('opacity-0');
+            m.classList.add('opacity-100');
+            box.classList.remove('scale-95', 'opacity-0');
+            box.classList.add('scale-100', 'opacity-100');
+        });
+        if (window.lucide) lucide.createIcons();
+    }
+    function closeModalHapusGaleri() {
+        const m = document.getElementById('modalHapusGaleri');
+        const box = document.getElementById('boxHapusGaleri');
+        if (!m || !box) return;
+        box.classList.remove('scale-100', 'opacity-100');
+        box.classList.add('scale-95', 'opacity-0');
+        m.classList.remove('opacity-100');
+        m.classList.add('opacity-0');
+        document.body.classList.remove('overflow-hidden');
+        setTimeout(() => {
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }, 220);
+    }
+
+    // 4. Switcher Form Berdasarkan Tipe Media
+    function toggleInputMedia(mode, tipe) {
+        const isVideo = tipe === 'video';
+        if (mode === 'tambah') {
+            document.getElementById('tambahBoxFile').classList.toggle('hidden', isVideo);
+            document.getElementById('tambahBoxVideo').classList.toggle('hidden', !isVideo);
+
+            document.querySelectorAll('#modalTambahGaleri .radio-tipe-card').forEach(card => {
+                const radio = card.querySelector('input[type="radio"]');
+                if (radio && radio.value === tipe) {
+                    card.classList.add('border-orange-500', 'bg-orange-50/60', 'text-orange-600', 'dark:bg-orange-500/15', 'dark:text-orange-400');
+                    card.classList.remove('border-slate-200', 'text-slate-600', 'dark:border-slate-700', 'dark:text-slate-300');
+                } else {
+                    card.classList.remove('border-orange-500', 'bg-orange-50/60', 'text-orange-600', 'dark:bg-orange-500/15', 'dark:text-orange-400');
+                    card.classList.add('border-slate-200', 'text-slate-600', 'dark:border-slate-700', 'dark:text-slate-300');
+                }
+            });
+        } else if (mode === 'edit') {
+            document.getElementById('editBoxFile').classList.toggle('hidden', isVideo);
+            document.getElementById('editBoxVideo').classList.toggle('hidden', !isVideo);
+        }
+    }
+
+    // 5. Image Preview & Badge Helper
+    function previewUploadImage(event, previewId, placeholderId, badgeId) {
+        const file = event.target ? event.target.files[0] : (event.files ? event.files[0] : null);
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById(previewId);
+                const placeholder = document.getElementById(placeholderId);
+                if (img) {
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                }
+                if (placeholder) {
+                    placeholder.classList.add('hidden');
+                }
+                if (badgeId) {
+                    const badge = document.getElementById(badgeId);
+                    if (badge) {
+                        badge.textContent = `✓ ${file.name}`;
+                        badge.classList.remove('hidden');
+                    }
+                }
+                const badgeStatus = document.getElementById("editBadgeFotoStatus");
+                if (badgeStatus) {
+                    badgeStatus.textContent = "Foto Baru Dipilih";
+                    badgeStatus.className = "absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-600 text-white backdrop-blur-xs";
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // 6. Filter Kategori Client-Side
+    function filterAdminGaleri(tipe, btn) {
+        document.querySelectorAll('.btn-filter-galeri').forEach(b => {
+            b.classList.remove('bg-navy-900', 'text-white');
+            b.classList.add('text-slate-500', 'hover:bg-slate-100');
+        });
+        btn.classList.add('bg-navy-900', 'text-white');
+        btn.classList.remove('text-slate-500', 'hover:bg-slate-100');
+
+        document.querySelectorAll('.row-galeri-item').forEach(row => {
+            if (tipe === 'semua' || row.dataset.tipe === tipe) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // 7. Search Filter Client-Side
+    function searchGaleriAdmin() {
+        const query = document.getElementById('cariGaleriAdmin').value.toLowerCase();
+        document.querySelectorAll('.row-galeri-item').forEach(row => {
+            const title = row.querySelector('.col-judul').innerText.toLowerCase();
+            if (title.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // 8. Event Delegation Tombol Edit & Hapus
+    document.addEventListener("click", function(e) {
+        // Tombol Edit
+        const btnEdit = e.target.closest(".btn-edit-galeri");
+        if (btnEdit) {
+            const id = btnEdit.dataset.id;
+            const tipe = btnEdit.dataset.tipe;
+            const judul = btnEdit.querySelector(".hidden-judul").innerText;
+            const filePath = btnEdit.querySelector(".hidden-filepath").innerText;
+            const keterangan = btnEdit.querySelector(".hidden-keterangan").value;
+
+            document.getElementById("editGaleriId").value = id;
+            document.getElementById("editGaleriJudul").value = judul;
+            document.getElementById("editGaleriTipe").value = tipe;
+            document.getElementById("editGaleriFileLama").value = filePath;
+            document.getElementById("editGaleriKeterangan").value = keterangan;
+
+            // Reset file input value and badge
+            const inputFile = document.getElementById("editGaleriInputFile");
+            if (inputFile) inputFile.value = "";
+            const badgeFile = document.getElementById("editBadgeFileGaleri");
+            if (badgeFile) badgeFile.classList.add("hidden");
+
+            const badgeStatus = document.getElementById("editBadgeFotoStatus");
+            if (badgeStatus) {
+                badgeStatus.textContent = "Foto Saat Ini";
+                badgeStatus.className = "absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-navy-900/80 text-white backdrop-blur-xs";
+            }
+
+            toggleInputMedia('edit', tipe);
+
+            if (tipe === 'video') {
+                document.getElementById("editGaleriVideoUrl").value = filePath;
+            } else {
+                const editImg = document.getElementById("editCurrentImg");
+                const placeholder = document.getElementById("editGaleriPlaceholder");
+                if (filePath && filePath.trim() !== '') {
+                    editImg.src = filePath;
+                    editImg.classList.remove("hidden");
+                    if (placeholder) placeholder.classList.add("hidden");
+                    if (badgeStatus) badgeStatus.classList.remove("hidden");
+                } else {
+                    editImg.classList.add("hidden");
+                    if (placeholder) placeholder.classList.remove("hidden");
+                    if (badgeStatus) badgeStatus.classList.add("hidden");
+                }
+            }
+
+            openModalEditGaleri();
+            return;
+        }
+
+        // Tombol Hapus
+        const btnHapus = e.target.closest(".btn-buka-hapus-galeri");
+        if (btnHapus) {
+            const id = btnHapus.dataset.id;
+            const judul = btnHapus.querySelector(".hidden-judul-hapus").innerText;
+            document.getElementById("deleteGaleriJudul").textContent = `"${judul}"`;
+            document.getElementById("btnConfirmDeleteGaleri").href = `/admin-diskominfo/galeri/hapus/${id}`;
+            openModalHapusGaleri();
+        }
+    });
+
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+</script>

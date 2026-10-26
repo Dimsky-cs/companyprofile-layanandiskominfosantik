@@ -1,0 +1,479 @@
+<% 
+    const listSurat = (typeof suratList !== 'undefined' && Array.isArray(suratList)) ? suratList : [];
+    const countMenunggu = listSurat.filter(s => s.status === 'Menunggu').length;
+    const countDiproses = listSurat.filter(s => s.status === 'Diproses').length;
+    const countDisetujui = listSurat.filter(s => s.status === 'Disetujui').length;
+    const countDitolak = listSurat.filter(s => s.status === 'Ditolak').length;
+%>
+
+<header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <h2 class="text-2xl font-bold text-navy-900 mb-1 flex items-center gap-2.5">
+            <i data-lucide="mail-check" class="w-7 h-7 text-orange-500"></i>
+            Pelayanan Surat Kedinasan
+        </h2>
+        <p class="text-slate-500 text-sm">Kelola verifikasi, disposisi berkas, dan penerbitan surat balasan resmi secara langsung.</p>
+    </div>
+    <div class="flex items-center gap-2">
+        <a href="/surat" target="_blank" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-navy-900 text-xs font-bold rounded-xl flex items-center gap-2 transition-all shadow-2xs">
+            <i data-lucide="external-link" class="w-4 h-4 text-orange-500"></i> Formulir Permohonan Warga
+        </a>
+    </div>
+</header>
+
+<!-- KARTU STATISTIK INDIKATOR PERMOHONAN -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <span class="text-xs text-slate-400 font-semibold block">Jumlah Permohonan</span>
+            <span class="text-lg font-extrabold text-navy-900"><%= listSurat.length %></span>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-2xl border border-amber-100 shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <span class="text-xs text-slate-400 font-semibold block">Menunggu</span>
+            <span class="text-lg font-extrabold text-amber-600"><%= countMenunggu %></span>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <i data-lucide="git-pull-request" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <span class="text-xs text-slate-400 font-semibold block">Sedang Diproses</span>
+            <span class="text-lg font-extrabold text-blue-600"><%= countDiproses %></span>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <span class="text-xs text-slate-400 font-semibold block">Disetujui</span>
+            <span class="text-lg font-extrabold text-emerald-600"><%= countDisetujui %></span>
+        </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-2xl border border-rose-100 shadow-sm flex items-center gap-3 col-span-2 md:col-span-1">
+        <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+            <i data-lucide="x-circle" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <span class="text-xs text-slate-400 font-semibold block">Ditolak</span>
+            <span class="text-lg font-extrabold text-rose-600"><%= countDitolak %></span>
+        </div>
+    </div>
+</div>
+
+<!-- KONTROL PENYARINGAN & PENCARIAN -->
+<div class="bg-white rounded-2xl border border-slate-100 p-4 mb-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <!-- Filter Status Tabs -->
+    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" id="filterStatusContainer">
+        <button type="button" onclick="filterSuratTable('all')" class="surat-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-navy-900 text-white transition-all shadow-2xs" data-status="all">
+            Semua (<%= listSurat.length %>)
+        </button>
+        <button type="button" onclick="filterSuratTable('Menunggu')" class="surat-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all" data-status="Menunggu">
+            Menunggu (<%= countMenunggu %>)
+        </button>
+        <button type="button" onclick="filterSuratTable('Diproses')" class="surat-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all" data-status="Diproses">
+            Diproses (<%= countDiproses %>)
+        </button>
+        <button type="button" onclick="filterSuratTable('Disetujui')" class="surat-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all" data-status="Disetujui">
+            Disetujui (<%= countDisetujui %>)
+        </button>
+        <button type="button" onclick="filterSuratTable('Ditolak')" class="surat-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all" data-status="Ditolak">
+            Ditolak (<%= countDitolak %>)
+        </button>
+    </div>
+
+    <!-- Pencarian Cepat -->
+    <div class="relative w-full md:w-72">
+        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+        <input type="text" id="inputSearchSurat" onkeyup="searchSuratTable()" placeholder="Cari nomor tiket, nama pemohon, instansi..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-1.5 text-xs text-navy-900 outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+    </div>
+</div>
+
+<!-- TABEL ARSIP SURAT -->
+<div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden mb-8">
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[720px] text-left border-collapse text-xs" id="tableSuratAdmin">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-bold">
+                    <th class="px-5 py-4">No. Tiket & Tanggal</th>
+                    <th class="px-5 py-4">Pemohon & Kontak</th>
+                    <th class="px-5 py-4">Jenis Surat & Keperluan</th>
+                    <th class="px-5 py-4 text-center">Lampiran Berkas</th>
+                    <th class="px-5 py-4 text-center">Status</th>
+                    <th class="px-5 py-4 text-center">Surat Jawaban Resmi</th>
+                    <th class="px-5 py-4 text-right">Tindakan</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium">
+                <% if (listSurat.length > 0) { %>
+                    <% listSurat.forEach(s => { %>
+                        <tr class="hover:bg-slate-50/60 transition-colors row-surat-item" data-status="<%= s.status %>" data-search="<%= (s.nomor_surat + ' ' + s.nama_pemohon + ' ' + (s.asal_instansi || '') + ' ' + (s.nik || '')).toLowerCase() %>">
+                            <!-- No Tiket & Tanggal -->
+                            <td class="px-5 py-4 whitespace-nowrap">
+                                <span class="font-mono font-bold text-navy-900 bg-slate-100 px-2.5 py-1 rounded-lg text-xs block mb-1 w-fit">
+                                    <%= s.nomor_surat %>
+                                </span>
+                                <span class="text-[11px] text-slate-400">
+                                    <%= new Date(s.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) %> WIB
+                                </span>
+                            </td>
+
+                            <!-- Pemohon & Kontak -->
+                            <td class="px-5 py-4">
+                                <div class="font-bold text-navy-900 text-sm mb-0.5"><%= s.nama_pemohon %></div>
+                                <div class="text-slate-500 text-[11px] mb-1">Instansi: <span class="text-navy-900 font-semibold"><%= s.asal_instansi || '-' %></span></div>
+                                <div class="flex items-center gap-2">
+                                    <% if (s.no_hp) { 
+                                        let cleanWa = s.no_hp.replace(/\D/g, '');
+                                        if (cleanWa.startsWith('0')) cleanWa = '62' + cleanWa.substring(1);
+                                    %>
+                                        <a href="https://wa.me/<%= cleanWa %>" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-semibold">
+                                            <i data-lucide="phone" class="w-3 h-3"></i> <%= s.no_hp %>
+                                        </a>
+                                    <% } %>
+                                    <% if (s.nik) { %>
+                                        <span class="text-[10px] text-slate-400">NIK: <%= s.nik %></span>
+                                    <% } %>
+                                </div>
+                            </td>
+
+                            <!-- Jenis Surat & Keperluan -->
+                            <td class="px-5 py-4 max-w-xs">
+                                <span class="font-bold text-navy-900 block mb-1 text-[11.5px] line-clamp-1"><%= s.jenis_surat %></span>
+                                <p class="text-slate-500 text-[11px] line-clamp-2 leading-relaxed mb-0"><%= s.keperluan %></p>
+                            </td>
+
+                            <!-- Lampiran Pemohon -->
+                            <td class="px-5 py-4 text-center whitespace-nowrap">
+                                <div class="flex flex-col items-center gap-1.5">
+                                    <!-- Surat Permohonan Resmi Otomatis Sistem -->
+                                    <a href="/surat/cetak-permohonan/<%= s.nomor_surat %>" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl font-bold transition-all text-[11px]" title="Lihat/Cetak Surat Permohonan Resmi">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5 text-amber-600"></i> Surat Pemohon
+                                    </a>
+
+                                    <% if (s.berkas_lampiran) { %>
+                                        <a href="<%= s.berkas_lampiran %>" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-all text-[10.5px]" title="Lihat berkas lampiran pendukung dari pemohon">
+                                            <i data-lucide="paperclip" class="w-3 h-3 text-slate-500"></i> Berkas Tambahan
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </td>
+
+                            <!-- Status -->
+                            <td class="px-5 py-4 text-center whitespace-nowrap">
+                                <% 
+                                    let badgeColor = "bg-amber-100 text-amber-800 border-amber-200";
+                                    let iconName = "clock";
+                                    if (s.status === 'Diproses') {
+                                        badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
+                                        iconName = "refresh-cw";
+                                    } else if (s.status === 'Disetujui') {
+                                        badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
+                                        iconName = "check-circle-2";
+                                    } else if (s.status === 'Ditolak') {
+                                        badgeColor = "bg-rose-100 text-rose-800 border-rose-200";
+                                        iconName = "x-circle";
+                                    }
+                                %>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold <%= badgeColor %>">
+                                    <i data-lucide="<%= iconName %>" class="w-3 h-3"></i> <%= s.status %>
+                                </span>
+                            </td>
+
+                            <!-- Surat Hasil (Dinas) -->
+                            <td class="px-5 py-4 text-center whitespace-nowrap">
+                                <% if (s.status === 'Disetujui' || s.file_surat_hasil) { 
+                                    let downloadUrl = s.file_surat_hasil || ('/surat/cetak-resmi/' + s.nomor_surat);
+                                %>
+                                    <div class="flex flex-col items-center gap-1">
+                                        <a href="<%= downloadUrl %>" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl font-bold transition-all text-xs" title="Surat balasan resmi sudah aktif dengan KOP & TTE">
+                                            <i data-lucide="file-check" class="w-3.5 h-3.5 text-emerald-600"></i> Surat Resmi (KOP & TTE)
+                                        </a>
+                                        <a href="/surat/verifikasi/<%= s.nomor_surat %>" target="_blank" class="text-[10px] text-slate-500 hover:text-emerald-700 flex items-center gap-0.5 font-medium underline">
+                                            <i data-lucide="shield-check" class="w-2.5 h-2.5 text-emerald-600"></i> Verifikasi TTE Digital
+                                        </a>
+                                    </div>
+                                <% } else { %>
+                                    <div class="flex flex-col items-center gap-0.5">
+                                        <span class="text-slate-400 text-[11px] italic">Belum Diterbitkan</span>
+                                        <a href="/surat/cetak-resmi/<%= s.nomor_surat %>" target="_blank" class="text-[10px] text-orange-600 hover:underline inline-flex items-center gap-0.5">
+                                            <i data-lucide="eye" class="w-2.5 h-2.5"></i> Pratinjau Draf
+                                        </a>
+                                    </div>
+                                <% } %>
+                            </td>
+
+                            <!-- Aksi -->
+                            <td class="px-5 py-4 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button type="button" onclick="openModalSuratTindak('<%= s.id %>')" class="px-3 py-1.5 bg-navy-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-sm transition-all text-xs" title="Verifikasi & Tindak Lanjuti Surat">
+                                        <i data-lucide="edit-3" class="w-3.5 h-3.5 text-orange-400"></i> Tindak Lanjuti
+                                    </button>
+                                    <button type="button" onclick="confirmHapusSurat('<%= s.id %>', '<%= s.nomor_surat %>')" class="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-all" title="Hapus permohonan">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- ======================================================== -->
+                        <!-- MODAL TINDAK LANJUTI / DISPOSISI SURAT                   -->
+                        <!-- ======================================================== -->
+                        <div id="modalSurat-<%= s.id %>" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] hidden items-center justify-center p-3 sm:p-4">
+                            <div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden transform transition-all">
+                                <form action="/admin-diskominfo/surat/update" method="POST" enctype="multipart/form-data" class="flex flex-col h-full max-h-[92vh]">
+                                    <input type="hidden" name="id" value="<%= s.id %>">
+                                    
+                                    <!-- Modal Header -->
+                                    <div class="bg-navy-900 px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between text-white border-b border-slate-700/50 flex-shrink-0">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0">
+                                                <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-bold text-sm sm:text-base text-white leading-tight">Verifikasi & Disposisi Surat</h3>
+                                                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">Nomor Tiket: <span class="text-orange-400 font-mono font-bold"><%= s.nomor_surat %></span></p>
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="closeModalSuratTindak('<%= s.id %>')" class="text-slate-400 hover:text-white p-1 rounded-lg transition-colors">
+                                            <i data-lucide="x" class="w-5 h-5"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Modal Body -->
+                                    <div class="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                                        <!-- Ringkasan Pemohon -->
+                                        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4 text-xs">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                                                <div>
+                                                    <span class="text-slate-400 block text-[10.5px]">Nama Pemohon:</span>
+                                                    <span class="font-bold text-navy-900 text-sm"><%= s.nama_pemohon %></span>
+                                                </div>
+                                                <div>
+                                                    <span class="text-slate-400 block text-[10.5px]">Asal Instansi / Kampus:</span>
+                                                    <span class="font-bold text-navy-900"><%= s.asal_instansi || '-' %></span>
+                                                </div>
+                                                <div>
+                                                    <span class="text-slate-400 block text-[10.5px]">Nomor Identitas (NIK/NIM):</span>
+                                                    <span class="font-bold text-navy-900"><%= s.nik %></span>
+                                                </div>
+                                                <div>
+                                                    <span class="text-slate-400 block text-[10.5px]">Kontak Pemohon:</span>
+                                                    <span class="font-bold text-navy-900"><%= s.no_hp || '-' %> / <%= s.email || '-' %></span>
+                                                </div>
+                                            </div>
+                                            <div class="border-t border-slate-200/60 pt-2 mt-2">
+                                                <span class="text-slate-400 block text-[10.5px]">Jenis Layanan:</span>
+                                                <span class="font-bold text-orange-600 block mb-1"><%= s.jenis_surat %></span>
+                                                <span class="text-slate-400 block text-[10.5px]">Keperluan / Isi Permohonan:</span>
+                                                <p class="text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200 text-xs mb-1 leading-relaxed"><%= s.keperluan %></p>
+                                                
+                                                <!-- Berkas Tambahan (Jika ada) -->
+                                                <% if (s.berkas_lampiran) { %>
+                                                    <div class="mt-2 flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200">
+                                                        <span class="text-slate-600 font-semibold flex items-center gap-1.5 text-xs">
+                                                            <i data-lucide="paperclip" class="w-3.5 h-3.5 text-orange-500"></i> Berkas Lampiran Tambahan Pemohon
+                                                        </span>
+                                                        <a href="<%= s.berkas_lampiran %>" target="_blank" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-navy-900 font-bold rounded-lg text-xs transition-colors flex items-center gap-1">
+                                                            <i data-lucide="download" class="w-3 h-3"></i> Unduh / Buka Berkas
+                                                        </a>
+                                                    </div>
+                                                <% } %>
+
+                                                <!-- Akses Dokumen Digital Otomatis Sistem -->
+                                                <div class="mt-3 pt-3 border-t border-slate-200/70 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <a href="/surat/cetak-permohonan/<%= s.nomor_surat %>" target="_blank" class="p-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl flex items-center gap-2 text-amber-900 transition-colors">
+                                                        <i data-lucide="file-text" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
+                                                        <div class="text-left">
+                                                            <span class="block font-bold text-[11px]">Surat Pemohon (Digital)</span>
+                                                            <span class="block text-[9.5px] text-amber-700">Dibuat otomatis oleh sistem</span>
+                                                        </div>
+                                                    </a>
+                                                    <a href="/surat/cetak-resmi/<%= s.nomor_surat %>" target="_blank" class="p-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl flex items-center gap-2 text-emerald-900 transition-colors">
+                                                        <i data-lucide="file-badge" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                                        <div class="text-left">
+                                                            <span class="block font-bold text-[11px]">Surat Jawaban (KOP & TTE)</span>
+                                                            <span class="block text-[9.5px] text-emerald-700">Pratinjau / Cetak Surat Resmi</span>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Perbarui Status -->
+                                        <div>
+                                            <label class="block text-xs font-bold text-navy-900 mb-1.5 uppercase tracking-wider">
+                                                Status Permohonan <span class="text-rose-500">*</span>
+                                            </label>
+                                            <select name="status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-navy-900 font-bold outline-none focus:ring-2 focus:ring-orange-500">
+                                                <option value="Menunggu" <%= s.status === 'Menunggu' ? 'selected' : '' %>>⏳ Menunggu (Belum Diverifikasi)</option>
+                                                <option value="Diproses" <%= s.status === 'Diproses' ? 'selected' : '' %>>⚙️ Diproses (Verifikasi / Disposisi Kadis)</option>
+                                                <option value="Disetujui" <%= s.status === 'Disetujui' ? 'selected' : '' %>>✅ Disetujui (Terbitkan Surat Resmi Dinas)</option>
+                                                <option value="Ditolak" <%= s.status === 'Ditolak' ? 'selected' : '' %>>❌ Ditolak (Tidak Memenuhi Syarat)</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Catatan Petugas / Disposisi -->
+                                        <div>
+                                            <label class="block text-xs font-bold text-navy-900 mb-1.5 uppercase tracking-wider">
+                                                Catatan Petugas / Disposisi Dinas
+                                            </label>
+                                            <textarea name="catatan_petugas" rows="3" placeholder="Tuliskan catatan disposisi, instruksi pengambilan surat, atau alasan penolakan berkas..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-navy-900 outline-none focus:ring-2 focus:ring-orange-500"><%= s.catatan_petugas || '' %></textarea>
+                                            <span class="text-[11px] text-slate-400 mt-1 block">Catatan ini akan tampil secara publik di portal pelacakan tiket pemohon.</span>
+                                        </div>
+
+                                        <!-- Unggah Surat Hasil Balasan Resmi (PDF) -->
+                                        <div>
+                                            <div class="flex items-center justify-between mb-1.5">
+                                                <label class="block text-xs font-bold text-navy-900 uppercase tracking-wider mb-0">
+                                                    Dokumen Jawaban Resmi Dinas
+                                                </label>
+                                                <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Otomatis Terbit saat Disetujui</span>
+                                            </div>
+                                            <% if (s.file_surat_hasil || s.status === 'Disetujui') { 
+                                                let previewUrl = s.file_surat_hasil || ('/surat/cetak-resmi/' + s.nomor_surat);
+                                            %>
+                                                <div class="mb-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs">
+                                                    <span class="text-emerald-800 font-semibold flex items-center gap-1.5">
+                                                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i> Surat Resmi (KOP & TTE BSrE) aktif
+                                                    </span>
+                                                    <a href="<%= previewUrl %>" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1">
+                                                        <i data-lucide="eye" class="w-3 h-3"></i> Buka / Cetak
+                                                    </a>
+                                                </div>
+                                            <% } %>
+                                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                                                    Pilihan: Unggah Berkas PDF Mandiri / Cap Basah Khusus
+                                                </label>
+                                                <input type="file" name="file_surat_hasil" accept=".pdf,.jpg,.jpeg,.png" class="w-full text-xs text-slate-700 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-navy-900 file:text-white hover:file:bg-slate-800">
+                                                <span class="text-[10px] text-slate-400 mt-1 block">Jika dikosongkan, sistem otomatis menerbitkan Surat Resmi Digital ber-KOP & QR TTE Diskominfo.</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pemberitahuan WhatsApp -->
+                                        <% if (s.no_hp) { 
+                                            let cleanWa = s.no_hp.replace(/\D/g, '');
+                                            if (cleanWa.startsWith('0')) cleanWa = '62' + cleanWa.substring(1);
+                                            let waMsg = encodeURIComponent(`Halo ${s.nama_pemohon}, kami dari Dinas Komunikasi Informatika Persandian dan Statistik (Diskominfo). Menginformasikan permohonan surat (${s.jenis_surat}) dengan nomor tiket ${s.nomor_surat} saat ini berstatus: ${s.status}. Rincian catatan: ${s.catatan_petugas || 'Silakan cek berkala di website resmi.'}. Terima kasih.`);
+                                        %>
+                                            <div class="p-3 bg-emerald-50/70 border border-emerald-100 rounded-2xl flex items-center justify-between text-xs">
+                                                <div class="flex items-center gap-2 text-emerald-800">
+                                                    <i data-lucide="message-square" class="w-4 h-4 text-emerald-600"></i>
+                                                    <span>Kirim pemberitahuan ke pemohon lewat WhatsApp?</span>
+                                                </div>
+                                                <a href="https://wa.me/<%= cleanWa %>?text=<%= waMsg %>" target="_blank" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-1.5 transition-all text-xs">
+                                                    <i data-lucide="send" class="w-3 h-3"></i> Kirim WhatsApp
+                                                </a>
+                                            </div>
+                                        <% } %>
+                                    </div>
+
+                                    <!-- Modal Footer -->
+                                    <div class="bg-slate-50 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-wrap items-center justify-end gap-2 sm:gap-3 border-t border-slate-100 flex-shrink-0">
+                                        <button type="button" onclick="closeModalSuratTindak('<%= s.id %>')" class="px-4 sm:px-5 py-2 sm:py-2.5 text-slate-500 hover:text-slate-700 font-bold text-xs rounded-xl transition-colors">
+                                            Batal
+                                        </button>
+                                        <button type="submit" class="px-5 sm:px-6 py-2 sm:py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-orange-500/20 flex items-center gap-2 transition-all">
+                                            <i data-lucide="check" class="w-4 h-4"></i> Simpan & Perbarui Status
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="7" class="px-6 py-16 text-center text-slate-400">
+                            <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-slate-400">
+                                <i data-lucide="inbox" class="w-8 h-8"></i>
+                            </div>
+                            <h5 class="font-bold text-navy-900 text-sm mb-1">Belum Ada Permohonan Surat Masuk</h5>
+                            <p class="text-xs text-slate-400 max-w-sm mx-auto">Permohonan surat dinas mandiri yang diajukan oleh masyarakat atau mahasiswa akan otomatis masuk dan tampil pada tabel ini.</p>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- JAVASCRIPT KONTROL ADMIN SURAT -->
+<script>
+    function filterSuratTable(status) {
+        // Update active button styling
+        const buttons = document.querySelectorAll('.surat-filter-btn');
+        buttons.forEach(btn => {
+            if (btn.getAttribute('data-status') === status) {
+                btn.className = 'surat-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-navy-900 text-white transition-all';
+            } else {
+                btn.className = 'surat-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all';
+            }
+        });
+
+        // Filter rows
+        const rows = document.querySelectorAll('.row-surat-item');
+        rows.forEach(r => {
+            const rowStatus = r.getAttribute('data-status');
+            if (status === 'all' || rowStatus === status) {
+                r.style.display = '';
+            } else {
+                r.style.display = 'none';
+            }
+        });
+    }
+
+    function searchSuratTable() {
+        const query = (document.getElementById('inputSearchSurat').value || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.row-surat-item');
+        rows.forEach(r => {
+            const searchData = r.getAttribute('data-search') || '';
+            if (searchData.includes(query)) {
+                r.style.display = '';
+            } else {
+                r.style.display = 'none';
+            }
+        });
+    }
+
+    function openModalSuratTindak(id) {
+        const modal = document.getElementById('modalSurat-' + id);
+        if (modal) {
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+
+    function closeModalSuratTindak(id) {
+        const modal = document.getElementById('modalSurat-' + id);
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+    }
+
+    function confirmHapusSurat(id, nomorSurat) {
+        if (confirm(`Apakah Anda yakin ingin menghapus arsip surat ${nomorSurat}? Tindakan ini tidak dapat dibatalkan.`)) {
+            window.location.href = `/admin-diskominfo/surat/hapus/${id}`;
+        }
+    }
+</script>

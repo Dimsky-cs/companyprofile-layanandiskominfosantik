@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.maintenance_judul) ? siteSettings.maintenance_judul : 'Pemeliharaan Sistem Berkala' %> - <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.nama_instansi) ? siteSettings.nama_instansi : 'DISKOMINFOSANTIK' %></title>
+    
+    <link rel="icon" type="image/png" href="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.favicon_url) ? siteSettings.favicon_url : '/images/logo.png' %>">
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --brand-primary: <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.warna_primer) ? siteSettings.warna_primer : '#FF6B00' %>;
+            --brand-hover: <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.warna_primer_hover) ? siteSettings.warna_primer_hover : '#E05E00' %>;
+            --brand-subtle: <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.warna_primer_subtle) ? siteSettings.warna_primer_subtle : 'rgba(255, 107, 0, 0.15)' %>;
+            --brand-glow: <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.warna_primer_glow) ? siteSettings.warna_primer_glow : 'rgba(255, 107, 0, 0.35)' %>;
+            --navy-deep: #050C18;
+            --navy-card: #0A162B;
+            --navy-border: #162B50;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--navy-deep);
+            color: #E2E8F0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Cyber Grid & Light Glow */
+        .ambient-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                radial-gradient(circle at 50% 15%, var(--brand-subtle) 0%, transparent 60%),
+                radial-gradient(circle at 10% 85%, rgba(14, 165, 233, 0.08) 0%, transparent 40%),
+                linear-gradient(rgba(22, 43, 80, 0.25) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(22, 43, 80, 0.25) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Pulsing Radar Ring */
+        .radar-box {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radar-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid var(--brand-primary);
+            animation: radarPulse 3s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+            opacity: 0;
+        }
+
+        .radar-ring:nth-child(2) {
+            animation-delay: 1s;
+        }
+
+        .radar-ring:nth-child(3) {
+            animation-delay: 2s;
+        }
+
+        @keyframes radarPulse {
+            0% { transform: scale(0.6); opacity: 0.8; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        .radar-core {
+            width: 96px;
+            height: 96px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, #0A162B 0%, #102445 100%);
+            border: 2px solid var(--navy-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), 0 0 30px var(--brand-glow);
+        }
+
+        /* Rotating Gear in Core */
+        .gear-rotate {
+            animation: spinGear 14s linear infinite;
+        }
+        @keyframes spinGear {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Status Badge */
+        .badge-live-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(245, 158, 11, 0.12);
+            color: #FBBF24;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #F59E0B;
+            box-shadow: 0 0 12px #F59E0B;
+            animation: dotBlink 1.5s ease-in-out infinite;
+        }
+        @keyframes dotBlink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.85); }
+        }
+
+        /* Card Container */
+        .glass-panel {
+            background: rgba(10, 22, 43, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--navy-border);
+            border-radius: 28px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Countdown Timer Box */
+        .countdown-tile {
+            background: rgba(5, 12, 24, 0.8);
+            border: 1px solid var(--navy-border);
+            border-radius: 16px;
+            padding: 12px 16px;
+            min-width: 76px;
+            text-align: center;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+        }
+
+        .countdown-val {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            font-family: monospace;
+            line-height: 1;
+        }
+
+        .countdown-lbl {
+            font-size: 0.65rem;
+            color: #94A3B8;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* Info Item */
+        .help-card {
+            background: rgba(16, 36, 69, 0.45);
+            border: 1px solid var(--navy-border);
+            border-radius: 18px;
+            padding: 16px 18px;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .help-card:hover {
+            background: rgba(16, 36, 69, 0.85);
+            border-color: var(--brand-primary);
+            transform: translateY(-2px);
+            color: inherit;
+        }
+
+        .btn-refresh {
+            background: var(--brand-primary);
+            color: #FFFFFF;
+            border: none;
+            font-weight: 700;
+            padding: 12px 28px;
+            border-radius: 14px;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 24px var(--brand-glow);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-refresh:hover {
+            background: var(--brand-hover);
+            color: #FFFFFF;
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px var(--brand-glow);
+        }
+
+        .pulse-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+        }
+        .pulse-progress-bar {
+            position: absolute;
+            height: 100%;
+            width: 35%;
+            background: linear-gradient(90deg, transparent, var(--brand-primary), transparent);
+            animation: progressFlow 2s ease-in-out infinite;
+        }
+        @keyframes progressFlow {
+            from { left: -35%; }
+            to { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-grid"></div>
+
+    <!-- HEADER IDENTITAS RESMI KEDINASAN -->
+    <header class="content-layer py-3 py-md-4 border-bottom" style="border-color: rgba(22, 43, 80, 0.6) !important;">
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <img src="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.logo_url) ? siteSettings.logo_url : '/images/logo.png' %>" alt="Logo" height="42" class="rounded shadow-sm">
+                <div>
+                    <h1 class="h6 mb-0 text-white fw-bold tracking-wide">
+                        <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.nama_instansi) ? siteSettings.nama_instansi : 'DISKOMINFOSANTIK' %>
+                    </h1>
+                    <span class="small text-light opacity-75 fw-medium" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.sub_instansi) ? siteSettings.sub_instansi : 'KABUPATEN BEKASI' %>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENT BODY UTAMA -->
+    <main class="content-layer my-auto py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-7 text-center">
+
+                    <!-- RADAR ANIMATION FOKAL -->
+                    <div class="radar-box">
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-core">
+                            <i data-lucide="wrench" class="gear-rotate" style="width: 44px; height: 44px; color: var(--brand-primary);"></i>
+                        </div>
+                    </div>
+
+                    <!-- BADGE STATUS -->
+                    <div class="mb-3">
+                        <span class="badge-live-status">
+                            <span class="pulse-dot"></span>
+                            <span>Pemeliharaan Sistem Berkala</span>
+                        </span>
+                    </div>
+
+                    <!-- JUDUL & PESAN DARI DATABASE -->
+                    <h2 class="display-6 fw-extrabold text-white mb-3">
+                        <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.maintenance_judul) ? siteSettings.maintenance_judul : 'Situs Sedang Dalam Pemeliharaan Berkala' %>
+                    </h2>
+
+                    <p class="lead text-light opacity-80 mb-4 fs-6 px-md-4 lh-base">
+                        <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.maintenance_pesan) ? siteSettings.maintenance_pesan : 'Kami sedang melakukan pemeliharaan dan peningkatan performa sistem layanan digital demi meningkatkan kualitas dan keamanan pelayanan publik bagi seluruh warga. Layanan akan segera aktif kembali.' %>
+                    </p>
+
+                    <!-- SIMULASI PROGRESS BAR -->
+                    <div class="col-md-8 mx-auto mb-4">
+                        <div class="pulse-progress">
+                            <div class="pulse-progress-bar"></div>
+                        </div>
+                        <div class="d-flex justify-content-between text-secondary mt-1" style="font-size: 0.72rem;">
+                            <span>Optimalisasi Basis Data & Infrastruktur</span>
+                            <span class="text-warning">Dalam Proses</span>
+                        </div>
+                    </div>
+
+                    <!-- COUNTDOWN TIMER JIKA TANGGAL SELESAI DITENTUKAN -->
+                    <% 
+                       const hasEnd = (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.maintenance_selesai);
+                       const endIso = hasEnd ? new Date(siteSettings.maintenance_selesai).toISOString() : '';
+                    %>
+                    <div id="countdownContainer" class="glass-panel p-4 mb-4 mx-auto <%= hasEnd ? '' : 'd-none' %>" style="max-width: 460px;">
+                        <span class="text-light opacity-75 small fw-semibold d-block mb-3">
+                            <i data-lucide="clock" class="inline" style="width: 14px; height: 14px; vertical-align: -2px;"></i> Perkiraan Sistem Siap Kembali:
+                        </span>
+                        <div class="d-flex justify-content-center align-items-center gap-2">
+                            <div class="countdown-tile">
+                                <div id="cd-hours" class="countdown-val">00</div>
+                                <div class="countdown-lbl">Jam</div>
+                            </div>
+                            <span class="fs-3 fw-bold text-secondary">:</span>
+                            <div class="countdown-tile">
+                                <div id="cd-mins" class="countdown-val">00</div>
+                                <div class="countdown-lbl">Menit</div>
+                            </div>
+                            <span class="fs-3 fw-bold text-secondary">:</span>
+                            <div class="countdown-tile">
+                                <div id="cd-secs" class="countdown-val">00</div>
+                                <div class="countdown-lbl">Detik</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOMBOL CEK STATUS / REFRESH -->
+                    <div class="mb-5">
+                        <button type="button" onclick="location.reload()" class="btn-refresh">
+                            <i data-lucide="rotate-cw" style="width: 16px; height: 16px;"></i>
+                            <span>Muat Ulang Halaman</span>
+                        </button>
+                    </div>
+
+                    <!-- KARTU BANTUAN DARURAT WARGA -->
+                    <div class="text-start">
+                        <span class="text-secondary small fw-bold text-uppercase d-block mb-2 text-center" style="letter-spacing: 0.5px;">Kebutuhan Mendesak? Hubungi Kontak Resmi Berikut:</span>
+                        <div class="row g-2 justify-content-center">
+                            <div class="col-sm-6">
+                                <a href="tel:112" class="help-card">
+                                    <div class="rounded-circle p-2 d-flex align-items-center justify-content-center" style="background: rgba(239, 68, 68, 0.15); color: #EF4444; width: 40px; height: 40px;">
+                                        <i data-lucide="phone-call" style="width: 20px; height: 20px;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-white small">Call Center 112</div>
+                                        <div class="text-secondary" style="font-size: 0.75rem;">Layanan Darurat Bebas Pulsa 24 Jam</div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-sm-6">
+                                <a href="mailto:<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.email) ? siteSettings.email : 'diskominfo@bekasikab.go.id' %>" class="help-card">
+                                    <div class="rounded-circle p-2 d-flex align-items-center justify-content-center" style="background: rgba(59, 130, 246, 0.15); color: #3B82F6; width: 40px; height: 40px;">
+                                        <i data-lucide="mail" style="width: 20px; height: 20px;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-white small">Email Resmi</div>
+                                        <div class="text-secondary" style="font-size: 0.75rem;"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.email) ? siteSettings.email : 'diskominfo@bekasikab.go.id' %></div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER RESMI -->
+    <footer class="content-layer py-3 text-center border-top" style="border-color: rgba(22, 43, 80, 0.6) !important; font-size: 0.75rem;">
+        <div class="container text-secondary">
+            &copy; 2026 <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.nama_instansi) ? siteSettings.nama_instansi : 'DISKOMINFOSANTIK' %> <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.sub_instansi) ? siteSettings.sub_instansi : 'KABUPATEN BEKASI' %>. <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.tagline) ? siteSettings.tagline : 'Bekasi Makin Berani' %>.
+        </div>
+    </footer>
+
+    <!-- LUCIDE ICONS & COUNTDOWN SCRIPT -->
+    <script>
+        lucide.createIcons();
+
+        // Hitung Mundur Selesai Pemeliharaan
+        (function() {
+            const endStr = '<%= endIso %>';
+            if (!endStr) return;
+
+            const targetTime = new Date(endStr).getTime();
+            if (isNaN(targetTime)) return;
+
+            const elHours = document.getElementById('cd-hours');
+            const elMins  = document.getElementById('cd-mins');
+            const elSecs  = document.getElementById('cd-secs');
+
+            function updateCd() {
+                const now = Date.now();
+                const diff = targetTime - now;
+
+                if (diff <= 0) {
+                    if (elHours) elHours.textContent = '00';
+                    if (elMins)  elMins.textContent  = '00';
+                    if (elSecs)  elSecs.textContent  = '00';
+                    return;
+                }
+
+                const totalSec = Math.floor(diff / 1000);
+                const h = Math.floor(totalSec / 3600);
+                const m = Math.floor((totalSec % 3600) / 60);
+                const s = totalSec % 60;
+
+                if (elHours) elHours.textContent = String(h).padStart(2, '0');
+                if (elMins)  elMins.textContent  = String(m).padStart(2, '0');
+                if (elSecs)  elSecs.textContent  = String(s).padStart(2, '0');
+            }
+
+            updateCd();
+            setInterval(updateCd, 1000);
+        })();
+    </script>
+</body>
+</html>

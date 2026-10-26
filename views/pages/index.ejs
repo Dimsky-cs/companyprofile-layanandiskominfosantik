@@ -1,0 +1,859 @@
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- 1. HERO SECTION (USER-CENTRIC & TRACKER CEPAT) -->
+<section class="hero-mesh text-white">
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row align-items-center g-5">
+            <!-- Sisi Kiri: Sapaan & Quick Tracker Warga -->
+            <div class="col-lg-7">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 border border-white border-opacity-20 mb-3 small">
+                    <span class="badge" style="background-color: var(--orange-primary);">RESMI</span>
+                    <span>Pusat Pelayanan Digital Masyarakat Kab. Bekasi</span>
+                </div>
+                <h1 class="display-5 fw-bold lh-tight mb-3">
+                    DISKOMINFOSANTIK <br>
+                    <span class="text-warning" style="color: var(--orange-primary) !important;" id="typewriter-text"></span>
+                </h1>
+                <p class="lead text-light opacity-75 fs-6 mb-4">
+                    Selamat datang di portal pelayanan terpadu. Ajukan surat mandiri, sampaikan laporan aduan warga, serta akses informasi dan data kependudukan Kabupaten Bekasi dalam satu pintu.
+                </p>
+
+                <!-- Quick Tracker Box Warga -->
+                <div class="glass-tracker-box">
+                    <h6 class="fw-bold text-white mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-search" style="color: var(--orange-primary);"></i> Lacak Status Permohonan & Aduan Anda
+                    </h6>
+                    <p class="small text-light opacity-75 mb-3">Masukkan NIK, Nomor Surat, atau Kode Tiket Aduan Anda untuk melihat perkembangan:</p>
+                    
+                    <% if (typeof trackerError !== 'undefined' && trackerError) { %>
+                        <div class="alert alert-danger py-2 small mb-3 border-0 bg-danger bg-opacity-75 text-white">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> <%= trackerError %>
+                        </div>
+                    <% } %>
+
+                    <form action="/track" method="POST" class="d-flex gap-2 align-items-stretch">
+                        <input type="text" name="trackingId" class="form-control form-control-lg bg-white border-0 fs-6 shadow-none" placeholder="Ketik NIK / No. Surat / Kode Tiket..." required style="min-width: 0; flex: 1;">
+                        <button type="submit" class="btn btn-orange px-3 px-sm-4 d-flex align-items-center justify-content-center gap-1.5 flex-shrink-0" style="white-space: nowrap;">
+                            <span>Lacak</span> <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sisi Kanan: Kartu Pintas Bantuan Warga (Citizen Assistance Hub) -->
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="p-4 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-20 shadow-lg text-white">
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-white border-opacity-25 pb-2">
+                        <span class="fw-bold small"><i class="bi bi-lightning-charge-fill text-warning me-1" style="color: var(--orange-primary) !important;"></i> BANTUAN & KONTAK CEPAT</span>
+                        <span class="badge bg-success">SIAGA 24 JAM</span>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        <!-- Kontak Darurat 112 -->
+                        <div class="p-3 bg-dark bg-opacity-50 rounded-3 border border-white border-opacity-10 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-box-orange" style="width: 42px; height: 42px; font-size: 1.2rem;"><i class="bi bi-telephone-fill"></i></div>
+                                <div>
+                                    <strong class="d-block text-white fs-6">Call Center 112</strong>
+                                    <span class="small text-light opacity-75">Panggilan Darurat Bebas Pulsa</span>
+                                </div>
+                            </div>
+                            <span class="badge" style="background-color: var(--orange-primary); color: white;">Gratis</span>
+                        </div>
+
+                        <!-- Cek Fakta Hoaks -->
+                        <div class="p-3 bg-dark bg-opacity-50 rounded-3 border border-white border-opacity-10 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-box-orange" style="width: 42px; height: 42px; font-size: 1.2rem;"><i class="bi bi-shield-check"></i></div>
+                                <div>
+                                    <strong class="d-block text-white fs-6">Kanal Cek Hoaks</strong>
+                                    <span class="small text-light opacity-75">Verifikasi Informasi Meragukan</span>
+                                </div>
+                            </div>
+                            <a href="/pengaduan" class="btn btn-sm btn-outline-light px-2 py-1" style="font-size: 0.75rem;">Lapor</a>
+                        </div>
+
+                        <!-- Jaminan Kesehatan UHC -->
+                        <div class="p-3 bg-dark bg-opacity-50 rounded-3 border border-white border-opacity-10 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-box-orange" style="width: 42px; height: 42px; font-size: 1.2rem;"><i class="bi bi-heart-pulse-fill"></i></div>
+                                <div>
+                                    <strong class="d-block text-white fs-6">UHC BPJS Kesehatan</strong>
+                                    <span class="small text-light opacity-75">99.1% Warga Terlindungi</span>
+                                </div>
+                            </div>
+                            <span class="badge bg-success">Terjamin</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 2. LIVE TICKER INFORMASI PUBLIK & CALL CENTER DARURAT -->
+<div class="ticker-wrap">
+    <div class="container">
+        <div class="ticker-grid">
+            <!-- 1. Jam Layanan Kantor -->
+            <div class="ticker-card ticker-card-hours">
+                <div class="ticker-card-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="ticker-card-content">
+                    <div class="ticker-card-header">
+                        <span class="ticker-badge ticker-badge-hours">JAM LAYANAN</span>
+                        <span class="ticker-sub">Senin – Jumat</span>
+                    </div>
+                    <div class="ticker-card-value">
+                        <strong>08.00 – 16.00 WIB</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Call Center Darurat 112 -->
+            <div class="ticker-card ticker-card-emergency">
+                <div class="ticker-card-icon pulse-emergency">
+                    <i class="bi bi-telephone-fill"></i>
+                </div>
+                <div class="ticker-card-content">
+                    <div class="ticker-card-header">
+                        <span class="ticker-badge ticker-badge-emergency">DARURAT</span>
+                        <span class="ticker-sub text-success-light">Bebas Pulsa 24 Jam</span>
+                    </div>
+                    <div class="ticker-card-value">
+                        Call Center: <strong>112</strong> <span class="ticker-note">(Siaga 24 Jam)</span>
+                    </div>
+                </div>
+                <a href="tel:112" class="ticker-action-btn" title="Panggil Call Center 112">
+                    <i class="bi bi-telephone-outbound-fill"></i>
+                    <span>Panggil 112</span>
+                </a>
+            </div>
+
+            <!-- 3. Jangkauan Warga & Kecamatan -->
+            <div class="ticker-card ticker-card-population">
+                <div class="ticker-card-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="ticker-card-content">
+                    <div class="ticker-card-header">
+                        <span class="ticker-badge ticker-badge-population">POPULASI</span>
+                        <span class="ticker-sub">23 Kecamatan</span>
+                    </div>
+                    <div class="ticker-card-value">
+                        Melayani <strong>3.214.850 Jiwa</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PEMBATAS & PERPINDAHAN WARNA HALUS (GENTLE WAVE DIVIDER) -->
+<div class="hero-transition-wave">
+    <svg viewBox="0 0 1440 38" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,0 C320,28 720,38 1080,24 C1240,18 1360,6 1440,0 L1440,38 L0,38 Z" class="wave-fill"></path>
+    </svg>
+</div>
+
+<!-- 3. MENU AKSES CEPAT LAYANAN (BENTO GRID RELEVAN) -->
+<section class="py-5 bg-light-surface section-transition-ambient">
+    <div class="container py-3">
+        <div class="text-center mb-5">
+            <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">MENU UTAMA PORTAL</span>
+            <h2 class="fw-bold text-navy-title">Pusat Pelayanan & Informasi Warga</h2>
+            <p class="text-muted small">Akses seluruh modul layanan DISKOMINFOSANTIK dengan 1 klik mudah</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- 1. Persuratan Digital -->
+            <div class="col-lg-4 col-md-6">
+                <a href="/surat" class="text-decoration-none">
+                    <div class="bento-card">
+                        <div>
+                            <div class="icon-box-orange mb-3"><i class="bi bi-envelope-paper-fill"></i></div>
+                            <h5 class="fw-bold text-dark mb-2">Pelayanan Persuratan</h5>
+                            <p class="text-muted mb-4 bento-desc">Pengajuan surat mandiri (PKL/Magang, Izin Liputan, Website Dinas, Informasi Publik) langsung cetak bukti ber-QR Code.</p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between text-warning fw-semibold bento-action" style="color: var(--orange-primary) !important;">
+                            <span>Ajukan Surat Mandiri</span>
+                            <i class="bi bi-arrow-right-circle-fill fs-5"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 2. Pengaduan Warga (Highlight Navy) -->
+            <div class="col-lg-4 col-md-6">
+                <a href="/pengaduan" class="text-decoration-none">
+                    <div class="bento-card highlight-navy">
+                        <div>
+                            <div class="d-inline-flex p-3 rounded-3 bg-white bg-opacity-10 text-warning mb-3 fs-4" style="color: var(--orange-primary) !important;">
+                                <i class="bi bi-megaphone-fill"></i>
+                            </div>
+                            <h5 class="fw-bold text-white mb-2">Pengaduan & Lapor Warga</h5>
+                            <p class="text-light opacity-90 mb-4 bento-desc">Laporkan gangguan internet publik, kendala website & aplikasi dinas, atau klarifikasi berita hoaks secara aman.</p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between text-warning fw-semibold bento-action" style="color: var(--orange-primary) !important;">
+                            <span>Buat Laporan / Cek Tiket</span>
+                            <i class="bi bi-arrow-right-circle-fill fs-5"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 3. Satu Data Kependudukan 23 Kecamatan -->
+            <div class="col-lg-4 col-md-6">
+                <a href="/statistik" class="text-decoration-none">
+                    <div class="bento-card">
+                        <div>
+                            <div class="icon-box-orange mb-3"><i class="bi bi-bar-chart-fill"></i></div>
+                            <h5 class="fw-bold text-dark mb-2">Statistik Kependudukan</h5>
+                            <p class="text-muted mb-4 bento-desc">Portal Satu Data 23 Kecamatan, peta kepadatan interaktif, piramida usia, dan fitur bandingkan 2 kecamatan.</p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between text-warning fw-semibold bento-action" style="color: var(--orange-primary) !important;">
+                            <span>Eksplorasi Data Daerah</span>
+                            <i class="bi bi-arrow-right-circle-fill fs-5"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 4. Profil Dinas & Visi Misi -->
+            <div class="col-lg-6 col-md-6">
+                <a href="/profil" class="text-decoration-none">
+                    <div class="bento-card">
+                        <div>
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="icon-box-orange"><i class="bi bi-building-fill"></i></div>
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1">Profil & Layanan Dinas</h5>
+                                    <span class="text-muted bento-subtitle">Visi Misi, Tugas Bidang, & Struktur Organisasi</span>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-3 bento-desc"><%= (profil && profil.tentang) ? profil.tentang.substring(0, 130) + '...' : 'Penyelenggara urusan komunikasi, informatika, persandian dan statistik Kabupaten Bekasi.' %></p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between fw-semibold bento-action bento-action-navy">
+                            <span>Lihat Struktur & Tugas Pejabat</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 5. Galeri & Dokumentasi Liputan -->
+            <div class="col-lg-6 col-md-6">
+                <a href="/galeri" class="text-decoration-none">
+                    <div class="bento-card">
+                        <div>
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="icon-box-orange"><i class="bi bi-camera-reels-fill"></i></div>
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1">Galeri Multimedia & Podcast</h5>
+                                    <span class="text-muted bento-subtitle">Dokumentasi Foto, Video, & Infografis</span>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-3 bento-desc">Kumpulan liputan program digitalisasi daerah, podcast edukasi literasi digital, dan poster infografis resmi daerah.</p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between fw-semibold bento-action bento-action-navy">
+                            <span>Buka Galeri Multimedia</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 4. SEKILAS DATA MASYARAKAT KABUPATEN BEKASI -->
+<section class="py-5 bg-white border-top border-bottom">
+    <div class="container py-3">
+        <div class="row align-items-center justify-content-between mb-4">
+            <div class="col-md-8">
+                <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">SATU DATA KEPENDUDUKAN</span>
+                <h2 class="fw-bold mb-1 text-navy-title">Sekilas Data Masyarakat Kabupaten Bekasi</h2>
+                <p class="text-muted small mb-0">Ringkasan demografi warga dan jaminan kesejahteraan sosial di 23 Kecamatan</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="/statistik" class="btn btn-navy btn-sm px-3">
+                    Buka Dashboard 23 Kecamatan <i class="bi bi-arrow-right ms-1 text-warning" style="color: var(--orange-primary) !important;"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4 align-items-center">
+            <!-- 4 Metrik Kependudukan Relevan -->
+            <div class="col-lg-7">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="metric-neon-card p-3 h-100">
+                            <span class="small text-muted fw-bold d-block mb-1">TOTAL PENDUDUK</span>
+                            <h4 class="fw-bold mb-1 text-navy-title"><%= stats.totalPenduduk %> <span class="fs-6 text-muted fw-normal">Jiwa</span></h4>
+                            <span class="badge bg-primary bg-opacity-10 text-primary small">♂ Laki: <%= stats.rasioLaki %> • ♀ Perempuan: <%= stats.rasioPerempuan %></span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="metric-neon-card p-3 h-100">
+                            <span class="small text-muted fw-bold d-block mb-1">JUMLAH KELUARGA (KK)</span>
+                            <h4 class="fw-bold mb-1" style="color: var(--orange-primary);"><%= stats.totalKK %> <span class="fs-6 text-muted fw-normal">KK</span></h4>
+                            <span class="small text-muted">Terdaftar di Data SIAK Dukcapil</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="metric-neon-card p-3 h-100">
+                            <span class="small text-muted fw-bold d-block mb-1">CAKUPAN WILAYAH</span>
+                            <h5 class="fw-bold mb-1 text-navy-title" style="font-size: 1.1rem;">23 Kecamatan</h5>
+                            <span class="small text-muted">187 Desa & Kelurahan Terhubung FO</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="metric-neon-card p-3 h-100">
+                            <span class="small text-muted fw-bold d-block mb-1">JAMINAN KESEHATAN (UHC)</span>
+                            <h4 class="fw-bold mb-1 text-success"><%= stats.uhcRate %></h4>
+                            <span class="badge bg-success bg-opacity-10 text-success border small">Warga Ter-cover BPJS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Grafik Komposisi Usia Warga -->
+            <div class="col-lg-5">
+                <div class="card-modern p-4 bg-light shadow-xs border">
+                    <h5 class="fw-bold mb-3 text-center text-navy-title" style="font-size: 1.15rem;">Komposisi Usia Penduduk</h5>
+                    <div style="height: 220px; position: relative;" class="d-flex align-items-center justify-content-center">
+                        <canvas id="miniChartUsia"></canvas>
+                    </div>
+                    <div class="text-center mt-3 pt-2 border-top border-secondary border-opacity-10">
+                        <p class="mb-0 fw-semibold text-secondary" style="font-size: 0.95rem;">
+                            <i class="bi bi-info-circle-fill text-warning me-1" style="color: var(--orange-primary) !important;"></i>
+                            Mayoritas Penduduk Merupakan <strong>Usia Produktif & Angkatan Kerja (66.8%)</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. WARTA & BERITA TERKINI (KONEKSI KE MENU BERITA) -->
+<section class="py-5 bg-light-surface">
+    <div class="container py-3">
+        <div class="row align-items-end justify-content-between mb-4">
+            <div class="col-md-8">
+                <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">KABAR DAERAH</span>
+                <h2 class="fw-bold mb-0 text-navy-title">Berita & Klarifikasi Hoaks Terkini</h2>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="/berita" class="btn btn-outline-dark btn-sm rounded-pill px-3">Lihat Semua Berita <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <% if (berita && berita.length > 0) { %>
+                <% berita.forEach(item => { %>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card-modern h-100 overflow-hidden d-flex flex-column">
+                            <div class="bg-secondary bg-opacity-25" style="height: 190px; overflow: hidden; position: relative;">
+                                <img src="<%= item.gambar || 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=60' %>" class="w-100 h-100 object-fit-cover" alt="<%= item.judul %>">
+                                <span class="badge position-absolute top-0 start-0 m-3 badge-category-cover">
+                                    <%= item.nama_kategori || 'Informasi' %>
+                                </span>
+                            </div>
+                            <div class="p-4 d-flex flex-column flex-grow-1">
+                                <div class="small text-muted mb-2">
+                                    <i class="bi bi-calendar3 me-1"></i> <%= new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                                    <span class="mx-1">•</span>
+                                    <i class="bi bi-person me-1"></i> <%= item.penulis %>
+                                </div>
+                                <h5 class="fw-bold mb-2" style="font-size: 1.1rem; line-height: 1.4;">
+                                    <a href="/berita/<%= item.slug %>" class="text-dark text-decoration-none"><%= item.judul %></a>
+                                </h5>
+                                <p class="small text-muted flex-grow-1">
+                                    <%= item.konten ? item.konten.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '' %>
+                                </p>
+                                <a href="/berita/<%= item.slug %>" class="fw-semibold small text-decoration-none mt-2" style="color: var(--orange-primary);">Baca Selengkapnya →</a>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } %>
+        </div>
+    </div>
+</section>
+
+<!-- CSS KHUSUS INTERAKSI GALERI BERANDA -->
+<style>
+    .gallery-img-wrapper {
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        background-color: #0f172a;
+    }
+    .gallery-img-wrapper img {
+        transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .gallery-img-wrapper:hover img {
+        transform: scale(1.08);
+    }
+    .gallery-img-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(10, 25, 47, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        pointer-events: none;
+    }
+    .gallery-img-wrapper:hover .gallery-img-overlay {
+        opacity: 1;
+    }
+    .lightbox-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        z-index: 1060;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    .lightbox-nav-btn:hover {
+        background: var(--orange-primary);
+        border-color: var(--orange-primary);
+        color: #ffffff;
+        transform: translateY(-50%) scale(1.1);
+    }
+    .lightbox-nav-btn:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+</style>
+
+<!-- 6. DOKUMENTASI & GALERI MULTIMEDIA TERKINI -->
+<section class="py-5 bg-white border-top">
+    <div class="container py-3">
+        <div class="row align-items-end justify-content-between mb-4">
+            <div class="col-md-8">
+                <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">DOKUMENTASI & MULTIMEDIA</span>
+                <h2 class="fw-bold mb-1 text-navy-title">Galeri Foto & Info Terbaru Warga</h2>
+                <p class="text-muted small mb-0">Potret agenda kegiatan daerah, video edukasi warga, dan poster infografis resmi Pemerintah Kabupaten Bekasi.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="/galeri" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                    Lihat Semua Galeri <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4" id="berandaGaleriContainer">
+            <% if (typeof galeri !== 'undefined' && galeri && galeri.length > 0) { %>
+                <% galeri.forEach(item => { %>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card-modern h-100 overflow-hidden d-flex flex-column border-0 shadow-sm">
+                            <div class="position-relative" style="height: 220px; overflow: hidden; background-color: #0f172a;">
+                                <% if (item.tipe === 'video') { %>
+                                    <iframe src="<%= item.file_path %>" class="w-100 h-100 border-0" allowfullscreen></iframe>
+                                <% } else { %>
+                                    <div class="w-100 h-100 gallery-img-wrapper gallery-item-clickable" 
+                                         data-img="<%= item.file_path %>" 
+                                         data-title="<%= item.judul %>" 
+                                         data-desc="<%= item.keterangan || '' %>"
+                                         data-tipe="<%= item.tipe %>">
+                                         <img src="<%= item.file_path %>" class="w-100 h-100 object-fit-cover" alt="<%= item.judul %>" loading="lazy">
+                                        <div class="gallery-img-overlay">
+                                            <span class="btn btn-sm btn-light rounded-pill px-3 py-1.5 shadow-sm fw-bold text-dark d-flex align-items-center gap-1.5">
+                                                <i class="bi bi-arrows-fullscreen text-warning" style="color: var(--orange-primary) !important;"></i> Perbesar
+                                            </span>
+                                        </div>
+                                    </div>
+                                <% } %>
+
+                                <% 
+                                    let badgeType = 'bg-primary';
+                                    let badgeIcon = 'bi-camera-fill';
+                                    if (item.tipe === 'video') {
+                                        badgeType = 'bg-danger';
+                                        badgeIcon = 'bi-play-circle-fill';
+                                    } else if (item.tipe === 'infografis') {
+                                        badgeType = 'bg-warning text-dark';
+                                        badgeIcon = 'bi-file-earmark-image-fill';
+                                    }
+                                %>
+                                <span class="badge position-absolute top-0 start-0 m-3 <%= badgeType %> shadow-sm text-uppercase fw-bold d-inline-flex align-items-center gap-1" style="font-size: 0.7rem; pointer-events: none; z-index: 5;">
+                                    <i class="bi <%= badgeIcon %>"></i> <%= item.tipe %>
+                                </span>
+                            </div>
+
+                            <div class="p-4 d-flex flex-column flex-grow-1">
+                                <span class="small text-muted mb-2 d-flex align-items-center">
+                                    <i class="bi bi-calendar3 me-1.5 text-warning" style="color: var(--orange-primary) !important;"></i> 
+                                    <%= new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                                </span>
+                                <h6 class="fw-bold mb-2 text-dark" style="line-height: 1.4; font-size: 1.05rem;">
+                                    <%= item.judul %>
+                                </h6>
+                                <p class="small text-secondary flex-grow-1 mb-3" style="line-height: 1.5;">
+                                    <%= item.keterangan ? (item.keterangan.length > 105 ? item.keterangan.substring(0, 105) + '...' : item.keterangan) : 'Dokumentasi liputan resmi kedinasan.' %>
+                                </p>
+
+                                <% if (item.tipe === 'infografis' || item.tipe === 'foto') { %>
+                                    <div class="mt-auto pt-2 border-top d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-gallery-zoom w-50 gallery-item-clickable d-flex align-items-center justify-content-center gap-1.5 rounded-3 fw-semibold"
+                                                data-img="<%= item.file_path %>" 
+                                                data-title="<%= item.judul %>" 
+                                                data-desc="<%= item.keterangan || '' %>"
+                                                data-tipe="<%= item.tipe %>">
+                                            <i class="bi bi-arrows-angle-expand"></i> Perbesar
+                                        </button>
+                                        <a href="<%= item.file_path %>" download target="_blank" class="btn btn-sm btn-outline-dark w-50 d-flex align-items-center justify-content-center gap-1 rounded-3 fw-semibold">
+                                            <i class="bi bi-download text-warning" style="color: var(--orange-primary) !important;"></i> Unduh
+                                        </a>
+                                    </div>
+                                <% } else if (item.tipe === 'video') { %>
+                                    <div class="mt-auto pt-2 border-top">
+                                        <a href="/galeri" class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1.5 rounded-3 fw-semibold">
+                                            <i class="bi bi-play-btn-fill"></i> Tonton di Galeri Video
+                                        </a>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="col-12 py-5 text-center text-muted">
+                    <i class="bi bi-images fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                    <p class="mb-0">Belum ada dokumentasi galeri yang dipublikasikan.</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</section>
+
+<!-- LIGHTBOX MODAL VIEWER BERANDA -->
+<div class="modal fade" id="modalLightbox" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 rounded-4 overflow-hidden shadow-2xl bg-dark text-white">
+            <div class="modal-header border-0 px-4 py-3 d-flex align-items-center justify-content-between" style="background: #0A192F;">
+                <div class="d-flex align-items-center gap-3 overflow-hidden me-3">
+                    <span class="badge px-2.5 py-1.5 rounded-pill text-uppercase fw-bold shrink-0" id="lightboxTipeBadge" style="background-color: var(--orange-primary); font-size: 0.72rem;">Foto</span>
+                    <h6 class="modal-title fw-bold text-white mb-0 text-truncate" id="lightboxTitle" style="font-size: 1rem;">Detail Dokumentasi</h6>
+                </div>
+                <div class="d-flex align-items-center gap-2 shrink-0">
+                    <span class="badge bg-secondary bg-opacity-50 text-light fw-medium px-3 py-1.5 rounded-pill small" id="lightboxCounter">1 dari 1</span>
+                    <button type="button" class="btn-close btn-close-white ms-2 shadow-none" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+            </div>
+
+            <div class="modal-body p-0 d-flex align-items-center justify-content-center position-relative bg-black" style="min-height: 50vh; max-height: 75vh; overflow: hidden; user-select: none;">
+                <button type="button" id="btnPrevLightbox" class="lightbox-nav-btn start-0 ms-3" title="Sebelumnya">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <img id="lightboxImg" src="" class="img-fluid" style="max-height: 75vh; width: auto; object-fit: contain; transition: opacity 0.2s ease-in-out;" alt="Preview Dokumentasi">
+                <button type="button" id="btnNextLightbox" class="lightbox-nav-btn end-0 me-3" title="Berikutnya">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="modal-footer border-0 px-4 py-3 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3" style="background: #0A192F;">
+                <div class="text-start">
+                    <p class="small text-light opacity-80 mb-0" id="lightboxDesc" style="line-height: 1.4; max-width: 700px;">Keterangan dokumentasi.</p>
+                </div>
+                <a id="lightboxDownloadBtn" href="" download target="_blank" class="btn btn-sm btn-orange fw-bold px-4 py-2 rounded-3 text-white shrink-0 d-inline-flex align-items-center gap-2 shadow-sm">
+                    <i class="bi bi-download"></i> Unduh Resolusi Penuh
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 7. FLOATING DIGITAL ASSISTANT (CHATBOT) -->
+<div class="floating-assistant-btn animate-float shadow-lg" id="assistantToggleBtn" title="Tanya Asisten Virtual">
+    <i class="bi bi-chat-dots-fill"></i>
+</div>
+
+<div class="assistant-modal" id="assistantBox">
+    <div class="p-3 text-white d-flex align-items-center justify-content-between assistant-header">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-robot text-warning fs-5" style="color: var(--orange-primary) !important;"></i>
+            <div>
+                <h6 class="mb-0 fw-bold">Asisten Virtual Diskominfo</h6>
+                <span class="small text-light opacity-75" style="font-size: 0.72rem;">Online 24/7 Bantuan Cepat</span>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white small" id="assistantCloseBtn"></button>
+    </div>
+    
+    <div class="p-3 assistant-chat-messages" id="chatMessages">
+        <div class="p-2.5 rounded-3 assistant-chat-bubble small mb-2 shadow-sm">
+            👋 Halo Warga Bekasi! Ada yang bisa saya bantu? Ketik misalnya: <strong>"surat"</strong>, <strong>"aduan"</strong>, <strong>"data penduduk"</strong>, atau <strong>"jam buka"</strong>.
+        </div>
+    </div>
+
+    <div class="p-2 border-top assistant-input-box d-flex gap-2">
+        <input type="text" id="assistantInput" class="form-control form-control-sm border" placeholder="Ketik pertanyaan...">
+        <button id="assistantSendBtn" class="btn btn-sm btn-orange"><i class="bi bi-send-fill"></i></button>
+    </div>
+</div>
+
+<!-- SCRIPT TYPEWRITER & MINI CHART -->
+<script>
+    // 1. Tagline Typewriter Effect
+    const words = [
+        "Pusat Layanan & Informasi Warga Kabupaten Bekasi.",
+        "Pelayanan Surat Digital, Pengaduan, & Data Terpadu.",
+        "Kanal Aspirasi Warga Cepat, Tanggap, & Terpercaya."
+    ];
+    let i = 0, timer;
+
+    function typingEffect() {
+        let word = words[i].split("");
+        var loopTyping = function() {
+            if (word.length > 0) {
+                document.getElementById('typewriter-text').innerHTML += word.shift();
+            } else {
+                setTimeout(deletingEffect, 2500);
+                return false;
+            }
+            timer = setTimeout(loopTyping, 50);
+        };
+        loopTyping();
+    }
+
+    function deletingEffect() {
+        let word = words[i].split("");
+        var loopDeleting = function() {
+            if (word.length > 0) {
+                word.pop();
+                document.getElementById('typewriter-text').innerHTML = word.join("");
+            } else {
+                if (words.length > (i + 1)) {
+                    i++;
+                } else {
+                    i = 0;
+                }
+                setTimeout(typingEffect, 500);
+                return false;
+            }
+            timer = setTimeout(loopDeleting, 30);
+        };
+        loopDeleting();
+    }
+    typingEffect();
+
+    // 2. Mini Chart Usia Penduduk (Dukungan Mode Terang & Dark Navy - Huruf Diperbesar Jelas Dibaca)
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('miniChartUsia');
+        if (ctx) {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const miniChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Usia Produktif 15-64 Th (66.8%)', 'Anak & Remaja 0-14 Th (24.8%)', 'Lansia 65+ Th (8.4%)'],
+                    datasets: [{
+                        data: [66.8, 24.8, 8.4],
+                        backgroundColor: ['#ff781f', isDark ? '#38bdf8' : '#0a2540', '#94a3b8'],
+                        borderWidth: 2,
+                        borderColor: isDark ? '#0f2238' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                boxWidth: 14, 
+                                boxHeight: 14,
+                                padding: 12,
+                                font: { 
+                                    size: 13, 
+                                    weight: '600'
+                                },
+                                color: isDark ? '#cbd5e1' : '#334155'
+                            } 
+                        }
+                    }
+                }
+            });
+
+            window.addEventListener('themeChanged', function(e) {
+                const dark = e.detail.isDark;
+                miniChart.data.datasets[0].backgroundColor = ['#ff781f', dark ? '#38bdf8' : '#0a2540', '#94a3b8'];
+                miniChart.data.datasets[0].borderColor = dark ? '#0f2238' : '#ffffff';
+                if (miniChart.options.plugins && miniChart.options.plugins.legend && miniChart.options.plugins.legend.labels) {
+                    miniChart.options.plugins.legend.labels.color = dark ? '#cbd5e1' : '#334155';
+                }
+                miniChart.update();
+            });
+        }
+    });
+
+    // 3. Floating Assistant Bot
+    const toggleBtn = document.getElementById('assistantToggleBtn');
+    const closeBtn = document.getElementById('assistantCloseBtn');
+    const assistantBox = document.getElementById('assistantBox');
+    const sendBtn = document.getElementById('assistantSendBtn');
+    const input = document.getElementById('assistantInput');
+    const chatMessages = document.getElementById('chatMessages');
+
+    toggleBtn.addEventListener('click', () => {
+        assistantBox.style.display = assistantBox.style.display === 'block' ? 'none' : 'block';
+    });
+
+    closeBtn.addEventListener('click', () => {
+        assistantBox.style.display = 'none';
+    });
+
+    function botReply(userText) {
+        const text = userText.toLowerCase();
+        let reply = "Maaf, saya belum memahami pertanyaan Anda. Silakan hubungi Call Center Bebas Pulsa 112 atau buka menu terkait.";
+
+        if (text.includes('surat') || text.includes('permohonan') || text.includes('magang')) {
+            reply = "Untuk pengajuan surat mandiri (magang/izin liputan/domain), klik menu <strong>Pelayanan Surat</strong> pada navigasi atas.";
+        } else if (text.includes('aduan') || text.includes('lapor') || text.includes('hoaks')) {
+            reply = "Anda dapat membuat laporan keluhan atau verifikasi hoaks melalui menu <strong>Pengaduan</strong>.";
+        } else if (text.includes('statistik') || text.includes('penduduk') || text.includes('data') || text.includes('kecamatan')) {
+            reply = "Data demografi 23 kecamatan dan peta kepadatan dapat Anda akses di menu <strong>Statistik</strong>.";
+        } else if (text.includes('jam') || text.includes('buka') || text.includes('jadwal')) {
+            reply = "Pelayanan kantor DISKOMINFOSANTIK beroperasi pada hari <strong>Senin - Jumat, pukul 08.00 - 16.00 WIB</strong>.";
+        }
+
+        const botBubble = document.createElement('div');
+        botBubble.className = 'p-2.5 rounded-3 assistant-chat-bubble border small mb-2 shadow-sm';
+        botBubble.innerHTML = `🤖 ${reply}`;
+        chatMessages.appendChild(botBubble);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function handleSend() {
+        const val = input.value.trim();
+        if (!val) return;
+
+        const userBubble = document.createElement('div');
+        userBubble.className = 'p-2.5 rounded-3 assistant-user-bubble small mb-2 text-end ms-auto shadow-sm';
+        userBubble.style.maxWidth = '85%';
+        userBubble.textContent = val;
+        chatMessages.appendChild(userBubble);
+
+        input.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        setTimeout(() => botReply(val), 600);
+    }
+
+    sendBtn.addEventListener('click', handleSend);
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSend();
+    });
+
+    // 4. Lightbox Interaktif Galeri Beranda
+    (function initBerandaLightbox() {
+        let currentPlaylist = [];
+        let currentIndex = 0;
+
+        const modalEl = document.getElementById('modalLightbox');
+        if (!modalEl) return;
+
+        const imgEl = document.getElementById('lightboxImg');
+        const titleEl = document.getElementById('lightboxTitle');
+        const descEl = document.getElementById('lightboxDesc');
+        const badgeEl = document.getElementById('lightboxTipeBadge');
+        const counterEl = document.getElementById('lightboxCounter');
+        const downloadBtn = document.getElementById('lightboxDownloadBtn');
+        const btnNext = document.getElementById('btnNextLightbox');
+        const btnPrev = document.getElementById('btnPrevLightbox');
+
+        function renderCurrentItem(index) {
+            if (!currentPlaylist.length) return;
+            if (index < 0) index = currentPlaylist.length - 1;
+            if (index >= currentPlaylist.length) index = 0;
+            currentIndex = index;
+
+            const item = currentPlaylist[currentIndex];
+            imgEl.style.opacity = '0.2';
+            setTimeout(() => {
+                imgEl.src = item.img;
+                imgEl.style.opacity = '1';
+            }, 100);
+
+            titleEl.textContent = item.title || 'Dokumentasi Diskominfo';
+            descEl.textContent = item.desc || 'Dokumentasi resmi liputan kedinasan.';
+            badgeEl.textContent = (item.tipe || 'Foto').toUpperCase();
+            counterEl.textContent = `${currentIndex + 1} dari ${currentPlaylist.length}`;
+
+            downloadBtn.href = item.img;
+            downloadBtn.setAttribute('download', (item.title || 'dokumentasi').toLowerCase().replace(/[^a-z0-9]/g, '-') + '.jpg');
+        }
+
+        function showNext() { renderCurrentItem(currentIndex + 1); }
+        function showPrev() { renderCurrentItem(currentIndex - 1); }
+
+        document.addEventListener('click', function(e) {
+            const trigger = e.target.closest('.gallery-item-clickable');
+            if (trigger) {
+                e.preventDefault();
+                const container = document.getElementById('berandaGaleriContainer') || document;
+                const triggers = Array.from(container.querySelectorAll('.gallery-item-clickable.gallery-img-wrapper'));
+
+                currentPlaylist = triggers.map(el => ({
+                    img: el.getAttribute('data-img'),
+                    title: el.getAttribute('data-title'),
+                    desc: el.getAttribute('data-desc'),
+                    tipe: el.getAttribute('data-tipe')
+                }));
+
+                const clickedImgSrc = trigger.getAttribute('data-img');
+                currentIndex = currentPlaylist.findIndex(item => item.img === clickedImgSrc);
+                if (currentIndex === -1) currentIndex = 0;
+
+                renderCurrentItem(currentIndex);
+
+                if (window.bootstrap && window.bootstrap.Modal) {
+                    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    bsModal.show();
+                }
+            }
+        });
+
+        if (btnNext) btnNext.addEventListener('click', (e) => { e.stopPropagation(); showNext(); });
+        if (btnPrev) btnPrev.addEventListener('click', (e) => { e.stopPropagation(); showPrev(); });
+
+        modalEl.addEventListener('shown.bs.modal', function() {
+            window.addEventListener('keydown', handleKeyNav);
+        });
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            window.removeEventListener('keydown', handleKeyNav);
+            imgEl.src = '';
+        });
+
+        function handleKeyNav(e) {
+            if (!modalEl.classList.contains('show')) return;
+            if (e.key === 'ArrowRight' || e.key === 'Right') {
+                e.preventDefault();
+                showNext();
+            } else if (e.key === 'ArrowLeft' || e.key === 'Left') {
+                e.preventDefault();
+                showPrev();
+            }
+        }
+    })();
+</script>

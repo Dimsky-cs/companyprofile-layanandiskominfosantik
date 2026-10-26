@@ -1,0 +1,374 @@
+<% 
+    const curSettings = (typeof siteSettings !== 'undefined' && siteSettings) ? siteSettings : {};
+%>
+
+<!-- ============================================================== -->
+<!-- MODUL PENGATURAN SITUS WEB, IDENTITAS, WARNA & MAINTENANCE     -->
+<!-- ============================================================== -->
+
+<div class="space-y-6">
+    <!-- Header Modul Pengaturan -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+                    <i data-lucide="sliders" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-navy-900 dark:text-white leading-tight">Pengaturan Identitas & Tampilan Web</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola logo, judul instansi, palet warna aksen, informasi kontak, dan mode pemeliharaan (maintenance).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <a href="/admin-diskominfo/pengaturan/preview-maintenance" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-2xs" title="Buka tampilan halaman maintenance di tab baru">
+                <i data-lucide="eye" class="w-4 h-4 text-amber-500"></i>
+                <span>Pratinjau Maintenance</span>
+            </a>
+            <a href="/" target="_blank" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-2xs" title="Lihat website publik langsung">
+                <i data-lucide="external-link" class="w-4 h-4 text-blue-500"></i>
+                <span>Lihat Portal Publik</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- FORM UTAMA PENGATURAN -->
+    <form action="/admin-diskominfo/pengaturan/update" method="POST" enctype="multipart/form-data" class="space-y-6">
+
+        <!-- ========================================================== -->
+        <!-- SEKSI 1: SAKLAR KENDALI MODE MAINTENANCE (PRIORITAS TINGGI) -->
+        <!-- ========================================================== -->
+        <div class="rounded-2xl border p-6 transition-all duration-300 <%= curSettings.is_maintenance ? 'bg-amber-500/10 border-amber-500/40 dark:bg-amber-950/20 dark:border-amber-500/30' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800' %>">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b <%= curSettings.is_maintenance ? 'border-amber-500/20' : 'border-slate-100 dark:border-slate-800' %>">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 <%= curSettings.is_maintenance ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 animate-bounce' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400' %>">
+                        <i data-lucide="cone" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-bold text-navy-900 dark:text-white">Status Operasional Website & Mode Pemeliharaan</h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold <%= curSettings.is_maintenance ? 'bg-amber-500 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400' %>">
+                                <%= curSettings.is_maintenance ? '🚧 SEDANG MAINTENANCE' : '🟢 ONLINE NORMAL' %>
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+                            Jika Mode Pemeliharaan diaktifkan, seluruh rute publik website akan ditutup sementara dan dialihkan murni ke <strong>Halaman Pemeliharaan Khusus</strong>. Administrator tetap dapat mengelola portal melalui Panel Administrator (/admin-diskominfo).
+                        </p>
+                    </div>
+                </div>
+
+                <!-- SAKLAR TOGGLE BESAR -->
+                <div class="flex items-center gap-3 shrink-0 bg-white/80 dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_maintenance" id="toggleMaintenance" value="1" <%= curSettings.is_maintenance ? 'checked' : '' %> class="sr-only peer" onchange="toggleMaintenanceForm(this.checked)">
+                        <div class="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-slate-600 peer-checked:bg-amber-500 shadow-inner"></div>
+                    </label>
+                    <span id="labelMaintenanceStatus" class="text-xs font-bold <%= curSettings.is_maintenance ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-400' %>">
+                        <%= curSettings.is_maintenance ? 'Aktif (Ditutup Sementara)' : 'Nonaktif (Website Dibuka)' %>
+                    </span>
+                </div>
+            </div>
+
+            <!-- DETAIL KONTEN MAINTENANCE -->
+            <div id="maintenanceDetailsBox" class="mt-6 space-y-4 <%= curSettings.is_maintenance ? '' : 'opacity-60' %>">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Judul Layar Pemeliharaan</label>
+                        <input type="text" name="maintenance_judul" value="<%= curSettings.maintenance_judul || 'Situs Sedang Dalam Pemeliharaan Berkala' %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="Contoh: Situs Sedang Dalam Pemeliharaan Berkala">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Perkiraan Selesai (Opsional - Tampilkan Hitung Mundur)
+                        </label>
+                        <% 
+                           let dtVal = '';
+                           if (curSettings.maintenance_selesai) {
+                               const dt = new Date(curSettings.maintenance_selesai);
+                               if (!isNaN(dt.getTime())) {
+                                   dtVal = new Date(dt.getTime() - (dt.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                               }
+                           }
+                        %>
+                        <input type="datetime-local" name="maintenance_selesai" value="<%= dtVal %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none dark:bg-slate-800 dark:text-white">
+                        <span class="text-[10px] text-slate-400 mt-1 block">Jika diisi, pengunjung akan melihat jam hitung mundur langsung (countdown timer) di layar pemeliharaan.</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Pesan Penjelasan untuk Masyarakat Awam</label>
+                    <textarea name="maintenance_pesan" rows="3" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="Tuliskan alasan pemeliharaan dan permohonan maaf kepada pengunjung..."><%= curSettings.maintenance_pesan || '' %></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- SEKSI 2: LOGO, FAVICON & IDENTITAS INSTANSI                -->
+        <!-- ========================================================== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Kolom Kiri (1): Upload Logo & Favicon -->
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-6">
+                <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <i data-lucide="image" class="w-4 h-4 text-indigo-500"></i>
+                    <h3 class="text-sm font-bold text-navy-900 dark:text-white">Logo & Ikon Tab Browser</h3>
+                </div>
+
+                <!-- Logo Utama -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Logo Utama Website</label>
+                    <div class="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700">
+                        <div class="w-16 h-16 bg-white dark:bg-slate-900 rounded-lg p-1.5 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-2xs shrink-0">
+                            <img id="previewLogoImg" src="<%= curSettings.logo_url || '/images/logo.png' %>" alt="Logo Preview" class="w-full h-full object-contain">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <input type="file" name="logo" id="inputLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-slate-700 dark:file:text-white" onchange="previewImage(this, 'previewLogoImg')">
+                            <span class="text-[10px] text-slate-400 block mt-1">Format: PNG, WEBP, SVG, JPG (Transparan disarankan)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Favicon Ikon Tab -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Favicon (Ikon Tab Browser)</label>
+                    <div class="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700">
+                        <div class="w-12 h-12 bg-white dark:bg-slate-900 rounded-lg p-1 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-2xs shrink-0">
+                            <img id="previewFaviconImg" src="<%= curSettings.favicon_url || '/images/logo.png' %>" alt="Favicon Preview" class="w-8 h-8 object-contain">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <input type="file" name="favicon" id="inputFaviconFile" accept="image/png,image/jpeg,image/x-icon,image/svg+xml" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-slate-700 dark:file:text-white" onchange="previewImage(this, 'previewFaviconImg')">
+                            <span class="text-[10px] text-slate-400 block mt-1">Ikon kecil tab browser (Ukuran 32x32 atau 64x64 px)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kolom Tengah & Kanan (2): Nama, Tagline, & Deskripsi -->
+            <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-4">
+                <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <i data-lucide="type" class="w-4 h-4 text-indigo-500"></i>
+                    <h3 class="text-sm font-bold text-navy-900 dark:text-white">Identitas, Judul & Slogan Website</h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama Instansi Utama</label>
+                        <input type="text" name="nama_instansi" value="<%= curSettings.nama_instansi || 'DISKOMINFOSANTIK' %>" required class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="Contoh: DISKOMINFOSANTIK">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Daerah / Sub-Judul</label>
+                        <input type="text" name="sub_instansi" value="<%= curSettings.sub_instansi || 'KABUPATEN BEKASI' %>" required class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="Contoh: KABUPATEN BEKASI">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Slogan / Tagline Daerah</label>
+                    <input type="text" name="tagline" value="<%= curSettings.tagline || 'Bekasi Makin Berani' %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="Contoh: Bekasi Makin Berani">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Deskripsi Singkat Portal (Meta SEO & Footer)</label>
+                    <textarea name="deskripsi_singkat" rows="3" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="Deskripsi ringkas mengenai fungsi dan layanan dinas..."><%= curSettings.deskripsi_singkat || '' %></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- SEKSI 3: PALET WARNA AKSEN DINAMIS (CUSTOM THEME ACCENT)   -->
+        <!-- ========================================================== -->
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="palette" class="w-4 h-4 text-orange-500"></i>
+                    <div>
+                        <h3 class="text-sm font-bold text-navy-900 dark:text-white">Palet Warna Aksen Utama Website</h3>
+                        <span class="text-xs text-slate-400">Pilih salah satu warna preset resmi atau gunakan kode HEX khusus pilihan Anda</span>
+                    </div>
+                </div>
+
+                <!-- Live Preview Badge Aksen -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500">Pratinjau Aksen:</span>
+                    <span id="previewAccentBadge" class="px-3 py-1 rounded-full text-xs font-bold text-white shadow-xs transition-colors" style="background-color: #ff6b00;">
+                        Tombol / Aksen Aktif
+                    </span>
+                </div>
+            </div>
+
+            <!-- PRESET TOMBOL WARNA CEPAT -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">Pilihan Cepat Warna Kedinasan</label>
+                <div class="flex flex-wrap gap-2.5">
+                    <button type="button" onclick="selectThemeColor('#FF6B00')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-2 shadow-xs transition-transform hover:scale-105 active:scale-95" style="background-color: #FF6B00;">
+                        <span class="w-3 h-3 rounded-full bg-white/40"></span> Oranye Diskominfo (Default)
+                    </button>
+                    <button type="button" onclick="selectThemeColor('#0284C7')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-2 shadow-xs transition-transform hover:scale-105 active:scale-95" style="background-color: #0284C7;">
+                        <span class="w-3 h-3 rounded-full bg-white/40"></span> Biru Samudera Digital
+                    </button>
+                    <button type="button" onclick="selectThemeColor('#059669')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-2 shadow-xs transition-transform hover:scale-105 active:scale-95" style="background-color: #059669;">
+                        <span class="w-3 h-3 rounded-full bg-white/40"></span> Zamrud Harmoni Hijau
+                    </button>
+                    <button type="button" onclick="selectThemeColor('#DC2626')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-2 shadow-xs transition-transform hover:scale-105 active:scale-95" style="background-color: #DC2626;">
+                        <span class="w-3 h-3 rounded-full bg-white/40"></span> Merah Karang Patriot
+                    </button>
+                    <button type="button" onclick="selectThemeColor('#7C3AED')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-2 shadow-xs transition-transform hover:scale-105 active:scale-95" style="background-color: #7C3AED;">
+                        <span class="w-3 h-3 rounded-full bg-white/40"></span> Ungu Modern Cyber
+                    </button>
+                    <button type="button" onclick="selectThemeColor('#D97706')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-2 shadow-xs transition-transform hover:scale-105 active:scale-95" style="background-color: #D97706;">
+                        <span class="w-3 h-3 rounded-full bg-white/40"></span> Emas Wibawa Daerah
+                    </button>
+                </div>
+            </div>
+
+            <!-- INPUT WARNA KUSTOM (COLOR PICKER + HEX INPUT) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Warna Aksen Utama (HEX Color)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="pickerWarnaPrimer" value="<%= curSettings.warna_primer || '#ff6b00' %>" class="w-11 h-11 p-1 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer bg-white dark:bg-slate-800" oninput="syncColorInput(this.value, 'inputWarnaPrimer')">
+                        <input type="text" name="warna_primer" id="inputWarnaPrimer" value="<%= curSettings.warna_primer || '#ff6b00' %>" required class="flex-1 font-mono uppercase px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="#FF6B00" oninput="syncColorPicker(this.value, 'pickerWarnaPrimer')">
+                    </div>
+                    <span class="text-[10px] text-slate-400 mt-1 block">Warna ini digunakan untuk tombol utama, sorotan kartu, garis aktif, dan tautan navigasi.</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Warna Navbar & Footer Deep</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="pickerWarnaSekunder" value="<%= curSettings.warna_sekunder || '#071527' %>" class="w-11 h-11 p-1 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer bg-white dark:bg-slate-800" oninput="syncColorInput(this.value, 'inputWarnaSekunder')">
+                        <input type="text" name="warna_sekunder" id="inputWarnaSekunder" value="<%= curSettings.warna_sekunder || '#071527' %>" required class="flex-1 font-mono uppercase px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="#071527" oninput="syncColorPicker(this.value, 'pickerWarnaSekunder')">
+                    </div>
+                    <span class="text-[10px] text-slate-400 mt-1 block">Warna dasar navy dominan untuk topbar, navbar utama, dan footer website.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- SEKSI 4: KONTAK RESMI, JAM OPERASIONAL & SOSIAL MEDIA      -->
+        <!-- ========================================================== -->
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-4">
+            <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <i data-lucide="phone-call" class="w-4 h-4 text-emerald-500"></i>
+                <h3 class="text-sm font-bold text-navy-900 dark:text-white">Kontak Layanan Publik & Media Sosial</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nomor Telepon / Call Center</label>
+                    <input type="text" name="telepon" value="<%= curSettings.telepon || '(021) 89970000 / Call Center 112' %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-800 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Alamat Surel (Email) Resmi</label>
+                    <input type="email" name="email" value="<%= curSettings.email || 'diskominfo@bekasikab.go.id' %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-800 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Jam Operasional Layanan</label>
+                    <input type="text" name="jam_layanan" value="<%= curSettings.jam_layanan || 'Senin - Jumat (08.00 - 16.00 WIB)' %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-800 dark:text-white">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Alamat Kantor Dinas Lengkap</label>
+                <input type="text" name="alamat" value="<%= curSettings.alamat || 'Komplek Perkantoran Pemkab Bekasi, Desa Sukamahi, Kec. Cikarang Pusat, Jawa Barat 17530' %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-800 dark:text-white">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="facebook" class="w-3.5 h-3.5 text-blue-600"></i> Tautan Facebook
+                    </label>
+                    <input type="text" name="sosmed_facebook" value="<%= curSettings.sosmed_facebook || '#' %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="https://facebook.com/...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="instagram" class="w-3.5 h-3.5 text-pink-600"></i> Tautan Instagram
+                    </label>
+                    <input type="text" name="sosmed_instagram" value="<%= curSettings.sosmed_instagram || '#' %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="https://instagram.com/...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="youtube" class="w-3.5 h-3.5 text-red-600"></i> Tautan YouTube
+                    </label>
+                    <input type="text" name="sosmed_youtube" value="<%= curSettings.sosmed_youtube || '#' %>" class="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none dark:bg-slate-800 dark:text-white" placeholder="https://youtube.com/...">
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- ACTION BAR: TOMBOL SIMPAN PENGATURAN                       -->
+        <!-- ========================================================== -->
+        <div class="sticky bottom-6 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <i data-lucide="info" class="w-4 h-4 text-indigo-500 shrink-0"></i>
+                <span class="hidden sm:inline">Perubahan akan langsung berefek seketika di seluruh halaman portal publik & administrasi.</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/25 transition-all transform hover:scale-102 active:scale-98 flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Simpan Pengaturan Web</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- JAVASCRIPT HELPER UNTUK LIVE PREVIEW -->
+<script>
+    function toggleMaintenanceForm(isChecked) {
+        const box = document.getElementById('maintenanceDetailsBox');
+        const lbl = document.getElementById('labelMaintenanceStatus');
+        if (box) {
+            box.classList.toggle('opacity-60', !isChecked);
+        }
+        if (lbl) {
+            lbl.textContent = isChecked ? 'Aktif (Ditutup Sementara)' : 'Nonaktif (Website Dibuka)';
+            lbl.className = 'text-xs font-bold ' + (isChecked ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-400');
+        }
+    }
+
+    function previewImage(input, previewId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById(previewId);
+                if (img) img.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function selectThemeColor(hex) {
+        const inputHex = document.getElementById('inputWarnaPrimer');
+        const picker = document.getElementById('pickerWarnaPrimer');
+        const badge = document.getElementById('previewAccentBadge');
+
+        if (inputHex) inputHex.value = hex;
+        if (picker) picker.value = hex;
+        if (badge) badge.style.backgroundColor = hex;
+    }
+
+    function syncColorInput(val, targetId) {
+        const target = document.getElementById(targetId);
+        if (target) target.value = val;
+        const badge = document.getElementById('previewAccentBadge');
+        if (badge && targetId === 'inputWarnaPrimer') badge.style.backgroundColor = val;
+    }
+
+    function syncColorPicker(val, targetId) {
+        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+            const target = document.getElementById(targetId);
+            if (target) target.value = val;
+            const badge = document.getElementById('previewAccentBadge');
+            if (badge && targetId === 'pickerWarnaPrimer') badge.style.backgroundColor = val;
+        }
+    }
+
+    // Inisialisasi warna awal badge pratinjau aksen sesuai pengaturan yang tersimpan
+    (function initPreviewAccent() {
+        const colorInput = document.getElementById('inputWarnaPrimer');
+        const badge = document.getElementById('previewAccentBadge');
+        if (badge && colorInput && colorInput.value) {
+            badge.style.backgroundColor = colorInput.value;
+        }
+    })();
+</script>

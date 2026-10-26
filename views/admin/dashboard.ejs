@@ -1,0 +1,1444 @@
+<%
+    const currentActiveTab = (typeof activeTab !== 'undefined' && activeTab) ? activeTab : 'dashboard';
+    const tabTitleMapServer = {
+        'dashboard': 'Panel Utama',
+        'aduan': 'Pengaduan Warga',
+        'surat': 'Pelayanan Surat',
+        'berita': 'Berita & Publikasi',
+        'galeri': 'Galeri Multimedia',
+        'profil': 'Profil & Struktur Organisasi',
+        'statistik': 'Satu Data Daerah',
+        'laporan': 'Pusat Laporan & Rekapitulasi',
+        'pengaturan': 'Pengaturan & Identitas Web'
+    };
+    const currentTabTitle = tabTitleMapServer[currentActiveTab] || 'Panel Utama';
+    const activeSidebarClass = "bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 text-white font-semibold shadow-md shadow-orange-500/25";
+    const inactiveSidebarClass = "text-slate-400 hover:bg-slate-800/80 hover:text-white";
+%>
+<!DOCTYPE html>
+<html lang="id" class="transition-colors duration-200">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title><%= typeof title !== 'undefined' ? title : 'Panel Administrator' %> - DISKOMINFOSANTIK</title>
+    <!-- Favicon Icon Tab Browser -->
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Script Deteksi Mode Dark Navy Awal (Mencegah Layar Kedip) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('adminTheme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        navy: {
+                            600: '#254B77',
+                            700: '#1B3557',
+                            800: '#13253F',
+                            900: '#0B1528',
+                            950: '#060B15'
+                        },
+                        red: {
+                            50: '#FEF2F2',
+                            100: '#FEE2E2',
+                            200: '#FECACA',
+                            300: '#FCA5A5',
+                            400: '#F87171',
+                            500: '#EF4444',
+                            600: '#DC2626',
+                            700: '#B91C1C',
+                            800: '#991B1B',
+                            900: '#7F1D1D'
+                        },
+                        // Palet Oranye Asli Diskominfo Kab. Bekasi
+                        orange: {
+                            50: '#FFF7ED',
+                            100: '#FFEDD5',
+                            200: '#FED7AA',
+                            300: '#FDBA74',
+                            400: '#FB923C',
+                            500: '#FF6B00',
+                            600: '#EA580C',
+                            700: '#C2410C',
+                            800: '#9A3412',
+                            900: '#7C2D12'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.2.1/classic/ckeditor.js"></script>
+    <style>
+        /* THEME VARIABLES SYSTEM */
+        :root {
+            --adm-bg: #F8FAFC;
+            --adm-card: #FFFFFF;
+            --adm-card-sub: #F8FAFC;
+            --adm-border: #E2E8F0;
+            --adm-text: #0F172A;
+            --adm-text-muted: #64748B;
+            --adm-red-primary: #DC2626;
+            --adm-red-hover: #B91C1C;
+        }
+
+        [data-theme="dark"], .dark {
+            --adm-bg: #070E1B;
+            --adm-card: #0E1B33;
+            --adm-card-sub: #0A1426;
+            --adm-border: #1E3557;
+            --adm-text: #FFFFFF;
+            --adm-text-muted: #94A3B8;
+            --adm-red-primary: #EF4444;
+            --adm-red-hover: #DC2626;
+        }
+
+        body { 
+            background-color: var(--adm-bg); 
+            color: var(--adm-text);
+            transition: background-color 0.2s ease, color 0.2s ease;
+            overflow-x: hidden; 
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #1e3557; }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeInDown { animation: fadeInDown 0.35s ease-out forwards; }
+
+        /* TOP BAR STICKY / FREEZE ON SCROLL */
+        .admin-topbar-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background-color: rgba(248, 250, 252, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .dark .admin-topbar-sticky,
+        [data-theme="dark"] .admin-topbar-sticky {
+            background-color: rgba(7, 14, 27, 0.92) !important;
+            border-bottom: 1px solid #14233D !important;
+        }
+
+        /* TRANSISI TAB HALUS & FLUIDA (MODERN SPA ANIMATION) */
+        .admin-tab-content {
+            animation: adminTabEnter 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes adminTabEnter {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.995);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* EFEK KARTU KENDALI ADMIN LEBIH HIDUP */
+        .admin-control-card {
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+                        box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+                        border-color 0.2s ease !important;
+        }
+        .admin-control-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08) !important;
+        }
+        .dark .admin-control-card:hover,
+        [data-theme="dark"] .admin-control-card:hover {
+            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.45) !important;
+        }
+
+        /* ANIMASI POP-IN MODAL */
+        .modal-dialog-animated {
+            animation: modalPopIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes modalPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* PUTARAN HALUS TOMBOL TEMA */
+        .theme-btn-rotate {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .theme-btn-rotate:active {
+            transform: rotate(180deg) scale(0.92);
+        }
+
+        /* BARIS TABEL RESPONTIF HALUS */
+        tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        /* ANIMASI PROGRESS BAR NOTIFIKASI AUTO-CLEAR */
+        @keyframes alertShrink {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        .alert-progress-bar {
+            animation: alertShrink 4s linear forwards;
+        }
+
+        /* DARK MODE (NAVY) COMPREHENSIVE OVERRIDES */
+        .dark body {
+            background-color: #070E1B !important;
+            color: #F8FAFC !important;
+        }
+        .dark aside {
+            background-color: #060C18 !important;
+            border-right: 1px solid #14233D !important;
+        }
+        .dark main,
+        [data-theme="dark"] main {
+            background-color: #070E1B !important;
+        }
+        .dark .bg-white,
+        [data-theme="dark"] .bg-white {
+            background-color: #0E1B33 !important;
+            color: #F8FAFC !important;
+            border-color: #1E3557 !important;
+        }
+        .dark .bg-slate-50,
+        [data-theme="dark"] .bg-slate-50 {
+            background-color: #0A1426 !important;
+            border-color: #1E3557 !important;
+        }
+        .dark .bg-slate-100,
+        [data-theme="dark"] .bg-slate-100 {
+            background-color: #142542 !important;
+            border-color: #1E3557 !important;
+            color: #F8FAFC !important;
+        }
+        .dark .text-navy-900, 
+        .dark .text-navy-800, 
+        .dark .text-slate-900, 
+        .dark .text-slate-800,
+        [data-theme="dark"] .text-navy-900, 
+        [data-theme="dark"] .text-navy-800, 
+        [data-theme="dark"] .text-slate-900, 
+        [data-theme="dark"] .text-slate-800 {
+            color: #FFFFFF !important;
+        }
+        .dark .text-slate-700, 
+        .dark .text-slate-600,
+        [data-theme="dark"] .text-slate-700, 
+        [data-theme="dark"] .text-slate-600 {
+            color: #CBD5E1 !important;
+        }
+        .dark .text-slate-500, 
+        .dark .text-slate-400,
+        [data-theme="dark"] .text-slate-500, 
+        [data-theme="dark"] .text-slate-400 {
+            color: #94A3B8 !important;
+        }
+        .dark .border-slate-100, 
+        .dark .border-slate-200, 
+        .dark .border-slate-200\/70,
+        .dark .border-slate-200\/80,
+        .dark .border-slate-200\/90, 
+        .dark .border-slate-300,
+        [data-theme="dark"] .border-slate-100,
+        [data-theme="dark"] .border-slate-200,
+        [data-theme="dark"] .border-slate-200\/70,
+        [data-theme="dark"] .border-slate-200\/80,
+        [data-theme="dark"] .border-slate-200\/90,
+        [data-theme="dark"] .border-slate-300 {
+            border-color: #1E3557 !important;
+        }
+
+        .dark .bg-slate-50\/70,
+        [data-theme="dark"] .bg-slate-50\/70 {
+            background-color: #0A1426 !important;
+            border-color: #1E3557 !important;
+        }
+
+        .dark .hover\:text-navy-900:hover,
+        [data-theme="dark"] .hover\:text-navy-900:hover {
+            color: #FFFFFF !important;
+        }
+
+        /* FORM CONTROLS IN DARK MODE */
+        .dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), 
+        .dark select, 
+        .dark textarea,
+        [data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), 
+        [data-theme="dark"] select, 
+        [data-theme="dark"] textarea {
+            background-color: #0A1426 !important;
+            color: #FFFFFF !important;
+            border-color: #1E3557 !important;
+        }
+        .dark input:focus, 
+        .dark select:focus, 
+        .dark textarea:focus,
+        [data-theme="dark"] input:focus, 
+        [data-theme="dark"] select:focus, 
+        [data-theme="dark"] textarea:focus {
+            border-color: #EF4444 !important;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25) !important;
+        }
+
+        /* TABLES IN DARK MODE */
+        .dark table thead tr,
+        .dark table thead tr.bg-slate-50,
+        [data-theme="dark"] table thead tr,
+        [data-theme="dark"] table thead tr.bg-slate-50 {
+            background-color: #0A1426 !important;
+            border-color: #1E3557 !important;
+        }
+        .dark table th,
+        [data-theme="dark"] table th {
+            color: #94A3B8 !important;
+            border-color: #1E3557 !important;
+        }
+        .dark table td,
+        [data-theme="dark"] table td {
+            color: #E2E8F0 !important;
+            border-color: #1E3557 !important;
+        }
+        .dark table tbody tr:hover,
+        [data-theme="dark"] table tbody tr:hover {
+            background-color: #142542 !important;
+        }
+
+        /* MODAL STYLING IN DARK MODE */
+        .dark [id^="modal"]:not(#modalPrintReport) .bg-white:not(.printable-paper-doc):not(#printableReportContent),
+        .dark #modalAdminProfile .bg-white,
+        [data-theme="dark"] [id^="modal"]:not(#modalPrintReport) .bg-white:not(.printable-paper-doc):not(#printableReportContent),
+        [data-theme="dark"] #modalAdminProfile .bg-white {
+            background-color: #0E1B33 !important;
+            border-color: #1E3557 !important;
+            color: #FFFFFF !important;
+        }
+
+        /* EXCEPTION UNTUK KERTAS PRATINJAU DOKUMEN CETAK RESMI (TETAP PUTIH SEPERTI KERTAS ASLI) */
+        .printable-paper-doc,
+        #printableReportContent,
+        .dark .printable-paper-doc,
+        .dark #printableReportContent,
+        [data-theme="dark"] .printable-paper-doc,
+        [data-theme="dark"] #printableReportContent {
+            background-color: #FFFFFF !important;
+            color: #0F172A !important;
+            border-color: #CBD5E1 !important;
+        }
+
+        .printable-paper-doc *,
+        #printableReportContent *,
+        .dark .printable-paper-doc *,
+        .dark #printableReportContent *,
+        [data-theme="dark"] .printable-paper-doc *,
+        [data-theme="dark"] #printableReportContent * {
+            color: #0F172A !important;
+        }
+
+        .printable-paper-doc th,
+        #printableReportContent th,
+        .dark .printable-paper-doc th,
+        .dark #printableReportContent th,
+        [data-theme="dark"] .printable-paper-doc th,
+        [data-theme="dark"] #printableReportContent th {
+            background-color: #F1F5F9 !important;
+            color: #0F172A !important;
+            border-color: #94A3B8 !important;
+        }
+
+        .printable-paper-doc td,
+        #printableReportContent td,
+        .dark .printable-paper-doc td,
+        .dark #printableReportContent td,
+        [data-theme="dark"] .printable-paper-doc td,
+        [data-theme="dark"] #printableReportContent td {
+            background-color: #FFFFFF !important;
+            color: #0F172A !important;
+            border-color: #CBD5E1 !important;
+        }
+
+        .printable-paper-doc tr:nth-child(even) td,
+        #printableReportContent tr:nth-child(even) td,
+        .dark .printable-paper-doc tr:nth-child(even) td,
+        .dark #printableReportContent tr:nth-child(even) td,
+        [data-theme="dark"] .printable-paper-doc tr:nth-child(even) td,
+        [data-theme="dark"] #printableReportContent tr:nth-child(even) td {
+            background-color: #F8FAFC !important;
+        }
+
+        .printable-paper-doc .paper-summary-card,
+        #printableReportContent .paper-summary-card,
+        .dark .printable-paper-doc .paper-summary-card,
+        .dark #printableReportContent .paper-summary-card,
+        [data-theme="dark"] .printable-paper-doc .paper-summary-card,
+        [data-theme="dark"] #printableReportContent .paper-summary-card {
+            background-color: #F8FAFC !important;
+            border-color: #CBD5E1 !important;
+            color: #0F172A !important;
+        }
+
+        /* CKEditor Custom Styling & Dark Mode */
+        .ck-editor__editable_inline {
+            min-height: 140px;
+            border-bottom-left-radius: 0.75rem !important;
+            border-bottom-right-radius: 0.75rem !important;
+        }
+        .ck.ck-toolbar {
+            border-top-left-radius: 0.75rem !important;
+            border-top-right-radius: 0.75rem !important;
+            background: #F8FAFC !important;
+            border-color: #E2E8F0 !important;
+        }
+        .ck.ck-editor__main>.ck-editor__editable {
+            border-color: #E2E8F0 !important;
+            font-size: 0.875rem;
+            color: #0F172A;
+        }
+        .ck.ck-editor__main>.ck-editor__editable:focus {
+            border-color: #DC2626 !important;
+            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2) !important;
+        }
+        .dark .ck.ck-toolbar {
+            background: #0A1426 !important;
+            border-color: #1E3557 !important;
+        }
+        .dark .ck.ck-editor__main>.ck-editor__editable {
+            background: #070E1B !important;
+            border-color: #1E3557 !important;
+            color: #FFFFFF !important;
+        }
+        .dark .ck .ck-button {
+            color: #CBD5E1 !important;
+        }
+        .dark .ck .ck-button:hover {
+            background: #142542 !important;
+        }
+
+        /* SOTK TREE CANVAS IN DARK MODE */
+        .dark .admin-viewport {
+            background: #070E1B !important;
+            background-image: radial-gradient(circle at 1px 1px, rgba(30, 53, 87, 0.6) 1px, transparent 0) !important;
+            border-color: #1E3557 !important;
+        }
+        .dark .admin-svg-connectors line {
+            stroke: #38BDF8 !important;
+        }
+        .dark .admin-node-card {
+            background: #0E1B33 !important;
+            border-color: #1E3557 !important;
+            color: #FFFFFF !important;
+        }
+        .dark .admin-node-card.node-root {
+            background: linear-gradient(135deg, #070E1B 0%, #0E1B33 100%) !important;
+            border-color: #EF4444 !important;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35) !important;
+        }
+        .dark .admin-node-title {
+            color: #FFFFFF !important;
+        }
+        .dark .admin-node-person {
+            color: #FCA5A5 !important;
+        }
+
+        /* SMOOTH TAB TRANSITIONS & ANIMATIONS */
+        .admin-tab-content {
+            animation: tabFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: opacity, transform;
+        }
+        @keyframes tabFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ALERT PROGRESS BAR & ANIMATIONS */
+        .alert-progress-bar {
+            animation: alertShrink 4.5s linear forwards;
+        }
+        @keyframes alertShrink {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        @keyframes alertSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-12px) scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .animate-alert-in {
+            animation: alertSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased font-sans flex">
+
+    <!-- MOBILE SIDEBAR BACKDROP OVERLAY -->
+    <div id="adminSidebarBackdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden lg:hidden transition-opacity"></div>
+
+    <!-- SIDEBAR NAVIGASI (RESPONSIF HP: SLIDING DRAWER) -->
+    <aside id="adminSidebar" class="bg-navy-900 text-white w-72 h-screen fixed left-0 top-0 flex flex-col justify-between z-50 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 shadow-2xl lg:shadow-none overflow-y-auto">
+        <div>
+            <!-- Brand Logo & Mobile Close Button -->
+            <div class="px-6 py-5 lg:py-8 border-b border-slate-700/50 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm">
+                        <img src="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.logo_url) ? siteSettings.logo_url : '/images/logo.png' %>" alt="Logo" class="w-full h-full object-contain">
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-sm leading-tight text-white tracking-wide"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.nama_instansi) ? siteSettings.nama_instansi : 'DISKOMINFOSANTIK' %></h1>
+                        <span class="text-[11px] font-extrabold text-orange-400 tracking-wider flex items-center gap-1.5 mt-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> PANEL ADMINISTRATOR
+                        </span>
+                    </div>
+                </div>
+                <button type="button" onclick="toggleMobileSidebar(false)" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" title="Tutup Menu">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Nav Menu (Perpaduan Oranye Diskominfo & Nuansa Merah Admin) -->
+            <nav class="p-4 space-y-1.5 mt-2">
+                <a href="?tab=dashboard" data-tab="dashboard" class="sidebar-link flex items-center gap-3 px-4 py-3 <%= currentActiveTab === 'dashboard' ? activeSidebarClass : inactiveSidebarClass %> rounded-xl transition-all">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Panel Utama
+                </a>
+                <a href="?tab=surat" data-tab="surat" class="sidebar-link flex items-center justify-between px-4 py-3 <%= currentActiveTab === 'surat' ? activeSidebarClass : inactiveSidebarClass %> rounded-xl transition-all">
+                    <div class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-orange-400"></i> Pelayanan Surat</div>
+                    <% if (typeof suratList !== 'undefined' && suratList.length > 0) { %>
+                        <span class="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><%= suratList.length %></span>
+                    <% } %>
+                </a>
+                <a href="?tab=aduan" data-tab="aduan" class="sidebar-link flex items-center justify-between px-4 py-3 <%= currentActiveTab === 'aduan' ? activeSidebarClass : inactiveSidebarClass %> rounded-xl transition-all">
+                    <div class="flex items-center gap-3"><i data-lucide="message-square-warning" class="w-5 h-5 text-red-400"></i> Pengaduan Warga</div>
+                    <% if (typeof aduanList !== 'undefined' && aduanList.length > 0) { %>
+                        <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><%= aduanList.length %></span>
+                    <% } %>
+                </a>
+                <a href="?tab=berita" data-tab="berita" class="sidebar-link flex items-center gap-3 px-4 py-3 <%= currentActiveTab === 'berita' ? activeSidebarClass : inactiveSidebarClass %> rounded-xl transition-all">
+                    <i data-lucide="newspaper" class="w-5 h-5"></i> Berita & Publikasi
+                </a>
+                <a href="?tab=galeri" data-tab="galeri" class="sidebar-link flex items-center gap-3 px-4 py-3 <%= currentActiveTab === 'galeri' ? activeSidebarClass : inactiveSidebarClass %> rounded-xl transition-all">
+                    <i data-lucide="images" class="w-5 h-5"></i> Galeri Multimedia
+                </a>
+                <a href="?tab=profil" data-tab="profil" class="sidebar-link flex items-center gap-3 px-4 py-3 <%= currentActiveTab === 'profil' ? activeSidebarClass : inactiveSidebarClass %> rounded-xl transition-all">
+                    <i data-lucide="building-2" class="w-5 h-5"></i> Profil & Struktur
+                </a>
+                <a href="?tab=statistik" data-tab="statistik" class="sidebar-link flex items-center gap-3 px-4 py-3 <%= currentActiveTab === 'statistik' ? activeSidebarClass : inactiveSidebarClass %> rounded-xl transition-all">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i> Statistik Daerah
+                </a>
+                <a href="?tab=laporan" data-tab="laporan" class="sidebar-link flex items-center justify-between px-4 py-3 <%= currentActiveTab === 'laporan' ? activeSidebarClass : inactiveSidebarClass %> rounded-xl transition-all">
+                    <div class="flex items-center gap-3"><i data-lucide="file-text" class="w-5 h-5 text-orange-400"></i> Laporan & Rekap</div>
+                    <span class="bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-300 border border-orange-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">Cetak & Rekap</span>
+                </a>
+                <a href="?tab=pengaturan" data-tab="pengaturan" class="sidebar-link flex items-center justify-between px-4 py-3 <%= currentActiveTab === 'pengaturan' ? activeSidebarClass : inactiveSidebarClass %> rounded-xl transition-all">
+                    <div class="flex items-center gap-3"><i data-lucide="sliders" class="w-5 h-5 text-indigo-400"></i> Pengaturan Web</div>
+                    <% if (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.is_maintenance) { %>
+                        <span class="bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full animate-pulse">Maintenance</span>
+                    <% } %>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Profil Admin & Theme Switcher Bawah -->
+        <div class="p-4 border-t border-slate-700/50">
+            <!-- Profil User Admin (Leluasa, Bersih, & Rapi) -->
+            <div class="bg-slate-800/50 hover:bg-slate-800 border border-transparent hover:border-slate-700/60 rounded-xl p-3 flex items-center justify-between transition-all group">
+                <div class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0" onclick="openModalAdminProfile()" title="Klik untuk ubah profil & kata sandi">
+                    <div class="relative shrink-0">
+                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white font-bold uppercase shadow-sm text-xs">
+                            <%= typeof admin !== 'undefined' && admin ? admin.nama.charAt(0) : 'A' %>
+                        </div>
+                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-navy-900 rounded-full"></span>
+                    </div>
+                    <div class="truncate">
+                        <p class="text-xs font-semibold text-white leading-none group-hover:text-orange-400 transition-colors truncate"><%= typeof admin !== 'undefined' && admin ? admin.nama : 'Administrator' %></p>
+                        <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                            <span><%= typeof admin !== 'undefined' && admin ? admin.role : 'Pengelola' %></span>
+                            <span>&bull;</span>
+                            <span class="text-orange-400 group-hover:underline">Ubah Profil</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 shrink-0 ml-1">
+                    <!-- Tombol Toggle Mode Tampilan (Hanya Ikon Bulan/Matahari, Tanpa Teks) -->
+                    <button type="button" id="btnThemeToggleSidebar" onclick="toggleAdminTheme()" class="text-slate-400 hover:text-amber-400 p-1.5 rounded-lg hover:bg-slate-700 transition-colors cursor-pointer theme-btn-rotate" title="Ganti Mode Tampilan (Gelap / Terang)">
+                        <i data-lucide="moon" class="w-4 h-4"></i>
+                    </button>
+                    <!-- Tombol Pengaturan Profil / Akun -->
+                    <button type="button" onclick="openModalAdminProfile()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-700 transition-colors cursor-pointer" title="Pengaturan Akun & Kata Sandi">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                    </button>
+                    <!-- Tombol Keluar -->
+                    <a href="/admin-diskominfo/logout" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-700 transition-colors" title="Keluar Sistem">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT (Kanan - Responsif di Layar Ponsel & Desktop) -->
+    <main class="lg:ml-72 ml-0 flex-1 min-h-screen flex flex-col w-full min-w-0 relative transition-all duration-300 overflow-x-hidden">
+        
+        <!-- ========================================================= -->
+        <!-- TOP BAR GLOBAL PERSISTEN & FREEZE (STICKY HEADER) -->
+        <!-- ========================================================= -->
+        <header class="admin-topbar-sticky w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <!-- Hamburger Button (Mobile) + Breadcrumb / Status Tab -->
+                <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                    <button type="button" id="btnAdminMobileSidebar" onclick="toggleMobileSidebar(true)" class="lg:hidden p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-2xs hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0" title="Buka Menu Navigasi" aria-label="Buka Menu Navigasi">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse hidden sm:inline-block shrink-0"></span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:inline-block truncate">Portal Administrator</span>
+                    <span class="text-xs text-slate-300 dark:text-slate-700 hidden sm:inline-block">/</span>
+                    <span id="globalTabBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400 border border-orange-200/80 dark:border-orange-900/40 transition-all duration-200 truncate">
+                        <%= currentTabTitle %>
+                    </span>
+                </div>
+
+                <!-- Kontrol Kanan: Jam, Dark Mode Toggle, Profile, Web Publik -->
+                <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                    <% if (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.is_maintenance) { %>
+                    <a href="?tab=pengaturan" class="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 shadow-md shadow-amber-500/25 animate-pulse" title="Mode Pemeliharaan aktif. Klik untuk kelola pengaturan.">
+                        <i data-lucide="cone" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Maintenance</span>
+                    </a>
+                    <% } %>
+
+                    <!-- Jam Tanggal Langsung -->
+                    <div class="hidden xl:flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl shadow-2xs border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-orange-500"></i>
+                        <span id="liveClock">Memuat Tanggal...</span>
+                    </div>
+
+                    <!-- TOMBOL TOGGLE THEME: HANYA IKON BULAN & MATAHARI SAJA (TANPA LABEL) -->
+                    <button type="button" id="btnThemeToggleNav" onclick="toggleAdminTheme()" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-2xs hover:scale-105 active:scale-95 transition-all theme-btn-rotate shrink-0" title="Ganti Mode Tampilan (Gelap / Terang)">
+                        <i data-lucide="moon" class="w-4 h-4 text-slate-700 dark:text-slate-200"></i>
+                    </button>
+
+                    <!-- Tombol Buka Portal Publik -->
+                    <a href="/" target="_blank" class="bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs shrink-0" title="Buka Halaman Portal Publik">
+                        <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="hidden md:inline">Portal Publik</span>
+                    </a>
+
+                    <!-- Ubah Profil Administrator -->
+                    <button type="button" onclick="openModalAdminProfile()" class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-orange-500/20 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 shrink-0">
+                        <i data-lucide="user-cog" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Petugas</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- KONTEN UTAMA HALAMAN ADMIN (PADDED) -->
+        <div class="p-3.5 sm:p-6 lg:p-8 pt-4 sm:pt-6 flex-1 w-full max-w-full overflow-x-hidden">
+
+        <!-- ========================================================= -->
+        <!-- WADAH NOTIFIKASI ALERT SISTEM (MATCHING LIGHT & DARK) -->
+        <!-- ========================================================= -->
+        <div id="globalAlertContainer">
+        <% if (typeof successMsg !== 'undefined' && successMsg) { %>
+            <div id="globalNotificationBox" class="bg-white/95 dark:bg-slate-900/90 border border-emerald-300 dark:border-emerald-500/40 text-emerald-950 dark:text-emerald-100 px-5 py-3.5 rounded-2xl mb-6 shadow-lg shadow-emerald-500/10 dark:shadow-emerald-950/50 flex items-center justify-between backdrop-blur-md animate-alert-in transition-all duration-300 relative overflow-hidden group">
+                <div class="flex items-center gap-3 text-sm font-semibold">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-700/60 shadow-2xs">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block mb-0.5">Operasi Berhasil</span>
+                        <span class="text-xs sm:text-sm font-medium"><%= successMsg %></span>
+                    </div>
+                </div>
+                <button type="button" onclick="closeNotificationBox()" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Tutup Notifikasi">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+                <div class="absolute bottom-0 left-0 h-1 bg-emerald-500 dark:bg-emerald-400 alert-progress-bar w-full"></div>
+            </div>
+        <% } %>
+
+        <% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
+            <div id="globalNotificationBox" class="bg-white/95 dark:bg-slate-900/90 border border-rose-300 dark:border-rose-500/40 text-rose-950 dark:text-rose-100 px-5 py-3.5 rounded-2xl mb-6 shadow-lg shadow-rose-500/10 dark:shadow-rose-950/50 flex items-center justify-between backdrop-blur-md animate-alert-in transition-all duration-300 relative overflow-hidden group">
+                <div class="flex items-center gap-3 text-sm font-semibold">
+                    <div class="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-700/60 shadow-2xs">
+                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-xs uppercase tracking-wider text-rose-600 dark:text-rose-400 block mb-0.5">Peringatan / Gagal</span>
+                        <span class="text-xs sm:text-sm font-medium"><%= errorMsg %></span>
+                    </div>
+                </div>
+                <button type="button" onclick="closeNotificationBox()" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Tutup Notifikasi">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+                <div class="absolute bottom-0 left-0 h-1 bg-rose-500 dark:bg-rose-400 alert-progress-bar w-full"></div>
+            </div>
+        <% } %>
+        </div>
+
+        <!-- TAB 1: PANEL UTAMA -->
+        <div id="tab-dashboard" class="admin-tab-content <%= currentActiveTab === 'dashboard' ? '' : 'hidden' %>">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-navy-900">Pusat Kendali Sistem</h2>
+                    <p class="text-slate-500 text-sm mt-0.5">Dinas Komunikasi, Informatika, Persandian dan Statistik Kabupaten Bekasi</p>
+                </div>
+            </header>
+
+            <!-- 7 KARTU PANEL KENDALI TERPADU -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                <% 
+                   let totalSurat = typeof suratList !== 'undefined' ? suratList.length : 0;
+                   let totalAduan = typeof aduanList !== 'undefined' ? aduanList.length : 0;
+                   let totalBerita = typeof beritaList !== 'undefined' ? beritaList.length : 0;
+                   let totalGaleri = typeof galeriList !== 'undefined' ? galeriList.length : 0;
+                %>
+                
+                <!-- Kotak 1: Surat (Palet Oranye Hangat Khas Kedinasan) -->
+                <div class="group admin-control-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="mail-open" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-bold text-navy-900 dark:text-white text-lg mb-1">Pelayanan Surat</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Terdapat <strong class="admin-stat-counter text-orange-600 dark:text-orange-400 font-bold" data-target="<%= totalSurat %>"><%= totalSurat %></strong> permohonan surat masuk di sistem.</p>
+                    </div>
+                    <a href="?tab=surat" data-tab="surat" class="mt-6 flex items-center text-sm font-semibold text-orange-600 dark:text-orange-400 group-hover:translate-x-1 transition-all">
+                        Periksa Permohonan Surat <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                    </a>
+                </div>
+
+                <!-- Kotak 2: Pengaduan (Palet Mawar Merah Tanggap Warga) -->
+                <div class="group admin-control-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="message-square-warning" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-bold text-navy-900 dark:text-white text-lg mb-1">Pengaduan Warga</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Terdapat <strong class="admin-stat-counter text-rose-600 dark:text-rose-400 font-bold" data-target="<%= totalAduan %>"><%= totalAduan %></strong> laporan masyarakat yang tercatat.</p>
+                    </div>
+                    <a href="?tab=aduan" data-tab="aduan" class="mt-6 flex items-center text-sm font-semibold text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-all">
+                        Tindak Lanjuti Aduan <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                    </a>
+                </div>
+
+                <!-- Kotak 3: Berita (Palet Biru Langit Komunikasi Publik) -->
+                <div class="group admin-control-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="newspaper" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-bold text-navy-900 dark:text-white text-lg mb-1">Berita & Publikasi</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Terdapat <strong class="admin-stat-counter text-sky-600 dark:text-sky-400 font-bold" data-target="<%= totalBerita %>"><%= totalBerita %></strong> artikel dan siaran pers terbit.</p>
+                    </div>
+                    <a href="?tab=berita" data-tab="berita" class="mt-6 flex items-center text-sm font-semibold text-sky-600 dark:text-sky-400 group-hover:translate-x-1 transition-all">
+                        Kelola Berita & Publikasi <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                    </a>
+                </div>
+
+                <!-- Kotak 4: Galeri (Palet Violet Dokumentasi Multimedia) -->
+                <div class="group admin-control-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="images" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-bold text-navy-900 dark:text-white text-lg mb-1">Galeri Multimedia</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Terdapat <strong class="admin-stat-counter text-violet-600 dark:text-violet-400 font-bold" data-target="<%= totalGaleri %>"><%= totalGaleri %></strong> dokumentasi foto & video tersimpan.</p>
+                    </div>
+                    <a href="?tab=galeri" data-tab="galeri" class="mt-6 flex items-center text-sm font-semibold text-violet-600 dark:text-violet-400 group-hover:translate-x-1 transition-all">
+                        Kelola Galeri Media <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                    </a>
+                </div>
+
+                <!-- Kotak 5: Profil & Struktur (Palet Indigo Tata Kelola Pemerintahan) -->
+                <div class="group admin-control-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="building-2" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-bold text-navy-900 dark:text-white text-lg mb-1">Profil & Tata Kelola</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Pengaturan visi, misi, kontak, serta bagan struktur kedinasan.</p>
+                    </div>
+                    <a href="?tab=profil" data-tab="profil" class="mt-6 flex items-center text-sm font-semibold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-all">
+                        Kelola Profil & Struktur <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                    </a>
+                </div>
+
+                <!-- Kotak 6: Satu Data Bekasi (Palet Zamrud Analitik Statistik) -->
+                <div class="group admin-control-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-bold text-navy-900 dark:text-white text-lg mb-1">Satu Data Daerah</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Integrasi dataset kependudukan dari <strong class="admin-stat-counter text-emerald-600 dark:text-emerald-400 font-bold" data-target="23">23</strong> Kecamatan di Kabupaten Bekasi.</p>
+                    </div>
+                    <a href="?tab=statistik" data-tab="statistik" class="mt-6 flex items-center text-sm font-semibold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-all">
+                        Pantau Statistik Daerah <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                    </a>
+                </div>
+
+                <!-- Kotak 7: Pengaturan Website & Tampilan Dinamis (Branding, Logo, Tema & Maintenance) -->
+                <div class="group admin-control-card bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i data-lucide="sliders-horizontal" class="w-6 h-6"></i>
+                            </div>
+                            <% if (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.is_maintenance) { %>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Maintenance
+                                </span>
+                            <% } else { %>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+                                </span>
+                            <% } %>
+                        </div>
+                        <h3 class="font-bold text-navy-900 dark:text-white text-lg mb-1">Identitas & Tema</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Sesuaikan logo instansi, warna primer website, kontak resmi, dan sakelar mode pemeliharaan.</p>
+                    </div>
+                    <a href="?tab=pengaturan" data-tab="pengaturan" class="mt-6 flex items-center text-sm font-semibold text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-all">
+                        Atur Branding & Tampilan <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                    </a>
+                </div>
+
+                <!-- Kotak 8: Pusat Laporan & Rekapitulasi Kinerja (Spanduk Rekap Terpadu) -->
+                <div class="group admin-control-card bg-gradient-to-br from-navy-900 via-slate-900 to-navy-950 text-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-slate-800 flex flex-col justify-between md:col-span-2 lg:col-span-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-orange-500/20 border border-orange-500/30 rounded-xl flex items-center justify-center shrink-0">
+                                <i data-lucide="file-check" class="text-orange-400 w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-bold text-white text-lg">Pusat Laporan & Rekapitulasi Kinerja</h3>
+                                    <span class="bg-gradient-to-r from-orange-500 to-red-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">TERPADU</span>
+                                </div>
+                                <p class="text-slate-400 text-xs mt-0.5">Susun rekapitulasi data permohonan surat & pengaduan masyarakat secara langsung, unduh lembar data berkas, serta cetak laporan resmi ber-KOP Dinas.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <a href="?tab=laporan" data-tab="laporan" class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-md shadow-orange-500/25">
+                                <i data-lucide="printer" class="w-4 h-4"></i> Buka Modul Laporan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- SUB-MODUL TAB (DIPANGGIL 1x) -->
+        <!-- ========================================================= -->
+        
+        <!-- 1. MODUL PENGADUAN -->
+        <div id="tab-aduan" class="admin-tab-content <%= currentActiveTab === 'aduan' ? '' : 'hidden' %>">
+            <%- include('./pengaduan/index') %>
+        </div>
+
+        <!-- 2. MODUL SURAT -->
+        <div id="tab-surat" class="admin-tab-content <%= currentActiveTab === 'surat' ? '' : 'hidden' %>">
+            <%- include('./surat/index') %>
+        </div>
+
+        <!-- 3. MODUL BERITA -->
+        <div id="tab-berita" class="admin-tab-content <%= currentActiveTab === 'berita' ? '' : 'hidden' %>">
+            <%- include('./berita/index') %>
+        </div>
+
+        <!-- 4. MODUL GALERI -->
+        <div id="tab-galeri" class="admin-tab-content <%= currentActiveTab === 'galeri' ? '' : 'hidden' %>">
+            <%- include('./galeri/index') %>
+        </div>
+
+        <!-- 5. MODUL PROFIL -->
+        <div id="tab-profil" class="admin-tab-content <%= currentActiveTab === 'profil' ? '' : 'hidden' %>">
+            <%- include('./profil/index') %>
+        </div>
+
+        <!-- 6. MODUL STATISTIK -->
+        <div id="tab-statistik" class="admin-tab-content <%= currentActiveTab === 'statistik' ? '' : 'hidden' %>">
+            <%- include('./statistik/index') %>
+        </div>
+
+        <!-- 7. MODUL LAPORAN & REKAPITULASI -->
+        <div id="tab-laporan" class="admin-tab-content <%= currentActiveTab === 'laporan' ? '' : 'hidden' %>">
+            <%- include('./laporan/index') %>
+        </div>
+
+        <!-- 8. MODUL PENGATURAN WEBSITE & BRANDING (ULTRA DINAMIS) -->
+        <div id="tab-pengaturan" class="admin-tab-content <%= currentActiveTab === 'pengaturan' ? '' : 'hidden' %>">
+            <%- include('./pengaturan/index') %>
+        </div>
+
+        </div> <!-- Tutup KONTEN UTAMA PADDED -->
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- MODAL EDIT PROFIL & KATA SANDI ADMINISTRATOR -->
+    <!-- ========================================================= -->
+    <div id="modalAdminProfile" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-[9999] hidden items-center justify-center p-3 sm:p-4 transition-all duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full max-h-[90vh] sm:max-h-[88vh] flex flex-col shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transform transition-all animate-fadeInDown">
+            <!-- Header Modal -->
+            <div class="bg-navy-900 px-5 sm:px-6 py-4.5 flex items-center justify-between text-white border-b border-slate-800 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-red-600/20 text-red-400 flex items-center justify-center shrink-0">
+                        <i data-lucide="user-cog" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-white leading-tight">Ubah Profil Administrator</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Kelola identitas dan perbarui kata sandi administrator</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalAdminProfile()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Form Edit Profil -->
+            <form action="/admin-diskominfo/admin-profile/update" method="POST" class="flex-1 flex flex-col min-h-0">
+                <input type="hidden" name="current_tab" id="profileCurrentTab" value="dashboard">
+
+                <div class="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain">
+                    <!-- Informasi Dasar -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Nama Administrator</label>
+                            <div class="relative">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-3"></i>
+                                <input type="text" name="nama" value="<%= typeof admin !== 'undefined' && admin ? admin.nama : '' %>" required class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:ring-2 focus:ring-red-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Alamat Surel Resmi Kedinasan</label>
+                            <div class="relative">
+                                <i data-lucide="mail" class="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-3"></i>
+                                <input type="email" name="email" value="<%= typeof admin !== 'undefined' && admin ? admin.email : '' %>" required class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:ring-2 focus:ring-red-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bagian Ubah Password -->
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="key-round" class="w-3.5 h-3.5 text-red-600 dark:text-red-400"></i> Ubah Kata Sandi
+                            </span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 italic">Kosongkan jika tidak diubah</span>
+                        </div>
+
+                        <div class="space-y-2.5">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Kata Sandi Baru</label>
+                                <div class="relative">
+                                    <i data-lucide="lock" class="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-3"></i>
+                                    <input type="password" name="password_baru" id="inputPasswordBaru" placeholder="Minimal 6 karakter unik" class="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:ring-2 focus:ring-red-500 outline-none">
+                                    <button type="button" onclick="togglePasswordVisibility('inputPasswordBaru', this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Konfirmasi Kata Sandi Baru</label>
+                                <div class="relative">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-3"></i>
+                                    <input type="password" name="password_konfirmasi" id="inputPasswordKonfirmasi" placeholder="Ulangi kata sandi baru" class="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:ring-2 focus:ring-red-500 outline-none">
+                                    <button type="button" onclick="togglePasswordVisibility('inputPasswordKonfirmasi', this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Verifikasi Password Saat Ini (Wajib) -->
+                    <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl p-3">
+                        <label class="block text-xs font-bold text-amber-900 dark:text-amber-300 mb-1">
+                            Kata Sandi Saat Ini <span class="text-red-600 dark:text-red-400">* (Wajib)</span>
+                        </label>
+                        <p class="text-[11px] text-amber-700 dark:text-amber-400 mb-2">Konfirmasi kata sandi aktif untuk menyimpan perubahan.</p>
+                        <div class="relative">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-amber-600 dark:text-amber-400 absolute left-3 top-3"></i>
+                            <input type="password" name="password_lama" id="inputPasswordLama" required placeholder="Masukkan kata sandi saat ini" class="w-full pl-9 pr-10 py-2 text-sm bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-navy-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:ring-2 focus:ring-red-500 outline-none">
+                            <button type="button" onclick="togglePasswordVisibility('inputPasswordLama', this)" class="absolute right-3 top-2.5 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Aksi -->
+                <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800 shrink-0">
+                    <button type="button" onclick="closeModalAdminProfile()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-red-600/20 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>Simpan Perubahan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script Logika UI & Theme Mode Switcher -->
+    <script>
+        // 1. Initial Icon Rendering
+        lucide.createIcons();
+
+        // 2. SISTEM MANAJEMEN TEMA (NUANSA MERAH vs DARK NAVY)
+        function initAdminTheme() {
+            const savedTheme = localStorage.getItem('adminTheme') || 'light';
+            setAdminTheme(savedTheme, false);
+        }
+
+        function setAdminTheme(theme, save = true) {
+            const isDark = theme === 'dark';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+            if (save) {
+                localStorage.setItem('adminTheme', theme);
+            }
+            updateThemeToggleUI(theme);
+        }
+
+        function toggleAdminTheme() {
+            const isCurrentlyDark = document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isCurrentlyDark ? 'light' : 'dark';
+            setAdminTheme(newTheme, true);
+        }
+
+        function updateThemeToggleUI(theme) {
+            const isDark = theme === 'dark';
+            
+            // 1. Topbar Toggle (Hanya ikon tanpa teks)
+            const btnNav = document.getElementById('btnThemeToggleNav');
+            if (btnNav) {
+                btnNav.innerHTML = isDark 
+                    ? '<i data-lucide="sun" class="w-4 h-4 text-amber-400"></i>'
+                    : '<i data-lucide="moon" class="w-4 h-4 text-slate-700 dark:text-slate-200"></i>';
+                btnNav.title = isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Navy (Gelap)';
+            }
+
+            // 2. Sidebar Toggle (Hanya ikon di samping tombol profil)
+            const btnSidebar = document.getElementById('btnThemeToggleSidebar');
+            if (btnSidebar) {
+                btnSidebar.innerHTML = isDark
+                    ? '<i data-lucide="sun" class="w-4 h-4 text-amber-400"></i>'
+                    : '<i data-lucide="moon" class="w-4 h-4 text-slate-400"></i>';
+                btnSidebar.title = isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Navy (Gelap)';
+            }
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Jalankan sinkronisasi tema UI segera
+        initAdminTheme();
+
+        // 3. Live Date Clock
+        const clockEl = document.getElementById('liveClock');
+        if(clockEl) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            clockEl.innerText = new Date().toLocaleDateString('id-ID', options);
+        }
+
+        // 4. Fungsi Tutup Notifikasi
+        function closeNotificationBox() {
+            const box = document.getElementById('globalNotificationBox');
+            if (box) {
+                box.style.opacity = '0';
+                box.style.transform = 'translateY(-10px)';
+                setTimeout(() => box.remove(), 300);
+            }
+        }
+
+        // 5. Pemetaan Nama Tab untuk Breadcrumb Topbar
+        const tabTitleMap = {
+            'dashboard': 'Panel Utama',
+            'aduan': 'Pengaduan Warga',
+            'surat': 'Pelayanan Surat',
+            'berita': 'Berita & Publikasi',
+            'galeri': 'Galeri Multimedia',
+            'profil': 'Profil & Struktur Organisasi',
+            'statistik': 'Satu Data Daerah',
+            'laporan': 'Pusat Laporan & Rekapitulasi',
+            'pengaturan': 'Pengaturan & Identitas Web'
+        };
+
+        // 5.b. Helper Animasi Counter Angka Panel Kendali
+        function animateAdminCounters() {
+            document.querySelectorAll('.admin-stat-counter').forEach(el => {
+                const target = parseInt(el.getAttribute('data-target') || el.innerText, 10);
+                if (isNaN(target)) return;
+                const duration = 850;
+                const startTime = performance.now();
+                function step(now) {
+                    const progress = Math.min((now - startTime) / duration, 1);
+                    const ease = 1 - Math.pow(1 - progress, 3);
+                    el.innerText = Math.floor(ease * target);
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        el.innerText = target;
+                    }
+                }
+                requestAnimationFrame(step);
+            });
+        }
+        window.animateAdminCounters = animateAdminCounters;
+
+        // 5.c. Helper Buka/Tutup Sidebar di Layar HP (Mobile Offcanvas Drawer)
+        function toggleMobileSidebar(open) {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('adminSidebarBackdrop');
+            if (!sidebar || !backdrop) return;
+            
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            const shouldOpen = (open !== undefined) ? open : isClosed;
+            
+            if (shouldOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+        window.toggleMobileSidebar = toggleMobileSidebar;
+
+        // 6. FUNGSI PERPINDAHAN TAB HALUS TANPA KEDIP & TANPA RELOAD (SPA SMOOTH TRANSITION)
+        function switchAdminTab(targetTab, updateHistory = true) {
+            if (!targetTab) targetTab = 'dashboard';
+
+            // Otomatis tutup sidebar di layar HP setelah memilih tab
+            if (window.innerWidth < 1024) {
+                toggleMobileSidebar(false);
+            }
+
+            // Sembunyikan semua tab & tampilkan tab yang dipilih
+            document.querySelectorAll(".admin-tab-content").forEach(el => {
+                if (el.id === "tab-" + targetTab) {
+                    el.classList.remove("hidden");
+                    // Trigger reflow & re-apply animation
+                    el.style.animation = 'none';
+                    el.offsetHeight; /* trigger reflow */
+                    el.style.animation = '';
+                } else {
+                    el.classList.add("hidden");
+                }
+            });
+
+            // Update Breadcrumb Global Topbar
+            const globalBadge = document.getElementById("globalTabBadge");
+            if (globalBadge && tabTitleMap[targetTab]) {
+                globalBadge.innerText = tabTitleMap[targetTab];
+            }
+
+            // Update status link sidebar seketika
+            const activeClasses = ["bg-gradient-to-r", "from-orange-500", "via-orange-600", "to-red-600", "text-white", "font-semibold", "shadow-md", "shadow-orange-500/25"];
+            const inactiveClasses = ["text-slate-400", "hover:bg-slate-800/80", "hover:text-white"];
+
+            document.querySelectorAll(".sidebar-link").forEach(link => {
+                const linkTab = link.getAttribute("data-tab");
+                const isActive = (linkTab === targetTab);
+
+                if (isActive) {
+                    link.classList.remove(...inactiveClasses);
+                    link.classList.add(...activeClasses);
+                } else {
+                    link.classList.remove(...activeClasses);
+                    link.classList.add(...inactiveClasses);
+                }
+            });
+
+            // Update hidden tab input di modal profil agar jika disimpan kembali ke tab aktif
+            const tabInput = document.getElementById('profileCurrentTab');
+            if (tabInput) tabInput.value = targetTab;
+
+            // Jalankan animasi hitung angka jika membuka dashboard
+            if (targetTab === 'dashboard') {
+                animateAdminCounters();
+            }
+
+            // Push state ke browser history jika dipanggil dari klik user
+            if (updateHistory) {
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set("tab", targetTab);
+                // Bersihkan parameter 'success' dan 'error' saat berpindah tab
+                currentUrl.searchParams.delete("success");
+                currentUrl.searchParams.delete("error");
+                window.history.pushState({ tab: targetTab }, "", currentUrl.toString());
+            }
+
+            // Refresh icon Lucide jika ada elemen baru yang dirender
+            if (window.lucide) lucide.createIcons();
+
+            // Pindahkan modal ke body agar tidak terpotong container tab
+            if (typeof teleportAllAdminModals === 'function') teleportAllAdminModals();
+
+            // Broadcast event untuk modul tertentu jika butuh re-render (misal grafik Chart.js atau rekap)
+            window.dispatchEvent(new CustomEvent('adminTabSwitch', { detail: { tab: targetTab } }));
+        }
+        window.switchAdminTab = switchAdminTab;
+
+        // Tangani navigasi tombol Back/Forward browser
+        window.addEventListener('popstate', (e) => {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab') || 'dashboard';
+            switchAdminTab(tab, false);
+        });
+
+        // 7. SISTEM ALERT UNIVERSAL (MATCHING LIGHT & DARK)
+        function showAdminAlert(message, type = 'success', duration = 4000) {
+            const container = document.getElementById('globalAlertContainer');
+            if (!container) return;
+
+            // Konfigurasi style matching untuk Light Mode & Dark Mode Navy
+            const configs = {
+                success: {
+                    title: 'Operasi Berhasil',
+                    icon: 'check-circle-2',
+                    badgeBg: 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/60',
+                    border: 'border-emerald-300 dark:border-emerald-500/40',
+                    text: 'text-emerald-950 dark:text-emerald-100',
+                    titleColor: 'text-emerald-600 dark:text-emerald-400',
+                    barColor: 'bg-emerald-500 dark:bg-emerald-400',
+                    shadow: 'shadow-emerald-500/10 dark:shadow-emerald-950/50'
+                },
+                error: {
+                    title: 'Peringatan / Tindakan Gagal',
+                    icon: 'alert-triangle',
+                    badgeBg: 'bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-700/60',
+                    border: 'border-rose-300 dark:border-rose-500/40',
+                    text: 'text-rose-950 dark:text-rose-100',
+                    titleColor: 'text-rose-600 dark:text-rose-400',
+                    barColor: 'bg-rose-500 dark:bg-rose-400',
+                    shadow: 'shadow-rose-500/10 dark:shadow-rose-950/50'
+                },
+                info: {
+                    title: 'Informasi Sistem',
+                    icon: 'info',
+                    badgeBg: 'bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-700/60',
+                    border: 'border-blue-300 dark:border-blue-500/40',
+                    text: 'text-blue-950 dark:text-blue-100',
+                    titleColor: 'text-blue-600 dark:text-blue-400',
+                    barColor: 'bg-blue-500 dark:bg-blue-400',
+                    shadow: 'shadow-blue-500/10 dark:shadow-blue-950/50'
+                }
+            };
+
+            const cfg = configs[type] || configs.success;
+
+            // Render alert beranimasi
+            container.innerHTML = `
+                <div id="globalNotificationBox" class="bg-white/95 dark:bg-slate-900/90 border ${cfg.border} ${cfg.text} px-5 py-3.5 rounded-2xl mb-6 shadow-lg ${cfg.shadow} flex items-center justify-between backdrop-blur-md animate-alert-in transition-all duration-300 relative overflow-hidden group">
+                    <div class="flex items-center gap-3 text-sm font-semibold">
+                        <div class="w-8 h-8 rounded-xl ${cfg.badgeBg} flex items-center justify-center shrink-0 shadow-2xs">
+                            <i data-lucide="${cfg.icon}" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-xs uppercase tracking-wider ${cfg.titleColor} block mb-0.5">${cfg.title}</span>
+                            <span class="text-xs sm:text-sm font-medium">${message}</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeNotificationBox()" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Tutup Notifikasi">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                    <div class="absolute bottom-0 left-0 h-1 ${cfg.barColor} alert-progress-bar w-full"></div>
+                </div>
+            `;
+
+            if (window.lucide) lucide.createIcons();
+
+            if (window._alertTimer) clearTimeout(window._alertTimer);
+            if (duration > 0) {
+                window._alertTimer = setTimeout(() => {
+                    closeNotificationBox();
+                }, duration);
+            }
+        }
+        window.showAdminAlert = showAdminAlert;
+
+        // 8. Inisialisasi DOM & Delegasi Klik Tab
+        document.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const activeTab = params.get("tab") || "dashboard";
+
+            // Inisialisasi teks badge breadcrumb jika belum diset
+            const globalBadge = document.getElementById("globalTabBadge");
+            if (globalBadge && tabTitleMap[activeTab]) {
+                globalBadge.innerText = tabTitleMap[activeTab];
+            }
+
+            // Jalankan animasi hitung awal jika berada di tab dashboard
+            if (activeTab === "dashboard") {
+                animateAdminCounters();
+            }
+
+            // Delegasi klik link [data-tab] untuk transisi instan tanpa reload browser
+            document.addEventListener("click", (e) => {
+                const tabTarget = e.target.closest("[data-tab]");
+                if (tabTarget) {
+                    const tabName = tabTarget.getAttribute("data-tab");
+                    if (tabName) {
+                        e.preventDefault();
+                        switchAdminTab(tabName, true);
+                    }
+                }
+            });
+
+            // Pembersihan parameter URL 'success' / 'error' setelah alert dirender oleh server
+            if (params.has("success") || params.has("error")) {
+                const cleanParams = new URLSearchParams();
+                if (params.has("tab")) cleanParams.set("tab", params.get("tab"));
+                if (params.has("subtab")) cleanParams.set("subtab", params.get("subtab"));
+                const newQuery = cleanParams.toString() ? '?' + cleanParams.toString() : '';
+                window.history.replaceState({ tab: activeTab }, document.title, window.location.pathname + newQuery);
+
+                if (window._alertTimer) clearTimeout(window._alertTimer);
+                window._alertTimer = setTimeout(() => {
+                    closeNotificationBox();
+                }, 4500);
+            }
+        });
+
+        // 7. Universal Modal Teleportation & Body Lock Helper
+        function safeTeleportModal(el) {
+            if (el && el.parentElement !== document.body) {
+                document.body.appendChild(el);
+            }
+        }
+
+        function teleportAllAdminModals() {
+            document.querySelectorAll('[id^="modal"]').forEach(modalEl => {
+                if (modalEl && modalEl.parentElement !== document.body) {
+                    document.body.appendChild(modalEl);
+                }
+            });
+        }
+        window.addEventListener('DOMContentLoaded', teleportAllAdminModals);
+        setTimeout(teleportAllAdminModals, 300);
+
+        // Helper Modal Aduan Beranimasi Pop-In
+        function openModalAduan(id) {
+            const modal = document.getElementById('modalAduan-' + id);
+            if(modal) {
+                safeTeleportModal(modal);
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+                const dialog = modal.querySelector('.bg-white, .relative');
+                if (dialog) {
+                    dialog.classList.remove('modal-dialog-animated');
+                    dialog.offsetHeight;
+                    dialog.classList.add('modal-dialog-animated');
+                }
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+        function closeModalAduan(id) {
+            const modal = document.getElementById('modalAduan-' + id);
+            if(modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        // Helper Modal Edit Profil Administrator Beranimasi Pop-In
+        function openModalAdminProfile() {
+            const modal = document.getElementById('modalAdminProfile');
+            if(modal) {
+                safeTeleportModal(modal);
+                const params = new URLSearchParams(window.location.search);
+                const currentTab = params.get('tab') || 'dashboard';
+                const tabInput = document.getElementById('profileCurrentTab');
+                if(tabInput) tabInput.value = currentTab;
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+                const dialog = modal.querySelector('.bg-white, .relative');
+                if (dialog) {
+                    dialog.classList.remove('modal-dialog-animated');
+                    dialog.offsetHeight;
+                    dialog.classList.add('modal-dialog-animated');
+                }
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function closeModalAdminProfile() {
+            const modal = document.getElementById('modalAdminProfile');
+            if(modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function togglePasswordVisibility(inputId, btnEl) {
+            const input = document.getElementById(inputId);
+            if(!input) return;
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            btnEl.innerHTML = isPassword ? '<i data-lucide="eye-off" class="w-4 h-4"></i>' : '<i data-lucide="eye" class="w-4 h-4"></i>';
+            if (window.lucide) lucide.createIcons();
+        }
+    </script>
+    <!-- SweetAlert2 & Custom Alert Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/site-alerts.js"></script>
+</body>
+</html>

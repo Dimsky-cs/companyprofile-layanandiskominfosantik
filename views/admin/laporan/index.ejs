@@ -1,0 +1,1077 @@
+<% 
+    const listSurat = (typeof suratList !== 'undefined' && Array.isArray(suratList)) ? suratList : [];
+    const listAduan = (typeof aduanList !== 'undefined' && Array.isArray(aduanList)) ? aduanList : [];
+    const instansiInfo = (typeof profil !== 'undefined' && profil) ? profil : {};
+
+    // Agregasi Statistik Surat
+    const totalSurat = listSurat.length;
+    const suratDisetujui = listSurat.filter(s => s.status === 'Disetujui').length;
+    const suratDiproses = listSurat.filter(s => s.status === 'Diproses').length;
+    const suratMenunggu = listSurat.filter(s => s.status === 'Menunggu').length;
+    const suratDitolak = listSurat.filter(s => s.status === 'Ditolak').length;
+    const rateSuratDisetujui = totalSurat > 0 ? Math.round((suratDisetujui / totalSurat) * 100) : 0;
+
+    // Agregasi Statistik Aduan
+    const totalAduan = listAduan.length;
+    const aduanSelesai = listAduan.filter(a => a.status === 'Selesai').length;
+    const aduanDiproses = listAduan.filter(a => a.status === 'Diproses').length;
+    const aduanTerkirim = listAduan.filter(a => a.status === 'Terkirim').length;
+    const aduanDitolak = listAduan.filter(a => a.status === 'Ditolak').length;
+    const rateAduanSelesai = totalAduan > 0 ? Math.round((aduanSelesai / totalAduan) * 100) : 0;
+
+    // Agregasi Total Gabungan & SPBE Ketuntasan
+    const totalGabungan = totalSurat + totalAduan;
+    const totalTuntas = suratDisetujui + aduanSelesai;
+    const overallSuccessRate = totalGabungan > 0 ? Math.round((totalTuntas / totalGabungan) * 100) : 0;
+
+    // Gabungan Semua Transaksi untuk Rekap
+    const allRecords = [
+        ...listSurat.map(s => ({
+            tipe: 'SURAT',
+            kode: s.nomor_surat,
+            nama: s.nama_pemohon,
+            nik: s.nik,
+            kontak: s.no_hp,
+            perihal: s.jenis_surat + ' (' + (s.keperluan ? s.keperluan.substring(0, 50) + '...' : '-') + ')',
+            status: s.status,
+            tanggal: new Date(s.created_at),
+            rawDate: s.created_at
+        })),
+        ...listAduan.map(a => ({
+            tipe: 'ADUAN',
+            kode: a.kode_tiket,
+            nama: a.nama_pelapor,
+            nik: a.nik_pelapor,
+            kontak: a.no_telp,
+            perihal: '[' + a.kategori_aduan + '] ' + a.judul_aduan,
+            status: a.status,
+            tanggal: new Date(a.created_at),
+            rawDate: a.created_at
+        }))
+    ].sort((a, b) => b.tanggal - a.tanggal);
+%>
+
+<!-- HEADER MODUL LAPORAN -->
+<header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div>
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200">
+                Laporan & Rekapitulasi Kinerja
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                Format Resmi Ber-KOP (Terbaru)
+            </span>
+            <span class="text-xs text-slate-400">• Standar Akuntabilitas SPBE</span>
+        </div>
+        <h2 class="text-2xl font-bold text-navy-900 mb-1">Pusat Laporan & Rekapitulasi Kedinasan</h2>
+        <p class="text-slate-500 text-sm">Unduh rekapitulasi data permohonan persuratan, pengaduan masyarakat, serta cetak laporan resmi ber-Kop Surat dinas.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2.5">
+        <!-- 1. Tombol Cetak Dokumen Resmi PDF -->
+        <button type="button" onclick="openPrintReportModal()" class="bg-navy-900 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs transition-all shadow-md active:scale-95">
+            <i data-lucide="printer" class="w-4 h-4 text-orange-400"></i> Cetak Laporan Resmi (PDF)
+        </button>
+
+        <!-- 2. Tombol Unduh Lembar Kerja Excel Langsung (Sekali Klik) -->
+        <button type="button" onclick="exportReportToExcel('SEMUA')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs transition-all shadow-md shadow-emerald-600/20 active:scale-95" title="Unduh berkas Excel resmi ber-Kop Surat dan anti-notasi ilmiah">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Unduh Excel Resmi (.xls)
+        </button>
+
+        <!-- 3. Dropdown Opsi Filter / Format Lain -->
+        <div class="relative inline-block text-left" id="exportDropdownWrap">
+            <button type="button" onclick="toggleExportMenu()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-3 py-2.5 rounded-xl flex items-center gap-1.5 text-xs transition-all border border-slate-200 dark:border-slate-700 active:scale-95">
+                <i data-lucide="filter" class="w-3.5 h-3.5 text-slate-500"></i> Filter Ekspor <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+            </button>
+            <div id="exportMenu" class="hidden absolute right-0 mt-2 w-72 rounded-2xl shadow-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 ring-1 ring-black/5 z-30 py-2 divide-y divide-slate-100 dark:divide-slate-800">
+                <div class="px-4 py-2 bg-slate-50 dark:bg-slate-800/50">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Filter Khusus Lembar Excel (.xls)</span>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Ber-Kop Surat Pemkab Bekasi & anti notasi ilmiah</p>
+                </div>
+                <div class="py-1">
+                    <button type="button" onclick="exportReportToExcel('SURAT')" class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-orange-50 dark:hover:bg-orange-950/30 hover:text-orange-600 flex items-center gap-2.5 font-medium transition-colors">
+                        <i data-lucide="mail" class="w-4 h-4 text-orange-500"></i> Hanya Rekap Persuratan Mandiri (.xls)
+                    </button>
+                    <button type="button" onclick="exportReportToExcel('ADUAN')" class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-orange-50 dark:hover:bg-orange-950/30 hover:text-orange-600 flex items-center gap-2.5 font-medium transition-colors">
+                        <i data-lucide="message-square-warning" class="w-4 h-4 text-orange-500"></i> Hanya Rekap Pengaduan Warga (.xls)
+                    </button>
+                </div>
+                <div class="px-4 py-1.5 bg-slate-50 dark:bg-slate-800/50">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Format Mentah Alternatif</span>
+                </div>
+                <div class="py-1">
+                    <button type="button" onclick="exportReportToCSV('SEMUA')" class="w-full text-left px-4 py-2 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 font-medium transition-colors">
+                        <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i> Ekspor CSV Mentah (Semua)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- 4 KARTU METRIK RINGKASAN KPI -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+    <!-- Card 1: Surat Masuk -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Persuratan Mandiri</span>
+            <div class="w-9 h-9 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center">
+                <i data-lucide="mail-check" class="w-5 h-5"></i>
+            </div>
+        </div>
+        <div>
+            <div class="flex items-baseline gap-2">
+                <h3 class="text-2xl font-black text-navy-900"><%= totalSurat %></h3>
+                <span class="text-xs text-slate-500 font-semibold">Berkas Masuk</span>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-2.5">
+                <span class="text-emerald-600 font-bold"><%= suratDisetujui %> Disetujui (<%= rateSuratDisetujui %>%)</span>
+                <span class="text-amber-600 font-semibold"><%= suratDiproses + suratMenunggu %> Proses</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Pengaduan Warga -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Aduan & Lapor Warga</span>
+            <div class="w-9 h-9 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center">
+                <i data-lucide="megaphone" class="w-5 h-5"></i>
+            </div>
+        </div>
+        <div>
+            <div class="flex items-baseline gap-2">
+                <h3 class="text-2xl font-black text-navy-900"><%= totalAduan %></h3>
+                <span class="text-xs text-slate-500 font-semibold">Laporan Masuk</span>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-2.5">
+                <span class="text-emerald-600 font-bold"><%= aduanSelesai %> Selesai (<%= rateAduanSelesai %>%)</span>
+                <span class="text-amber-600 font-semibold"><%= aduanDiproses + aduanTerkirim %> Proses</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: SLA Penyelesaian -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Rasio Ketuntasan</span>
+            <div class="w-9 h-9 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+                <i data-lucide="check-check" class="w-5 h-5"></i>
+            </div>
+        </div>
+        <div>
+            <% /* Variabel totalGabungan, totalTuntas & overallSuccessRate telah diagregasi secara terpusat di blok atas */ %>
+            <div class="flex items-baseline gap-2">
+                <h3 class="text-2xl font-black text-emerald-600"><%= overallSuccessRate %>%</h3>
+                <span class="text-xs text-slate-500 font-semibold">Tuntas Dilayani</span>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-2.5">
+                <span><%= totalTuntas %> dari <%= totalGabungan %> Berkas</span>
+                <span class="text-emerald-600 font-bold">Kinerja Prima</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: Periode & Wilayah -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Cakupan Wilayah</span>
+            <div class="w-9 h-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
+                <i data-lucide="map-pin" class="w-5 h-5"></i>
+            </div>
+        </div>
+        <div>
+            <div class="flex items-baseline gap-2">
+                <h3 class="text-2xl font-black text-navy-900">23</h3>
+                <span class="text-xs text-slate-500 font-semibold">Kecamatan Aktif</span>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-2.5">
+                <span>Kab. Bekasi • 187 Desa</span>
+                <span class="text-orange-500 font-bold">Tahun 2026</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTER DINAMIS & SEARCH BAR -->
+<div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-6">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        
+        <!-- Filter Kategori & Status -->
+        <div class="flex flex-wrap items-center gap-3">
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Jenis Layanan</label>
+                <select id="reportFilterTipe" onchange="applyReportFilter()" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                    <option value="ALL">Semua Layanan (Surat & Aduan)</option>
+                    <option value="SURAT">Layanan Persuratan Saja</option>
+                    <option value="ADUAN">Pengaduan Warga Saja</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Status Berkas</label>
+                <select id="reportFilterStatus" onchange="applyReportFilter()" class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                    <option value="ALL">Semua Status</option>
+                    <option value="Disetujui">Disetujui / Selesai</option>
+                    <option value="Diproses">Sedang Diproses</option>
+                    <option value="Menunggu">Menunggu / Terkirim</option>
+                    <option value="Ditolak">Ditolak</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Rentang Tanggal</label>
+                <div class="flex items-center gap-2">
+                    <input type="date" id="reportFilterStartDate" onchange="applyReportFilter()" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                    <span class="text-slate-400 text-xs">s/d</span>
+                    <input type="date" id="reportFilterEndDate" onchange="applyReportFilter()" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Bar & Tombol Reset -->
+        <div class="flex items-end gap-2">
+            <div class="w-full sm:w-64">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Cari Data</label>
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                    <input type="text" id="reportSearchInput" onkeyup="applyReportFilter()" placeholder="Cari nama, NIK, kode tiket..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+            </div>
+            <button type="button" onclick="resetReportFilter()" class="px-3.5 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap" title="Atur ulang filter">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Atur Ulang
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- TABEL REKAPITULASI DOKUMEN -->
+<div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden mb-8">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <h3 class="font-bold text-navy-900 text-sm">Daftar Transaksi Rekapitulasi</h3>
+            <span id="reportRowCount" class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-0.5 rounded-full"><%= allRecords.length %> Data</span>
+        </div>
+        <span class="text-xs text-slate-400">Diperbarui langsung dari pangkalan data</span>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[780px] text-left border-collapse" id="reportTable">
+            <thead>
+                <tr class="bg-slate-50/80 border-b border-slate-100 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                    <th class="py-3.5 px-4 text-center w-12">No</th>
+                    <th class="py-3.5 px-4">Jenis</th>
+                    <th class="py-3.5 px-4">No. Registrasi / Tiket</th>
+                    <th class="py-3.5 px-4">Nama Pemohon / Pelapor</th>
+                    <th class="py-3.5 px-4">NIK & Kontak</th>
+                    <th class="py-3.5 px-4">Perihal / Keperluan</th>
+                    <th class="py-3.5 px-4">Tanggal Masuk</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                    <th class="py-3.5 px-4 text-center">Tindakan</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-xs">
+                <% if (allRecords.length === 0) { %>
+                    <tr>
+                        <td colspan="9" class="py-12 text-center text-slate-400">
+                            <i data-lucide="folder-x" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+                            <p class="font-medium">Belum ada transaksi surat atau pengaduan masuk di sistem.</p>
+                        </td>
+                    </tr>
+                <% } else { %>
+                    <% allRecords.forEach((item, idx) => { %>
+                        <tr class="report-row hover:bg-slate-50/60 transition-colors" 
+                            data-tipe="<%= item.tipe %>" 
+                            data-status="<%= item.status %>" 
+                            data-date="<%= item.rawDate %>"
+                            data-kode="<%= item.kode %>"
+                            data-nama="<%= item.nama %>"
+                            data-nik="<%= item.nik || '-' %>"
+                            data-kontak="<%= item.kontak || '-' %>"
+                            data-perihal="<%= item.perihal %>"
+                            data-tanggal="<%= item.tanggal.toLocaleDateString('id-ID') %>"
+                            data-search="<%= (item.kode + ' ' + item.nama + ' ' + item.nik + ' ' + item.perihal).toLowerCase() %>">
+                            <td class="py-3.5 px-4 text-center font-bold text-slate-400"><%= idx + 1 %></td>
+                            <td class="py-3.5 px-4">
+                                <% if (item.tipe === 'SURAT') { %>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        <i data-lucide="mail" class="w-3 h-3"></i> Surat
+                                    </span>
+                                <% } else { %>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                        <i data-lucide="megaphone" class="w-3 h-3"></i> Aduan
+                                    </span>
+                                <% } %>
+                            </td>
+                            <td class="py-3.5 px-4 font-bold text-navy-900 font-mono text-xs"><%= item.kode %></td>
+                            <td class="py-3.5 px-4 font-semibold text-slate-800"><%= item.nama %></td>
+                            <td class="py-3.5 px-4 text-slate-500">
+                                <span class="font-mono text-[11px]"><%= item.nik ? item.nik.substring(0, 6) + '******' + item.nik.substring(12) : '-' %></span>
+                                <span class="block text-[11px] text-slate-400"><%= item.kontak || '-' %></span>
+                            </td>
+                            <td class="py-3.5 px-4 text-slate-600 max-w-xs truncate" title="<%= item.perihal %>"><%= item.perihal %></td>
+                            <td class="py-3.5 px-4 text-slate-500 whitespace-nowrap">
+                                <%= item.tanggal.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                                <span class="block text-[10px] text-slate-400"><%= item.tanggal.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %> WIB</span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <% if (item.status === 'Disetujui' || item.status === 'Selesai') { %>
+                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block">
+                                        <%= item.status %>
+                                    </span>
+                                <% } else if (item.status === 'Diproses') { %>
+                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 inline-block">
+                                        Diproses
+                                    </span>
+                                <% } else if (item.status === 'Ditolak') { %>
+                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 inline-block">
+                                        Ditolak
+                                    </span>
+                                <% } else { %>
+                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 inline-block">
+                                        Menunggu
+                                    </span>
+                                <% } %>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <% if (item.tipe === 'SURAT') { %>
+                                    <a href="/surat/cetak/<%= item.kode %>" target="_blank" class="p-1.5 text-slate-400 hover:text-navy-900 rounded-lg hover:bg-slate-100 transition-colors inline-block" title="Lihat Tanda Terima">
+                                        <i data-lucide="printer" class="w-4 h-4"></i>
+                                    </a>
+                                <% } else { %>
+                                    <button type="button" onclick="if(typeof switchAdminTab === 'function'){ switchAdminTab('aduan'); } else { window.location.href='?tab=aduan'; }" class="p-1.5 text-slate-400 hover:text-navy-900 rounded-lg hover:bg-slate-100 transition-colors inline-block" title="Buka Rincian Pengaduan">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL CETAK LAPORAN RESMI BER-KOP SURAT (FULL VIEWPORT VIEWER) -->
+<!-- ============================================================== -->
+<div id="modalPrintReport" 
+     class="fixed inset-0 z-[999999] hidden flex-col w-screen h-screen bg-slate-950/95 backdrop-blur-md transition-all select-none overflow-hidden"
+     role="dialog" 
+     aria-modal="true"
+     aria-labelledby="modalPrintTitle">
+    
+    <!-- 1. TOP BAR TERKUNCI PERMANEN DI PALING ATAS (TIDAK PERNAH HILANG / TERPOTONG DI ZOOM 100%) -->
+    <header class="shrink-0 h-16 bg-slate-900 border-b border-slate-800 px-4 sm:px-8 flex items-center justify-between text-white shadow-xl z-50 no-print">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center font-bold shrink-0">
+                <i data-lucide="printer" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h3 id="modalPrintTitle" class="font-extrabold text-sm sm:text-base text-white flex items-center gap-2">
+                    Pratinjau Dokumen Kedinasan (PDF)
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">A4 Standar SPBE</span>
+                </h3>
+                <p class="text-[11px] text-slate-400 hidden sm:block">Ber-Kop Surat Resmi Pemerintah Kabupaten Bekasi &bull; Tekan tombol <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-300 font-mono text-[10px]">Esc</kbd> untuk menutup</p>
+            </div>
+        </div>
+
+        <!-- TOMBOL AKSI: CETAK & TOMBOL MERAH TUTUP 'X' SUPER BESAR DAN JELAS -->
+        <div class="flex items-center gap-3">
+            <button type="button" 
+                    onclick="printOfficialReportPDF()" 
+                    class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-orange-500/25 active:scale-95 transition-all">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Cetak / Simpan PDF</span>
+                <span class="sm:hidden">Cetak</span>
+            </button>
+            
+            <!-- TOMBOL MERAH TUTUP 'X': DIJAMIN 100% TERLIHAT DI POJOK KANAN ATAS TANPA PERLU ZOOM OUT -->
+            <button type="button" 
+                    onclick="closePrintReportModal()" 
+                    class="px-4 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-rose-600/30 ring-2 ring-rose-400/40 transition-all cursor-pointer" 
+                    title="Tutup Pratinjau (Esc)">
+                <i data-lucide="x" class="w-5 h-5 stroke-[2.5]"></i>
+                <span class="font-bold uppercase tracking-wider">Tutup (Esc)</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 2. CANVAS DOKUMEN SCROLLABLE BEBAS DARI KENDALA VERTICAL CENTERING -->
+    <main class="flex-1 min-h-0 w-full overflow-y-auto overscroll-contain p-4 sm:p-8 flex justify-center bg-slate-950/80" 
+          onclick="if(event.target === this) closePrintReportModal()">
+        
+        <!-- 3. KERTAS FISIK A4 (SELALU 100% PUTIH BERSIH DENGAN TINTA HITAM / NAVY, TIDAK TERPENGARUH DARK MODE) -->
+        <div class="printable-paper-doc w-full max-w-4xl rounded-xl shadow-2xl p-6 sm:p-10 md:p-12 relative my-auto select-text" 
+             id="printableReportContent" 
+             style="background-color: #ffffff !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; font-family: Arial, Helvetica, sans-serif !important;">
+            
+            <!-- TOMBOL 'X' KECIL TAMBAHAN DI DALAM KERTAS (PILIHAN CADANGAN LANGSUNG PADA DOKUMEN) -->
+            <button type="button" 
+                    onclick="closePrintReportModal()" 
+                    class="no-print absolute top-4 right-4 text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors" 
+                    title="Tutup Pratinjau">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+                
+                <!-- KOP SURAT DINAS RESMI PEMKAB BEKASI -->
+                <div class="pb-3 mb-6 flex items-center gap-5 sm:gap-7" style="border-bottom: 4px double #0f172a !important;">
+                    <img src="/images/logo.png" alt="Logo Kabupaten Bekasi" class="w-20 h-24 object-contain shrink-0" style="filter: none !important;">
+                    <div class="text-center flex-1">
+                        <h3 class="font-bold text-xs sm:text-sm tracking-widest uppercase" style="color: #0f172a !important; font-family: Arial, Helvetica, sans-serif !important; letter-spacing: 1.5px !important;">
+                            PEMERINTAH KABUPATEN BEKASI
+                        </h3>
+                        <h2 class="font-black text-base sm:text-xl uppercase tracking-tight my-1" style="color: #0b2a4a !important; font-family: Arial, Helvetica, sans-serif !important;">
+                            DINAS KOMUNIKASI, INFORMATIKA, PERSANDIAN DAN STATISTIK
+                        </h2>
+                        <p class="text-[11px] leading-snug mt-1" style="color: #334155 !important; font-family: Arial, Helvetica, sans-serif !important;">
+                            Kompleks Perkantoran Pemerintah Kabupaten Bekasi, Desa Sukamahi, Kec. Cikarang Pusat, Jawa Barat 17530<br>
+                            Telepon: (021) 89970000 &bull; Pos-el: <span style="color: #0369a1 !important;">diskominfo@bekasikab.go.id</span> &bull; Laman: <span style="color: #0369a1 !important;">diskominfo.bekasikab.go.id</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- JUDUL RESMI & PENOMORAN DOKUMEN -->
+                <div class="text-center my-5">
+                    <h3 class="text-sm sm:text-base font-black uppercase tracking-wide underline underline-offset-4" style="color: #0f172a !important; font-family: Arial, Helvetica, sans-serif !important;">
+                        LAPORAN REKAPITULASI PELAYANAN PUBLIK & PERSURATAN KEDINASAN
+                    </h3>
+                    <p class="text-xs font-semibold mt-1.5" style="color: #334155 !important; font-family: Arial, Helvetica, sans-serif !important;">
+                        Nomor Rekapitulasi: <span style="font-family: monospace !important; font-weight: bold !important;">REKAP/DISKOMINFO/<%= new Date().getFullYear() %>/<span id="reportPrintRandom">0826</span></span>
+                    </p>
+                    <p class="text-[11px] mt-0.5" style="color: #475569 !important; font-family: Arial, Helvetica, sans-serif !important;">
+                        Periode Data: Terhitung s.d. <strong><%= new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %></strong>
+                    </p>
+                </div>
+
+                <!-- RINGKASAN REKAP EKSEKUTIF (KPI BOX) -->
+                <div class="my-5 grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl p-4 text-xs paper-summary-box" 
+                     style="background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; font-family: Arial, Helvetica, sans-serif !important;">
+                    <div style="border-right: 1px solid #e2e8f0; padding-right: 8px;">
+                        <span class="block font-bold uppercase text-[10px]" style="color: #64748b !important;">1. Layanan Persuratan Mandiri:</span>
+                        <strong class="text-sm" style="color: #0f172a !important;"><%= totalSurat %> Berkas</strong>
+                        <div class="text-[11px] mt-0.5" style="color: #475569 !important;">
+                            (<%= suratDisetujui %> Disetujui, <%= suratDiproses %> Proses, <%= suratDitolak %> Ditolak)
+                        </div>
+                    </div>
+                    <div style="border-right: 1px solid #e2e8f0; padding-right: 8px;">
+                        <span class="block font-bold uppercase text-[10px]" style="color: #64748b !important;">2. Pengaduan Masyarakat:</span>
+                        <strong class="text-sm" style="color: #0f172a !important;"><%= totalAduan %> Laporan</strong>
+                        <div class="text-[11px] mt-0.5" style="color: #475569 !important;">
+                            (<%= aduanSelesai %> Selesai, <%= aduanDiproses %> Proses, <%= aduanTerkirim %> Masuk)
+                        </div>
+                    </div>
+                    <div>
+                        <span class="block font-bold uppercase text-[10px]" style="color: #64748b !important;">3. Tingkat Ketuntasan (SPBE):</span>
+                        <strong class="text-sm font-black kpi-highlight" style="color: #047857 !important;"><%= overallSuccessRate %>% Tuntas</strong>
+                        <div class="text-[11px] mt-0.5" style="color: #047857 !important; font-weight: 600;">
+                            Standar Mutu Pelayanan Publik
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABEL DATA RESMI -->
+                <div class="overflow-x-auto my-5">
+                    <table class="w-full text-left border-collapse text-[11px]" style="border: 1px solid #475569 !important; font-family: Arial, Helvetica, sans-serif !important;">
+                        <thead>
+                            <tr style="background-color: #e2e8f0 !important; color: #0f172a !important; border-bottom: 2px solid #475569 !important;">
+                                <th style="border: 1px solid #475569 !important; padding: 6px 4px; text-align: center; width: 35px; font-weight: bold;">No</th>
+                                <th style="border: 1px solid #475569 !important; padding: 6px 8px; text-align: center; width: 65px; font-weight: bold;">Jenis</th>
+                                <th style="border: 1px solid #475569 !important; padding: 6px 8px; width: 120px; font-weight: bold;">Nomor / Tiket</th>
+                                <th style="border: 1px solid #475569 !important; padding: 6px 8px; width: 130px; font-weight: bold;">Nama Pemohon / Pelapor</th>
+                                <th style="border: 1px solid #475569 !important; padding: 6px 8px; font-weight: bold;">Keperluan / Perihal Laporan</th>
+                                <th style="border: 1px solid #475569 !important; padding: 6px 8px; text-align: center; width: 85px; font-weight: bold;">Tanggal</th>
+                                <th style="border: 1px solid #475569 !important; padding: 6px 8px; text-align: center; width: 80px; font-weight: bold;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (allRecords.length === 0) { %>
+                                <tr>
+                                    <td colspan="7" style="border: 1px solid #cbd5e1 !important; padding: 16px; text-align: center; color: #64748b !important;">
+                                        Belum ada riwayat permohonan atau aduan pada periode ini.
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% allRecords.slice(0, 30).forEach((item, i) => { %>
+                                    <tr style="background-color: <%= (i % 2 === 0) ? '#ffffff' : '#f8fafc' %> !important; color: #0f172a !important;">
+                                        <td style="border: 1px solid #cbd5e1 !important; padding: 6px 4px; text-align: center; font-weight: bold;"><%= i + 1 %></td>
+                                        <td style="border: 1px solid #cbd5e1 !important; padding: 6px 8px; text-align: center; font-weight: bold; color: <%= item.tipe === 'SURAT' ? '#ea580c' : '#0284c7' %> !important;">
+                                            <%= item.tipe %>
+                                        </td>
+                                        <td style="border: 1px solid #cbd5e1 !important; padding: 6px 8px; font-family: monospace; font-size: 10px; font-weight: 600;"><%= item.kode %></td>
+                                        <td style="border: 1px solid #cbd5e1 !important; padding: 6px 8px; font-weight: 600;"><%= item.nama %></td>
+                                        <td style="border: 1px solid #cbd5e1 !important; padding: 6px 8px; line-height: 1.3;"><%= item.perihal %></td>
+                                        <td style="border: 1px solid #cbd5e1 !important; padding: 6px 8px; text-align: center; white-space: nowrap;"><%= item.tanggal.toLocaleDateString('id-ID') %></td>
+                                        <td style="border: 1px solid #cbd5e1 !important; padding: 6px 8px; text-align: center; font-weight: bold;">
+                                            <% if (item.status === 'Disetujui' || item.status === 'Selesai') { %>
+                                                <span style="color: #047857 !important; background-color: #d1fae5 !important; padding: 2px 6px; border-radius: 4px; font-size: 10px; border: 1px solid #a7f3d0 !important;"><%= item.status %></span>
+                                            <% } else if (item.status === 'Diproses') { %>
+                                                <span style="color: #b45309 !important; background-color: #fef3c7 !important; padding: 2px 6px; border-radius: 4px; font-size: 10px; border: 1px solid #fde68a !important;"><%= item.status %></span>
+                                            <% } else if (item.status === 'Ditolak') { %>
+                                                <span style="color: #b91c1c !important; background-color: #fee2e2 !important; padding: 2px 6px; border-radius: 4px; font-size: 10px; border: 1px solid #fecaca !important;"><%= item.status %></span>
+                                            <% } else { %>
+                                                <span style="color: #334155 !important; background-color: #f1f5f9 !important; padding: 2px 6px; border-radius: 4px; font-size: 10px; border: 1px solid #cbd5e1 !important;"><%= item.status %></span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <% if (allRecords.length > 30) { %>
+                    <p class="text-[10px] italic mb-6" style="color: #64748b !important; font-family: Arial, Helvetica, sans-serif !important;">
+                        * Menampilkan 30 data teratas untuk efisiensi lembar cetak A4. Seluruh <%= allRecords.length %> data lengkap dapat diunduh melalui tombol <strong>Ekspor Lembar Data (Excel)</strong>.
+                    </p>
+                <% } %>
+
+                <!-- KOLOM PENGESAHAN & TANDA TANGAN RESMI -->
+                <div class="mt-8 pt-4 flex justify-between items-end text-xs" style="font-family: Arial, Helvetica, sans-serif !important; color: #0f172a !important;">
+                    <div class="text-left max-w-xs">
+                        <div class="rounded-lg p-2.5" style="background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important;">
+                            <p class="font-bold text-[10px] uppercase" style="color: #334155 !important;">Integritas Data Kedinasan:</p>
+                            <p class="text-[9.5px] mt-0.5 leading-snug" style="color: #64748b !important;">
+                                Dokumen ini dihasilkan secara otomatis melalui modul Laporan & Rekapitulasi SPBE DISKOMINFOSANTIK Kab. Bekasi dan dinyatakan sah secara administratif.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-center w-72">
+                        <p style="color: #334155 !important;">Cikarang Pusat, <%= new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+                        <p class="font-bold mt-1 mb-16" style="color: #0f172a !important; line-height: 1.25;">
+                            Kepala Dinas Komunikasi, Informatika,<br>Persandian dan Statistik
+                        </p>
+                        <p class="font-black underline uppercase text-sm" style="color: #0f172a !important;">
+                            Drs. H. Yan Yan Akhmad Kurnia, M.Si
+                        </p>
+                        <p class="text-[11px]" style="color: #475569 !important;">Pembina Utama Muda (IV/c)</p>
+                        <p class="text-[11px] font-mono" style="color: #475569 !important;">NIP. 19700512 199603 1 004</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- FOOTER MODAL TERSEMAT (HINT PENGGUNA) -->
+        <footer class="shrink-0 bg-slate-900 border-t border-slate-800 px-6 py-2.5 flex items-center justify-between text-xs text-slate-400 no-print">
+            <span class="flex items-center gap-1.5 text-[11px]">
+                <i data-lucide="info" class="w-3.5 h-3.5 text-orange-400"></i> Tip: Tekan tombol <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-300 font-mono text-[10px]">Esc</kbd> atau klik tombol merah <strong>Tutup</strong> di kanan atas untuk kembali ke dashboard.
+            </span>
+            <span class="text-[11px] font-semibold text-slate-400 hidden sm:inline">DISKOMINFOSANTIK Kab. Bekasi</span>
+        </footer>
+
+    </div>
+
+<!-- GAYA KHUSUS PRATINJAU DOKUMEN & CETAK A4 -->
+<style>
+/* 1. Isolasi Warna Kertas Dokumen Cetak (Anti Dark-Mode) */
+#modalPrintReport .printable-paper-doc,
+#modalPrintReport .printable-paper-doc * {
+    color: #0f172a !important;
+    text-shadow: none !important;
+}
+#modalPrintReport .printable-paper-doc {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+}
+#modalPrintReport .printable-paper-doc .paper-summary-box {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+#modalPrintReport .printable-paper-doc table {
+    background-color: #ffffff !important;
+    border-color: #475569 !important;
+}
+#modalPrintReport .printable-paper-doc thead tr,
+#modalPrintReport .printable-paper-doc thead th {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    border-color: #475569 !important;
+}
+#modalPrintReport .printable-paper-doc tbody td {
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+/* 2. Format Cetak / Simpan PDF Browser */
+@media print {
+    body > *:not(#modalPrintReport) {
+        display: none !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+    #modalPrintReport {
+        position: static !important;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    #modalPrintReport > div {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    #modalPrintReport .overflow-y-auto {
+        overflow: visible !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+    #printableReportContent {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+    @page {
+        size: A4 portrait;
+        margin: 12mm 15mm 12mm 15mm;
+    }
+}
+</style>
+
+<!-- SCRIPT PENGENDALI MODUL LAPORAN & EKSPOR EXCEL/CSV -->
+<script>
+    // 1. Toggle Export Dropdown
+    function toggleExportMenu() {
+        const menu = document.getElementById('exportMenu');
+        if (menu) menu.classList.toggle('hidden');
+    }
+
+    document.addEventListener('click', (e) => {
+        const wrap = document.getElementById('exportDropdownWrap');
+        const menu = document.getElementById('exportMenu');
+        if (wrap && menu && !wrap.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    // 2. Filter Dinamis Tabel Laporan
+    function applyReportFilter() {
+        const filterTipe = document.getElementById('reportFilterTipe').value;
+        const filterStatus = document.getElementById('reportFilterStatus').value;
+        const startDate = document.getElementById('reportFilterStartDate').value;
+        const endDate = document.getElementById('reportFilterEndDate').value;
+        const searchQuery = (document.getElementById('reportSearchInput').value || '').toLowerCase().trim();
+
+        const rows = document.querySelectorAll('.report-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const tipe = row.getAttribute('data-tipe');
+            const status = row.getAttribute('data-status');
+            const rowDateStr = row.getAttribute('data-date');
+            const searchData = row.getAttribute('data-search') || '';
+
+            let matchTipe = (filterTipe === 'ALL' || tipe === filterTipe);
+            let matchStatus = (filterStatus === 'ALL' || status.toLowerCase() === filterStatus.toLowerCase());
+            let matchSearch = (!searchQuery || searchData.includes(searchQuery));
+            let matchDate = true;
+
+            if (startDate || endDate) {
+                const rowDate = new Date(rowDateStr);
+                if (startDate) {
+                    const start = new Date(startDate);
+                    start.setHours(0, 0, 0, 0);
+                    if (rowDate < start) matchDate = false;
+                }
+                if (endDate) {
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59, 999);
+                    if (rowDate > end) matchDate = false;
+                }
+            }
+
+            if (matchTipe && matchStatus && matchSearch && matchDate) {
+                row.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+
+        const countEl = document.getElementById('reportRowCount');
+        if (countEl) countEl.textContent = `${visibleCount} Data`;
+    }
+
+    function resetReportFilter() {
+        document.getElementById('reportFilterTipe').value = 'ALL';
+        document.getElementById('reportFilterStatus').value = 'ALL';
+        document.getElementById('reportFilterStartDate').value = '';
+        document.getElementById('reportFilterEndDate').value = '';
+        document.getElementById('reportSearchInput').value = '';
+        applyReportFilter();
+    }
+
+    // 3. Modal Pratinjau Cetak & Tutup (Keyboard Escape Support)
+    function openPrintReportModal() {
+        const modal = document.getElementById('modalPrintReport');
+        if (modal) {
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+            if (window.lucide) lucide.createIcons();
+
+            // Selalu kembalikan scroll ke titik 0 paling atas (Kop Surat) saat dibuka
+            const scrollContainer = modal.querySelector('main');
+            if (scrollContainer) scrollContainer.scrollTop = 0;
+
+            // Set nomor acak berkas jika belum terisi
+            const randEl = document.getElementById('reportPrintRandom');
+            if (randEl && !randEl.getAttribute('data-seeded')) {
+                const pad = (num, size) => ('0000' + num).substr(-size);
+                randEl.textContent = pad(Math.floor(Math.random() * 9000) + 1000, 4);
+                randEl.setAttribute('data-seeded', 'true');
+            }
+        }
+    }
+
+    function closePrintReportModal() {
+        const modal = document.getElementById('modalPrintReport');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+    }
+
+    function printOfficialReportPDF() {
+        window.print();
+    }
+
+    // Listener tombol Esc keyboard
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            const modal = document.getElementById('modalPrintReport');
+            if (modal && !modal.classList.contains('hidden')) {
+                closePrintReportModal();
+            }
+        }
+    });
+
+    // 4. EKSPOR LEMBAR KERJA EXCEL RESMI (.XLS) BER-KOP SURAT & ANTI NOTASI ILMIAH
+    function exportReportToExcel(targetTipe) {
+        const allRows = document.querySelectorAll('.report-row');
+        let items = [];
+        let counter = 1;
+
+        allRows.forEach(row => {
+            const tipe = row.getAttribute('data-tipe');
+            if (targetTipe === 'SEMUA' || tipe === targetTipe) {
+                const cols = row.querySelectorAll('td');
+                const kode = row.getAttribute('data-kode') || (cols[2] ? cols[2].innerText.trim() : '-');
+                const nama = row.getAttribute('data-nama') || (cols[3] ? cols[3].innerText.trim() : '-');
+                const nik = row.getAttribute('data-nik') || '-';
+                const kontak = row.getAttribute('data-kontak') || '-';
+                const perihal = row.getAttribute('data-perihal') || (cols[5] ? cols[5].innerText.trim() : '-');
+                const tanggal = row.getAttribute('data-tanggal') || (cols[6] ? cols[6].innerText.trim().replace(/\n/g, ' ') : '-');
+                const status = row.getAttribute('data-status') || (cols[7] ? cols[7].innerText.trim() : '-');
+
+                items.push({
+                    no: counter++,
+                    tipe: tipe,
+                    kode: kode,
+                    nama: nama,
+                    nik: nik,
+                    kontak: kontak,
+                    perihal: perihal,
+                    tanggal: tanggal,
+                    status: status
+                });
+            }
+        });
+
+        if (items.length === 0) {
+            if (typeof showAdminAlert === 'function') {
+                showAdminAlert('Tidak ada data yang dapat diekspor pada filter ini.', 'error');
+            } else {
+                alert('Tidak ada data yang dapat diekspor.');
+            }
+            return;
+        }
+
+        // Statistik Ringkasan untuk Header Excel
+        const countTotal = items.length;
+        const countSurat = items.filter(i => i.tipe === 'SURAT').length;
+        const countAduan = items.filter(i => i.tipe === 'ADUAN').length;
+        const countSelesai = items.filter(i => i.status === 'Disetujui' || i.status === 'Selesai').length;
+        const percentSelesai = countTotal > 0 ? Math.round((countSelesai / countTotal) * 100) : 0;
+
+        const todayStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        const todaySimple = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+        let rowsHtml = '';
+        items.forEach((item, idx) => {
+            const bgRow = (idx % 2 === 0) ? '#FFFFFF' : '#F8FAFC';
+            let statusStyle = 'background-color: #F1F5F9; color: #475569; font-weight: bold; text-align: center;';
+            if (item.status === 'Disetujui' || item.status === 'Selesai') {
+                statusStyle = 'background-color: #D1FAE5; color: #065F46; font-weight: bold; text-align: center;';
+            } else if (item.status === 'Diproses') {
+                statusStyle = 'background-color: #FEF3C7; color: #92400E; font-weight: bold; text-align: center;';
+            } else if (item.status === 'Ditolak') {
+                statusStyle = 'background-color: #FEE2E2; color: #991B1B; font-weight: bold; text-align: center;';
+            }
+
+            rowsHtml += `
+            <tr style="background-color: ${bgRow};">
+                <td style="border: 0.5pt solid #CBD5E1; text-align: center; font-weight: bold; padding: 5px;">${item.no}</td>
+                <td style="border: 0.5pt solid #CBD5E1; text-align: center; font-weight: bold; padding: 5px;">${item.tipe}</td>
+                <td style="border: 0.5pt solid #CBD5E1; text-align: center; font-family: Consolas, monospace; padding: 5px; mso-number-format:'\\@';">${item.kode}</td>
+                <td style="border: 0.5pt solid #CBD5E1; font-weight: 600; padding: 5px;">${item.nama}</td>
+                <td style="border: 0.5pt solid #CBD5E1; text-align: center; padding: 5px; mso-number-format:'\\@';">${item.nik}</td>
+                <td style="border: 0.5pt solid #CBD5E1; text-align: center; padding: 5px; mso-number-format:'\\@';">${item.kontak}</td>
+                <td style="border: 0.5pt solid #CBD5E1; padding: 5px;">${item.perihal}</td>
+                <td style="border: 0.5pt solid #CBD5E1; text-align: center; padding: 5px; mso-number-format:'\\@';">${item.tanggal}</td>
+                <td style="border: 0.5pt solid #CBD5E1; ${statusStyle} padding: 5px;">${item.status}</td>
+            </tr>`;
+        });
+
+        const excelTemplate = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+              xmlns:x="urn:schemas-microsoft-com:office:excel" 
+              xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+            <!--[if gte mso 9]>
+            <xml>
+                <x:ExcelWorkbook>
+                    <x:ExcelWorksheets>
+                        <x:ExcelWorksheet>
+                            <x:Name>Rekap Laporan Kedinasan</x:Name>
+                            <x:WorksheetOptions>
+                                <x:DisplayGridlines/>
+                            </x:WorksheetOptions>
+                        </x:ExcelWorksheet>
+                    </x:ExcelWorksheets>
+                </x:ExcelWorkbook>
+            </xml>
+            <![endif]-->
+            <style>
+                body { font-family: Arial, Helvetica, sans-serif; }
+                .kop-title-1 { font-size: 13pt; font-weight: bold; text-align: center; color: #0F172A; }
+                .kop-title-2 { font-size: 15pt; font-weight: 900; text-align: center; color: #0B2A4A; }
+                .kop-alamat { font-size: 9pt; text-align: center; color: #334155; }
+                .kop-kontak { font-size: 8.5pt; text-align: center; color: #475569; }
+                .judul-laporan { font-size: 13pt; font-weight: 900; text-align: center; text-decoration: underline; color: #0F172A; }
+                .meta-laporan { font-size: 9pt; text-align: center; color: #475569; }
+                .th-col { background-color: #0B2A4A; color: #FFFFFF; font-weight: bold; font-size: 10pt; text-align: center; height: 35px; border: 1pt solid #000000; vertical-align: middle; }
+            </style>
+        </head>
+        <body>
+            <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                <!-- KOP SURAT PEMKAB BEKASI -->
+                <tr>
+                    <td colspan="9" class="kop-title-1" style="height: 25px;">PEMERINTAH KABUPATEN BEKASI</td>
+                </tr>
+                <tr>
+                    <td colspan="9" class="kop-title-2" style="height: 30px;">DINAS KOMUNIKASI, INFORMATIKA, PERSANDIAN DAN STATISTIK</td>
+                </tr>
+                <tr>
+                    <td colspan="9" class="kop-alamat" style="height: 18px;">Kompleks Perkantoran Pemerintah Kabupaten Bekasi, Desa Sukamahi, Kec. Cikarang Pusat, Jawa Barat 17530</td>
+                </tr>
+                <tr>
+                    <td colspan="9" class="kop-kontak" style="height: 18px;">Telepon: (021) 89970000 &bull; Pos-el: diskominfo@bekasikab.go.id &bull; Laman: diskominfo.bekasikab.go.id</td>
+                </tr>
+                <tr>
+                    <td colspan="9" style="border-bottom: 2.5pt double #0F172A; height: 8px;"></td>
+                </tr>
+                <tr><td colspan="9" style="height: 14px;"></td></tr>
+
+                <!-- JUDUL DAN METADATA LAPORAN -->
+                <tr>
+                    <td colspan="9" class="judul-laporan" style="height: 25px;">LAPORAN REKAPITULASI PELAYANAN PUBLIK & PERSURATAN KEDINASAN</td>
+                </tr>
+                <tr>
+                    <td colspan="9" class="meta-laporan" style="height: 18px;">
+                        Nomor Rekapitulasi: <strong>REKAP/DISKOMINFO/${new Date().getFullYear()}/0826</strong> &bull; Periode Data s.d. <strong>${todayStr}</strong>
+                    </td>
+                </tr>
+                <tr><td colspan="9" style="height: 12px;"></td></tr>
+
+                <!-- KOTAK KPI RINGKASAN EKSEKUTIF -->
+                <tr style="height: 28px;">
+                    <td colspan="3" style="background-color: #EFF6FF; border: 1pt solid #BFDBFE; font-weight: bold; font-size: 9pt; padding: 6px; color: #1E3A8A;">
+                        1. PERMOHONAN PERSURATAN: ${countSurat} Berkas
+                    </td>
+                    <td colspan="3" style="background-color: #FEF3C7; border: 1pt solid #FDE68A; font-weight: bold; font-size: 9pt; padding: 6px; color: #92400E;">
+                        2. PENGADUAN MASYARAKAT: ${countAduan} Laporan
+                    </td>
+                    <td colspan="3" style="background-color: #ECFDF5; border: 1pt solid #A7F3D0; font-weight: bold; font-size: 9pt; padding: 6px; color: #065F46;">
+                        3. KETUNTASAN PELAYANAN (SPBE): ${percentSelesai}% Tuntas
+                    </td>
+                </tr>
+                <tr><td colspan="9" style="height: 14px;"></td></tr>
+
+                <!-- TABEL DATA UTAMA -->
+                <thead>
+                    <tr style="height: 35px;">
+                        <th class="th-col" style="width: 45px;">No</th>
+                        <th class="th-col" style="width: 80px;">Tipe Layanan</th>
+                        <th class="th-col" style="width: 150px;">Nomor Registrasi / Tiket</th>
+                        <th class="th-col" style="width: 180px;">Nama Pemohon / Pelapor</th>
+                        <th class="th-col" style="width: 140px;">NIK</th>
+                        <th class="th-col" style="width: 140px;">No Kontak / WhatsApp</th>
+                        <th class="th-col" style="width: 280px;">Perihal & Keperluan Layanan</th>
+                        <th class="th-col" style="width: 110px;">Tanggal Masuk</th>
+                        <th class="th-col" style="width: 100px;">Status Akhir</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml}
+                </tbody>
+
+                <!-- BLOK PENGESAHAN / TANDA TANGAN KEPALA DINAS -->
+                <tr><td colspan="9" style="height: 20px;"></td></tr>
+                <tr>
+                    <td colspan="4" style="font-size: 8.5pt; color: #64748B; font-style: italic; vertical-align: top;">
+                        * Dokumen rekapitulasi kedinasan ini digenerate secara otomatis melalui Sistem Informasi Administrasi DISKOMINFOSANTIK Kab. Bekasi.<br>
+                        * Format lembar kerja resmi Excel (.xls) berstandar akuntabilitas SPBE.
+                    </td>
+                    <td colspan="2"></td>
+                    <td colspan="3" style="font-size: 10pt; text-align: center; color: #0F172A;">
+                        Cikarang Pusat, ${todaySimple}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6"></td>
+                    <td colspan="3" style="font-size: 10pt; font-weight: bold; text-align: center; color: #0F172A;">
+                        Kepala Dinas Komunikasi, Informatika,<br>Persandian dan Statistik
+                    </td>
+                </tr>
+                <tr><td colspan="9" style="height: 55px;"></td></tr>
+                <tr>
+                    <td colspan="6"></td>
+                    <td colspan="3" style="font-size: 10.5pt; font-weight: bold; text-decoration: underline; text-align: center; color: #0F172A;">
+                        Drs. H. Yan Yan Akhmad Kurnia, M.Si
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6"></td>
+                    <td colspan="3" style="font-size: 9.5pt; text-align: center; color: #475569;">
+                        Pembina Utama Muda (IV/c)
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6"></td>
+                    <td colspan="3" style="font-size: 9.5pt; text-align: center; color: #475569; mso-number-format:'\\@';">
+                        NIP. 19700512 199603 1 004
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>`;
+
+        const blob = new Blob([excelTemplate], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        const dateFileStr = new Date().toISOString().slice(0, 10);
+        link.download = `Laporan_Resmi_Diskominfo_${targetTipe}_${dateFileStr}.xls`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        const menu = document.getElementById('exportMenu');
+        if (menu) menu.classList.add('hidden');
+
+        if (typeof showAdminAlert === 'function') {
+            showAdminAlert('Berkas Excel Resmi (.xls) dengan Kop Surat & format anti notasi ilmiah berhasil diunduh.', 'success');
+        }
+    }
+
+    // 5. Ekspor Format CSV Data Mentah
+    function exportReportToCSV(targetTipe) {
+        let rowsData = [];
+        
+        // Header Kolom CSV
+        rowsData.push([
+            "No",
+            "Tipe Layanan",
+            "Nomor Registrasi / Tiket",
+            "Nama Pemohon / Pelapor",
+            "NIK",
+            "No Kontak",
+            "Perihal / Keperluan",
+            "Tanggal Masuk",
+            "Status Akhir"
+        ]);
+
+        const allRows = document.querySelectorAll('.report-row');
+        let counter = 1;
+
+        allRows.forEach(row => {
+            const tipe = row.getAttribute('data-tipe');
+            if (targetTipe === 'SEMUA' || tipe === targetTipe) {
+                const cols = row.querySelectorAll('td');
+                if (cols.length >= 8) {
+                    const kode = cols[2].innerText.trim();
+                    const nama = cols[3].innerText.trim();
+                    const nik = cols[4].querySelector('span') ? cols[4].querySelector('span').innerText.trim() : '-';
+                    const kontak = cols[4].querySelectorAll('span')[1] ? cols[4].querySelectorAll('span')[1].innerText.trim() : '-';
+                    const perihal = cols[5].innerText.trim();
+                    const tanggal = cols[6].innerText.trim().replace(/\n/g, ' ');
+                    const status = cols[7].innerText.trim();
+
+                    // Prefix tab (\t) pada NIK & Kontak agar saat dibuka di Excel tidak dikonversi ke notasi ilmiah
+                    rowsData.push([
+                        counter++,
+                        tipe,
+                        `"${kode}"`,
+                        `"${nama}"`,
+                        `"\t${nik}"`,
+                        `"\t${kontak}"`,
+                        `"${perihal.replace(/"/g, '""')}"`,
+                        `"${tanggal}"`,
+                        `"${status}"`
+                    ]);
+                }
+            }
+        });
+
+        if (rowsData.length <= 1) {
+            if (typeof showAdminAlert === 'function') {
+                showAdminAlert('Tidak ada data yang dapat diekspor pada filter ini.', 'error');
+            } else {
+                alert('Tidak ada data yang dapat diekspor.');
+            }
+            return;
+        }
+
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rowsData.map(e => e.join(",")).join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        const dateStr = new Date().toISOString().slice(0, 10);
+        link.setAttribute("download", `Laporan_Rekapitulasi_Diskominfo_${targetTipe}_${dateStr}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        const menu = document.getElementById('exportMenu');
+        if (menu) menu.classList.add('hidden');
+
+        if (typeof showAdminAlert === 'function') {
+            showAdminAlert('Berkas rekapitulasi format CSV berhasil diunduh ke perangkat Anda.', 'success');
+        }
+    }
+</script>

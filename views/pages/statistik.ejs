@@ -1,0 +1,574 @@
+<!-- Leaflet & Chart.js CDN -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- 1. HERO HEADER -->
+<section class="hero-mesh text-white py-5">
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb small mb-2">
+                        <li class="breadcrumb-item"><a href="/" class="text-white opacity-75 text-decoration-none">Beranda</a></li>
+                        <li class="breadcrumb-item active text-warning" style="color: var(--orange-primary) !important;">Satu Data Kependudukan</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Statistik & Satu Data Masyarakat</h1>
+                <p class="lead text-light opacity-75 fs-6 mb-0">
+                    Portal Data Terbuka Kependudukan, Ketenagakerjaan Kawasan Industri, dan Kesejahteraan Sosial Kabupaten Bekasi.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a href="#section-tabel" class="btn btn-orange btn-lg px-4">
+                    <i class="bi bi-filetype-csv me-1"></i> Unduh Data Terbuka (CSV)
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+
+    <!-- 2. INDIKATOR STRATEGIS KEPENDUDUKAN (NEON CARDS) -->
+    <div class="row g-3 mb-5">
+        <!-- Total Penduduk -->
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-neon-card h-100">
+                <span class="small text-muted fw-bold d-block mb-1">TOTAL PENDUDUK</span>
+                <h3 class="fw-bold mb-1 text-navy-title"><%= ringkasan.totalPenduduk %> <span class="fs-6 text-muted fw-normal">Jiwa</span></h3>
+                <div class="d-flex gap-2 small">
+                    <span class="badge bg-primary bg-opacity-10 text-primary">♂ L: <%= ringkasan.rasioLaki %></span>
+                    <span class="badge bg-danger bg-opacity-10 text-danger">♀ P: <%= ringkasan.rasioPerempuan %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kepala Keluarga -->
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-neon-card h-100">
+                <span class="small text-muted fw-bold d-block mb-1">KEPALA KELUARGA (KK)</span>
+                <h3 class="fw-bold mb-1" style="color: var(--orange-primary);"><%= ringkasan.totalKK %> <span class="fs-6 text-muted fw-normal">KK</span></h3>
+                <span class="badge bg-secondary bg-opacity-10 text-dark small">Tersebar di 187 Desa/Kel.</span>
+            </div>
+        </div>
+
+        <!-- Indeks Pembangunan Manusia (IPM) -->
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-neon-card h-100">
+                <span class="small text-muted fw-bold d-block mb-1">SKOR IPM KAB. BEKASI</span>
+                <h3 class="fw-bold mb-1 text-navy-title"><%= ringkasan.skorIPM %></h3>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">
+                    <i class="bi bi-star-fill text-warning me-1"></i> Predikat <%= ringkasan.predikatIPM %>
+                </span>
+            </div>
+        </div>
+
+        <!-- Kepadatan & Luas Wilayah -->
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-neon-card h-100">
+                <span class="small text-muted fw-bold d-block mb-1">KEPADATAN PENDUDUK</span>
+                <h3 class="fw-bold mb-1 text-navy-title"><%= ringkasan.kepadatan %> <span class="fs-6 text-muted fw-normal">Jiwa/km²</span></h3>
+                <span class="small text-muted">Luas: <%= ringkasan.luasWilayah %> (23 Kec.)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. FITUR CANGGIH: SIDE-BY-SIDE COMPARISON TOOL -->
+    <div class="card-modern p-4 p-md-5 mb-5 comparison-tool-card">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 pb-3 border-bottom">
+            <div>
+                <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">FITUR INTERAKTIF</span>
+                <h4 class="fw-bold mb-1 text-navy-title">Bandingkan 2 Kecamatan (Side-by-Side Comparison Tool)</h4>
+                <p class="small text-muted mb-0">Pilih dua kecamatan untuk membandingkan jumlah warga, kepadatan, dan rasio fasilitas publik secara berdampingan.</p>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Pilih Kecamatan A:</label>
+                <select id="kecamatanA" class="form-select">
+                    <% kecamatanList.forEach(k => { %>
+                        <option value="<%= k.id %>" <%= k.nama === 'Tambun Selatan' ? 'selected' : '' %>><%= k.nama %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Pilih Kecamatan B:</label>
+                <select id="kecamatanB" class="form-select">
+                    <% kecamatanList.forEach(k => { %>
+                        <option value="<%= k.id %>" <%= k.nama === 'Cikarang Utara' ? 'selected' : '' %>><%= k.nama %></option>
+                    <% }) %>
+                </select>
+            </div>
+        </div>
+
+        <div class="row g-4" id="compareResultContainer">
+            <!-- Box Kecamatan A -->
+            <div class="col-md-6">
+                <div class="compare-box" id="boxKecA">
+                    <!-- Dinamis Diisi JS -->
+                </div>
+            </div>
+            <!-- Box Kecamatan B -->
+            <div class="col-md-6">
+                <div class="compare-box" id="boxKecB">
+                    <!-- Dinamis Diisi JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. PETA INTERAKTIF PERSEBARAN 23 KECAMATAN (LEAFLET) -->
+    <div class="card-modern p-4 p-md-5 mb-5">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">PETA SEBARAN WARGA</span>
+                <h4 class="fw-bold mb-1 text-navy-title">Peta Interaktif Kepadatan 23 Kecamatan</h4>
+                <p class="small text-muted mb-0">Klik pada titik marker kecamatan untuk melihat data Camat, jumlah KK, dan fasilitas layanan.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2 small">
+                <span class="badge" style="background: #dc3545;">Sangat Padat (>5.000)</span>
+                <span class="badge" style="background: #ffc107; color: #000;">Padat (3.000-5.000)</span>
+                <span class="badge" style="background: #0d6efd;">Sedang (<3.000)</span>
+            </div>
+        </div>
+
+        <div id="mapKependudukan" class="border shadow-sm leaflet-map-responsive"></div>
+    </div>
+
+    <!-- 5. VISUALISASI GRAFIK DEMOGRAFI & SOSIAL (CHART.JS) -->
+    <div class="text-center mb-4">
+        <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">ANALITIK MASYARAKAT</span>
+        <h2 class="fw-bold text-navy-title">Visualisasi Grafik Demografi & Sosial</h2>
+        <p class="text-muted small">Struktur usia, sektor ketenagakerjaan kawasan industri, dan tingkat pendidikan warga</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Grafik 1: Piramida Usia (Bar Horizontal) -->
+        <div class="col-lg-6">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-navy-title">Piramida Kelompok Usia Penduduk</h5>
+                        <span class="small text-muted">Dominasi Usia Produktif Kawasan Industri</span>
+                    </div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary">66.8% Produktif</span>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="chartUsia"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafik 2: Distribusi Sektor Profesi & Ketenagakerjaan (Bar Chart) -->
+        <div class="col-lg-6">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-navy-title">Distribusi Mata Pencaharian Warga</h5>
+                        <span class="small text-muted">Sektor industri, perdagangan, dan perikanan</span>
+                    </div>
+                    <span class="badge bg-warning bg-opacity-10 text-dark">TPAK: 68.5%</span>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="chartPekerjaan"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafik 3: Tingkat Pendidikan Terakhir (Doughnut) -->
+        <div class="col-lg-6">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-navy-title">Tingkat Pendidikan Terakhir</h5>
+                        <span class="small text-muted">Literasi & Angka Melek Huruf 99.2%</span>
+                    </div>
+                </div>
+                <div style="height: 280px; position: relative;" class="d-flex align-items-center justify-content-center">
+                    <canvas id="chartPendidikan"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafik 4: Universal Health Coverage & Bantuan Sosial (Bar Chart) -->
+        <div class="col-lg-6">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-navy-title">Kesehatan (UHC) & Sebaran Bansos</h5>
+                        <span class="small text-muted">Cakupan BPJS 99.1% dan Perlindungan Sosial</span>
+                    </div>
+                    <span class="badge bg-success bg-opacity-10 text-success">UHC Terpenuhi</span>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="chartSosial"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. TABEL SATU DATA KEPENDUDUKAN 23 KECAMATAN & EXPORT -->
+    <div class="card-modern p-4 p-md-5" id="section-tabel">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 pb-3 border-bottom">
+            <div>
+                <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">OPEN DATA DAERAH</span>
+                <h4 class="fw-bold mb-1 text-navy-title">Tabel Data Kependudukan 23 Kecamatan</h4>
+                <p class="small text-muted mb-0">Data resmi dapat difilter dan diunduh langsung sesuai standar Satu Data Indonesia.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="exportKecamatanCSV()" class="btn btn-outline-dark btn-sm d-flex align-items-center gap-1">
+                    <i class="bi bi-filetype-csv text-success fs-6"></i> Unduh CSV
+                </button>
+                <button onclick="exportKecamatanJSON()" class="btn btn-outline-dark btn-sm d-flex align-items-center gap-1">
+                    <i class="bi bi-filetype-json text-warning fs-6"></i> Unduh JSON
+                </button>
+            </div>
+        </div>
+
+        <!-- Smart Search & Filter -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-8">
+                <input type="text" id="kecamatanSearch" class="form-control form-control-sm" placeholder="🔍 Cari nama kecamatan, nama camat, atau zona wilayah...">
+            </div>
+            <div class="col-md-4">
+                <select id="zonaFilter" class="form-select form-select-sm">
+                    <option value="">Semua Zona Kepadatan</option>
+                    <option value="Sangat Padat">Sangat Padat</option>
+                    <option value="Padat">Padat</option>
+                    <option value="Sedang">Sedang</option>
+                    <option value="Berkembang">Berkembang</option>
+                    <option value="Pesisir">Pesisir / Konservasi</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tabelKecamatan">
+                <thead class="table-light small">
+                    <tr>
+                        <th scope="col">No</th>
+                        <th scope="col">Kecamatan</th>
+                        <th scope="col">Camat</th>
+                        <th scope="col">Jumlah Penduduk</th>
+                        <th scope="col">Jumlah KK</th>
+                        <th scope="col">Luas Wilayah</th>
+                        <th scope="col">Kepadatan</th>
+                        <th scope="col">Fasilitas (Puskesmas/Sekolah)</th>
+                        <th scope="col">Zona</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    <% kecamatanList.forEach((k, idx) => { %>
+                        <tr>
+                            <td><%= idx + 1 %></td>
+                            <td><strong><%= k.nama %></strong></td>
+                            <td><%= k.camat %></td>
+                            <td><span class="badge bg-light text-dark border"><%= k.penduduk.toLocaleString('id-ID') %> Jiwa</span></td>
+                            <td><%= k.kk.toLocaleString('id-ID') %></td>
+                            <td><%= k.luas %> km²</td>
+                            <td><strong><%= k.kepadatan.toLocaleString('id-ID') %></strong> /km²</td>
+                            <td>
+                                <span class="badge bg-info bg-opacity-10 text-dark"><%= k.puskesmas %> Puskesmas</span>
+                                <span class="badge bg-secondary bg-opacity-10 text-dark"><%= k.sekolah %> Sekolah</span>
+                            </td>
+                            <td>
+                                <% 
+                                    let badgeColor = 'bg-secondary';
+                                    if (k.zona === 'Sangat Padat') badgeColor = 'bg-danger';
+                                    if (k.zona === 'Padat') badgeColor = 'bg-warning text-dark';
+                                    if (k.zona === 'Sedang') badgeColor = 'bg-primary';
+                                    if (k.zona === 'Pesisir / Konservasi') badgeColor = 'bg-info text-dark';
+                                %>
+                                <span class="badge <%= badgeColor %>"><%= k.zona %></span>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- EMBED DATA GRAFIK & KECAMATAN DARI DATABASE -->
+<script id="chartDataJson" type="application/json">
+    <%- JSON.stringify(typeof chartData !== 'undefined' ? chartData : {}) %>
+</script>
+<script id="kecamatanDataJson" type="application/json">
+    <%- JSON.stringify(typeof kecamatanList !== 'undefined' ? kecamatanList : []) %>
+</script>
+
+<!-- SCRIPT DATA & INTERAKTIF -->
+<script>
+    // Menyimpan data kecamatan ke variable JavaScript
+    const rawKecamatanEl = document.getElementById('kecamatanDataJson');
+    let dataKecamatan = [];
+    if (rawKecamatanEl) {
+        try { dataKecamatan = JSON.parse(rawKecamatanEl.textContent || '[]'); } catch(e) {}
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        // 1. Inisialisasi Peta Interaktif Leaflet (Kabupaten Bekasi Center: -6.28, 107.15)
+        const map = L.map('mapKependudukan').setView([-6.25, 107.15], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Pasang Marker 23 Kecamatan dengan warna sesuai kepadatan
+        dataKecamatan.forEach(k => {
+            let markerColor = '#0d6efd';
+            if (k.kepadatan > 5000) markerColor = '#dc3545';
+            else if (k.kepadatan >= 3000) markerColor = '#ffc107';
+
+            const circle = L.circleMarker([k.lat, k.lng], {
+                radius: Math.min(Math.max(k.penduduk / 25000, 8), 20),
+                fillColor: markerColor,
+                color: '#ffffff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            circle.bindPopup(`
+                <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 200px;">
+                    <h6 style="color: #0a2540; margin-bottom: 2px; font-weight: bold;">Kecamatan ${k.nama}</h6>
+                    <p style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Camat: ${k.camat}</p>
+                    <hr style="margin: 4px 0;">
+                    <div style="font-size: 11px;">
+                        <div>👥 <strong>Penduduk:</strong> ${k.penduduk.toLocaleString('id-ID')} Jiwa</div>
+                        <div>🏠 <strong>Kepala Keluarga:</strong> ${k.kk.toLocaleString('id-ID')} KK</div>
+                        <div>📐 <strong>Kepadatan:</strong> ${k.kepadatan.toLocaleString('id-ID')} Jiwa/km²</div>
+                        <div>🏥 <strong>Fasilitas:</strong> ${k.puskesmas} Puskesmas, ${k.sekolah} Sekolah</div>
+                    </div>
+                </div>
+            `);
+        });
+
+        // 2. Logika Side-by-Side Comparison Tool
+        const selA = document.getElementById('kecamatanA');
+        const selB = document.getElementById('kecamatanB');
+        const boxA = document.getElementById('boxKecA');
+        const boxB = document.getElementById('boxKecB');
+
+        function renderComparisonBox(kec, boxEl) {
+            boxEl.innerHTML = `
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                    <h5 class="fw-bold mb-0 text-navy-title">Kecamatan ${kec.nama}</h5>
+                    <span class="badge bg-secondary bg-opacity-10 text-dark">${kec.zona}</span>
+                </div>
+                <div class="row g-2 small">
+                    <div class="col-6"><strong>Camat:</strong><br><span class="text-muted">${kec.camat}</span></div>
+                    <div class="col-6"><strong>Luas Wilayah:</strong><br><span class="text-muted">${kec.luas} km²</span></div>
+                    <div class="col-6"><strong>Total Warga:</strong><br><span class="fs-6 fw-bold text-primary">${kec.penduduk.toLocaleString('id-ID')} Jiwa</span></div>
+                    <div class="col-6"><strong>Kepala Keluarga:</strong><br><span class="fs-6 fw-bold text-dark">${kec.kk.toLocaleString('id-ID')} KK</span></div>
+                    <div class="col-6"><strong>Kepadatan:</strong><br><span class="text-danger fw-bold">${kec.kepadatan.toLocaleString('id-ID')} /km²</span></div>
+                    <div class="col-6"><strong>Fasilitas Kesehatan:</strong><br><span class="text-muted">${kec.puskesmas} Puskesmas</span></div>
+                    <div class="col-6"><strong>Fasilitas Sekolah:</strong><br><span class="text-muted">${kec.sekolah} Sekolah</span></div>
+                    <div class="col-6"><strong>Desa/Kelurahan:</strong><br><span class="text-muted">${kec.kantorDesa} Kantor Desa</span></div>
+                </div>
+            `;
+        }
+
+        function updateComparison() {
+            const kecA = dataKecamatan.find(k => k.id == selA.value);
+            const kecB = dataKecamatan.find(k => k.id == selB.value);
+            if (kecA) renderComparisonBox(kecA, boxA);
+            if (kecB) renderComparisonBox(kecB, boxB);
+        }
+
+        selA.addEventListener('change', updateComparison);
+        selB.addEventListener('change', updateComparison);
+        updateComparison(); // Load pertama kali
+
+        // 3. Render Dynamic Chart.js dari Database
+        const rawChartEl = document.getElementById('chartDataJson');
+        let dynamicCharts = { usia: [], pekerjaan: [], pendidikan: [], sosial: [] };
+        if (rawChartEl) {
+            try { dynamicCharts = JSON.parse(rawChartEl.textContent || '{}'); } catch(e) {}
+        }
+
+        const usiaLabels = (dynamicCharts.usia && dynamicCharts.usia.length > 0)
+            ? dynamicCharts.usia.map(i => i.label)
+            : ['Balita (0-4 Thn)', 'Anak/Sekolah (5-14 Thn)', 'Usia Produktif (15-64 Thn)', 'Lansia (65+ Thn)'];
+        const usiaValues = (dynamicCharts.usia && dynamicCharts.usia.length > 0)
+            ? dynamicCharts.usia.map(i => Number(i.jumlah))
+            : [280000, 520000, 2145000, 269850];
+
+        const pekerjaanLabels = (dynamicCharts.pekerjaan && dynamicCharts.pekerjaan.length > 0)
+            ? dynamicCharts.pekerjaan.map(i => i.label)
+            : ['Karyawan Pabrik/Industri', 'Wiraswasta/UMKM', 'Petani & Nelayan', 'PNS/TNI/Polri', 'Jasa & Lainnya'];
+        const pekerjaanValues = (dynamicCharts.pekerjaan && dynamicCharts.pekerjaan.length > 0)
+            ? dynamicCharts.pekerjaan.map(i => Number(i.jumlah))
+            : [1250000, 580000, 185000, 85000, 420000];
+
+        const pendidikanLabels = (dynamicCharts.pendidikan && dynamicCharts.pendidikan.length > 0)
+            ? dynamicCharts.pendidikan.map(i => i.label)
+            : ['SD/Sederajat', 'SMP/Sederajat', 'SMA/SMK', 'Diploma/Sarjana (S1-S3)'];
+        const pendidikanValues = (dynamicCharts.pendidikan && dynamicCharts.pendidikan.length > 0)
+            ? dynamicCharts.pendidikan.map(i => Number(i.jumlah))
+            : [18, 22, 45, 15];
+
+        const sosialLabels = (dynamicCharts.sosial && dynamicCharts.sosial.length > 0)
+            ? dynamicCharts.sosial.map(i => i.label)
+            : ['UHC BPJS Kesehatan', 'Penerima PKH', 'Bantuan BPNT/Sembako', 'KIP / Beasiswa Daerah'];
+        const sosialValues = (dynamicCharts.sosial && dynamicCharts.sosial.length > 0)
+            ? dynamicCharts.sosial.map(i => Number(i.jumlah))
+            : [99.1, 142000, 195000, 88000];
+
+        const isDarkNow = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (window.Chart) {
+            Chart.defaults.color = isDarkNow ? '#cbd5e1' : '#64748b';
+            if (Chart.defaults.borderColor) {
+                Chart.defaults.borderColor = isDarkNow ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+            }
+        }
+
+        // A. Chart Kelompok Usia
+        const chartUsia = new Chart(document.getElementById('chartUsia'), {
+            type: 'bar',
+            data: {
+                labels: usiaLabels,
+                datasets: [{
+                    label: 'Jumlah Jiwa',
+                    data: usiaValues,
+                    backgroundColor: ['#64748b', '#0d6efd', '#ff781f', '#198754'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // B. Chart Pekerjaan
+        const chartPekerjaan = new Chart(document.getElementById('chartPekerjaan'), {
+            type: 'bar',
+            data: {
+                labels: pekerjaanLabels,
+                datasets: [{
+                    label: 'Tenaga Kerja',
+                    data: pekerjaanValues,
+                    backgroundColor: isDarkNow ? '#38bdf8' : '#0a2540',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // C. Chart Pendidikan
+        const chartPendidikan = new Chart(document.getElementById('chartPendidikan'), {
+            type: 'doughnut',
+            data: {
+                labels: pendidikanLabels,
+                datasets: [{
+                    data: pendidikanValues,
+                    backgroundColor: ['#94a3b8', '#64748b', '#ff781f', isDarkNow ? '#38bdf8' : '#0a2540'],
+                    borderColor: isDarkNow ? '#0f2238' : '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            color: isDarkNow ? '#cbd5e1' : '#64748b'
+                        }
+                    } 
+                }
+            }
+        });
+
+        // D. Chart Kesehatan & Bansos
+        const chartSosial = new Chart(document.getElementById('chartSosial'), {
+            type: 'bar',
+            data: {
+                labels: sosialLabels,
+                datasets: [{
+                    label: 'Cakupan (%) / Penerima',
+                    data: sosialValues,
+                    backgroundColor: ['#198754', '#0d6efd', '#ff781f', '#a855f7'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Event listener saat tema diubah secara realtime
+        window.addEventListener('themeChanged', function(e) {
+            const dark = e.detail.isDark;
+            chartPekerjaan.data.datasets[0].backgroundColor = dark ? '#38bdf8' : '#0a2540';
+            chartPekerjaan.update();
+
+            chartPendidikan.data.datasets[0].backgroundColor = ['#94a3b8', '#64748b', '#ff781f', dark ? '#38bdf8' : '#0a2540'];
+            chartPendidikan.data.datasets[0].borderColor = dark ? '#0f2238' : '#ffffff';
+            if (chartPendidikan.options.plugins && chartPendidikan.options.plugins.legend && chartPendidikan.options.plugins.legend.labels) {
+                chartPendidikan.options.plugins.legend.labels.color = dark ? '#cbd5e1' : '#64748b';
+            }
+            chartPendidikan.update();
+
+            chartUsia.update();
+            chartSosial.update();
+        });
+
+        // 4. Smart Search & Filter Tabel Kecamatan
+        const searchInput = document.getElementById('kecamatanSearch');
+        const zonaFilter = document.getElementById('zonaFilter');
+        const rows = document.querySelectorAll('#tabelKecamatan tbody tr');
+
+        function filterKecamatan() {
+            const query = searchInput.value.toLowerCase();
+            const zona = zonaFilter.value.toLowerCase();
+
+            rows.forEach(r => {
+                const text = r.textContent.toLowerCase();
+                const matchQuery = text.includes(query);
+                const matchZona = !zona || text.includes(zona);
+
+                if (matchQuery && matchZona) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('keyup', filterKecamatan);
+        zonaFilter.addEventListener('change', filterKecamatan);
+    });
+
+    // 5. Export CSV & JSON Kependudukan
+    function exportKecamatanCSV() {
+        let csv = ["No,Kecamatan,Camat,Jumlah Penduduk,Jumlah KK,Luas Wilayah (km2),Kepadatan (Jiwa/km2),Zona"];
+        dataKecamatan.forEach((k, idx) => {
+            csv.push(`${idx + 1},"${k.nama}","${k.camat}",${k.penduduk},${k.kk},${k.luas},${k.kepadatan},"${k.zona}"`);
+        });
+        const blob = new Blob([csv.join("\n")], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = 'data-kependudukan-23-kecamatan-bekasikab.csv';
+        link.click();
+    }
+
+    function exportKecamatanJSON() {
+        const blob = new Blob([JSON.stringify(dataKecamatan, null, 2)], { type: 'application/json' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = 'data-kependudukan-23-kecamatan-bekasikab.json';
+        link.click();
+    }
+</script>

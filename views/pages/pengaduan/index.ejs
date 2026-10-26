@@ -1,0 +1,320 @@
+<!-- BANNER HEADER -->
+<section class="hero-mesh text-white py-5">
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb small mb-2">
+                        <li class="breadcrumb-item"><a href="/" class="text-white opacity-75 text-decoration-none">Beranda</a></li>
+                        <li class="breadcrumb-item active text-warning" style="color: var(--orange-primary) !important;">Pengaduan Warga</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Sistem Pengaduan Masyarakat</h1>
+                <p class="lead text-light opacity-75 fs-6 mb-0">
+                    Kanal pelaporan gangguan jaringan, layanan publik, dan klarifikasi hoaks secara transparan, aman, dan responsif.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a href="#form-aduan" class="btn btn-orange btn-lg px-4">
+                    <i class="bi bi-megaphone-fill me-1"></i> Buat Laporan Baru
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+
+    <!-- ALERT PESAN -->
+    <% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> <%= errorMsg %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+    <% if (typeof successMsg !== 'undefined' && successMsg) { %>
+        <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> <strong>Laporan Berhasil Terkirim!</strong> Simpan Kode Tiket di bawah untuk memantau tanggapan petugas.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+
+    <!-- 1. HASIL PENCARIAN TIKET ADUAN SPESIFIK -->
+    <% if (typeof hasilTiket !== 'undefined' && hasilTiket) { %>
+        <div class="card-modern p-4 p-md-5 mb-5 border-warning" style="border: 2px solid var(--orange-primary) !important;">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 pb-3 border-bottom">
+                <div>
+                    <span class="badge px-3 py-2 rounded-pill fw-bold mb-2" style="background-color: var(--orange-subtle); color: var(--orange-primary);">DETAIL TIKET PENGADUAN</span>
+                    <h3 class="fw-bold mb-1 text-navy-title"><%= hasilTiket.kode_tiket %></h3>
+                    <p class="small text-muted mb-0">Pelapor: <strong><%= hasilTiket.nama_pelapor %></strong> | Kategori: <%= hasilTiket.kategori_aduan %> | <%= new Date(hasilTiket.created_at).toLocaleString('id-ID') %></p>
+                </div>
+                <div>
+                    <% 
+                        let stBadge = 'bg-warning text-dark';
+                        let stText = 'Pending / Menunggu';
+                        if (hasilTiket.status === 'Diproses') { stBadge = 'bg-primary text-white'; stText = 'Sedang Diproses'; }
+                        if (hasilTiket.status === 'Selesai') { stBadge = 'bg-success text-white'; stText = 'Selesai Ditindaklanjuti'; }
+                        if (hasilTiket.status === 'Ditolak') { stBadge = 'bg-danger text-white'; stText = 'Ditolak'; }
+                    %>
+                    <span class="badge <%= stBadge %> fs-6 px-3 py-2"><%= stText %></span>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <h5 class="fw-bold mb-2"><%= hasilTiket.judul_aduan %></h5>
+                    <p class="small text-secondary lh-base mb-4"><%= hasilTiket.isi_aduan %></p>
+
+                    <!-- Tanggapan Petugas -->
+                    <% if (hasilTiket.tanggapan) { %>
+                        <div class="p-3 rounded-4 bg-light border-start border-4 border-success">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-patch-check-fill text-success fs-5"></i>
+                                    <strong class="text-dark small">Tanggapan Resmi Tim Teknis Diskominfo:</strong>
+                                </div>
+                                <% if (hasilTiket.updated_at) { %>
+                                    <span class="badge bg-success bg-opacity-10 text-success fw-normal border border-success border-opacity-25 rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                        <i class="bi bi-clock-history"></i> Ditanggapi: <%= new Date(hasilTiket.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %>, <%= new Date(hasilTiket.updated_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %> WIB
+                                    </span>
+                                <% } %>
+                            </div>
+                            <p class="small text-dark mb-0 lh-base"><%= hasilTiket.tanggapan %></p>
+                        </div>
+                    <% } else { %>
+                        <div class="p-3 rounded-4 bg-light border">
+                            <span class="small text-muted"><i class="bi bi-clock-history me-1"></i> Laporan ini sedang ditinjau oleh operator dinas. Tanggapan akan tampil di sini setelah diverifikasi.</span>
+                        </div>
+                    <% } %>
+                </div>
+
+                <!-- Foto Bukti -->
+                <div class="col-lg-4">
+                    <h6 class="fw-bold small text-muted mb-2">Bukti Foto / Lampiran:</h6>
+                    <% if (hasilTiket.foto_bukti) { %>
+                        <a href="<%= hasilTiket.foto_bukti %>" target="_blank">
+                            <img src="<%= hasilTiket.foto_bukti %>" alt="Bukti Aduan" class="img-fluid rounded-3 border shadow-sm" style="max-height: 200px; object-fit: cover;">
+                        </a>
+                    <% } else { %>
+                        <div class="p-4 bg-light rounded text-center text-muted small border">
+                            <i class="bi bi-image fs-2 d-block opacity-50 mb-1"></i>
+                            Tidak ada lampiran foto.
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <!-- 2. SUMMARY METRICS ADUAN -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="card-modern p-4 text-center">
+                <span class="small text-muted fw-bold d-block mb-1">TOTAL LAPORAN MASUK</span>
+                <h2 class="fw-bold mb-0 text-navy-title"><%= statsAduan.total %></h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-modern p-4 text-center">
+                <span class="small text-muted fw-bold d-block mb-1">DALAM PROSES PENANGANAN</span>
+                <h2 class="fw-bold mb-0 text-primary"><%= statsAduan.proses %></h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-modern p-4 text-center">
+                <span class="small text-muted fw-bold d-block mb-1">SELESAI DITINDAKLANJUTI</span>
+                <h2 class="fw-bold mb-0 text-success"><%= statsAduan.selesai %></h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. FORM LAPORAN CEPAT & LIVE STATUS BOARD (TABULASI) -->
+    <div class="card-modern p-4 p-md-5 mb-5" id="form-aduan">
+        <ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3 flex-column flex-sm-row" id="pills-tab" role="tablist">
+            <li class="nav-item flex-fill flex-sm-grow-0" role="presentation">
+                <button class="btn btn-navy active w-100 px-3 px-sm-4" id="pills-form-tab" data-bs-toggle="pill" data-bs-target="#pills-form" type="button" role="tab">
+                    <i class="bi bi-pencil-square me-1"></i> Form Laporan Cepat
+                </button>
+            </li>
+            <li class="nav-item flex-fill flex-sm-grow-0" role="presentation">
+                <button class="btn btn-outline-dark w-100 px-3 px-sm-4" id="pills-board-tab" data-bs-toggle="pill" data-bs-target="#pills-board" type="button" role="tab">
+                    <i class="bi bi-card-checklist me-1"></i> Live Status Board Aduan Publik
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="pills-tabContent">
+            
+            <!-- TAB 1: FORM PENGADUAN -->
+            <div class="tab-pane fade show active" id="pills-form" role="tabpanel">
+                <form action="/pengaduan/kirim" method="POST" enctype="multipart/form-data">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Nama Lengkap Pelapor <span class="text-danger">*</span></label>
+                            <input type="text" name="nama_pelapor" class="form-control" placeholder="Contoh: Muhammad Irfan" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">NIK (16 Digit) <span class="text-danger">*</span></label>
+                            <input type="text" name="nik_pelapor" class="form-control" placeholder="3216xxxxxxxxxxxx" required>
+                            <span class="small text-muted" style="font-size: 0.72rem;">*NIK dijamin kerahasiaannya & tidak akan dipublikasikan ke publik.</span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">No. Telepon / WhatsApp Aktif <span class="text-danger">*</span></label>
+                            <input type="tel" name="no_telp" class="form-control" placeholder="0812xxxxxxxx" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Kategori Laporan Aduan <span class="text-danger">*</span></label>
+                            <select name="kategori_aduan" class="form-select" required>
+                                <option value="">-- Pilih Kategori --</option>
+                                <option value="Laporan Hoaks">Klarifikasi / Laporan Berita Hoaks</option>
+                                <option value="Gangguan Jaringan Publik">Gangguan Free Wi-Fi / Jaringan Publik</option>
+                                <option value="Gangguan Website Dinas">Gangguan Website & Aplikasi Layanan Daerah</option>
+                                <option value="Keamanan Informasi">Insiden Keamanan Siber & CSIRT</option>
+                                <option value="Layanan Publik">Pelayanan Publik Diskominfo Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Judul Singkat Laporan <span class="text-danger">*</span></label>
+                            <input type="text" name="judul_aduan" class="form-control" placeholder="Ringkasan inti keluhan Anda..." required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Isi Detail Pengaduan / Lokasi Kejadian <span class="text-danger">*</span></label>
+                            <textarea name="isi_aduan" class="form-control" rows="4" placeholder="Jelaskan secara rinci kronologi, lokasi spesifik, dan kendala yang dialami..." required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Unggah Bukti Foto / Tangkapan Layar <span class="text-muted">(JPG/PNG, Max 2MB)</span></label>
+                            <input type="file" name="foto_bukti" class="form-control" accept=".jpg,.jpeg,.png,.webp,.pdf">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Sifat Privasi Laporan <span class="text-danger">*</span></label>
+                            <select name="sifat_aduan" class="form-select" required>
+                                <option value="Publik">Publik (Ditampilkan di Live Status Board dengan nama disamarkan)</option>
+                                <option value="Rahasia">Rahasia / Anonim (Hanya Anda & Petugas yang bisa melihat)</option>
+                            </select>
+                        </div>
+
+                        <!-- Anti-Spam Math Challenge -->
+                        <% 
+                            const math1 = Math.floor(Math.random() * 9) + 1;
+                            const math2 = Math.floor(Math.random() * 9) + 1;
+                            const mathTotal = math1 + math2;
+                        %>
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded-3 d-flex align-items-center gap-3">
+                                <label class="small fw-bold mb-0">Verifikasi Anti-Spam: <span class="badge bg-dark px-2 py-1"><%= math1 %> + <%= math2 %></span> = </label>
+                                <input type="number" name="math_answer" class="form-control form-control-sm" style="max-width: 100px;" required placeholder="Hasil...">
+                                <input type="hidden" name="math_real" value="<%= mathTotal %>">
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-end mt-4">
+                            <button type="submit" class="btn btn-orange btn-lg px-5">
+                                <i class="bi bi-send-fill me-1"></i> Kirim Laporan Pengaduan
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TAB 2: LIVE STATUS BOARD ADUAN PUBLIK -->
+            <div class="tab-pane fade" id="pills-board" role="tabpanel">
+                <div class="row g-4">
+                    <% if (aduanPublik && aduanPublik.length > 0) { %>
+                        <% aduanPublik.forEach(aduan => { %>
+                            <% 
+                                // LOGIKA SENSOR BARU: Ahmad Santoso -> A**** S******
+                                const namaArr = aduan.nama_pelapor.trim().split(/\s+/);
+                                const namaSensored = namaArr.map(kata => {
+                                    if (kata.length <= 1) return kata;
+                                    return kata.charAt(0) + '*'.repeat(kata.length - 1);
+                                }).join(' ');
+
+                                let badgeClass = 'bg-warning text-dark';
+                                let badgeTitle = 'Menunggu Verifikasi';
+                                if (aduan.status === 'Diproses') { badgeClass = 'bg-primary text-white'; badgeTitle = 'Dalam Penanganan'; }
+                                if (aduan.status === 'Selesai') { badgeClass = 'bg-success text-white'; badgeTitle = 'Selesai / Ditindaklanjuti'; }
+                                if (aduan.status === 'Ditolak') { badgeClass = 'bg-danger text-white'; badgeTitle = 'Ditolak'; }
+                            %>
+                            <div class="col-12">
+                                <div class="p-4 rounded-4 border bg-white shadow-sm">
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 border-bottom pb-2">
+                                        <div>
+                                            <span class="badge bg-secondary bg-opacity-10 text-dark me-2"><%= aduan.kategori_aduan %></span>
+                                            <span class="small text-muted"><i class="bi bi-clock me-1"></i> <%= new Date(aduan.created_at).toLocaleString('id-ID') %></span>
+                                        </div>
+                                        <span class="badge <%= badgeClass %>"><%= badgeTitle %></span>
+                                    </div>
+                                    <h5 class="fw-bold mb-2 text-navy-title"><%= aduan.judul_aduan %></h5>
+                                    <p class="small text-secondary mb-3"><%= aduan.isi_aduan %></p>
+                                    <div class="small text-muted mb-3">
+                                        <i class="bi bi-person-fill text-muted me-1"></i> Pelapor: <strong><%= namaSensored %></strong>
+                                        <span class="mx-2">•</span>
+                                        <i class="bi bi-ticket-perforated me-1"></i> Tiket: <code><%= aduan.kode_tiket %></code>
+                                    </div>
+
+                                    <% if (aduan.tanggapan) { %>
+                                        <div class="p-3 rounded-3 bg-light border-start border-3 border-success small">
+                                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1.5">
+                                                <strong class="text-success d-inline-flex align-items-center gap-1.5">
+                                                    <i class="bi bi-check-circle-fill"></i> Tanggapan Resmi Diskominfo:
+                                                </strong>
+                                                <% if (aduan.updated_at) { %>
+                                                    <span class="badge bg-success bg-opacity-10 text-success fw-normal border border-success border-opacity-25 rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1" style="font-size: 0.72rem;">
+                                                        <i class="bi bi-clock-history"></i> Ditanggapi: <%= new Date(aduan.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %>, <%= new Date(aduan.updated_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %> WIB
+                                                    </span>
+                                                <% } %>
+                                            </div>
+                                            <span class="text-dark d-block" style="line-height: 1.6;"><%= aduan.tanggapan %></span>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="col-12 text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+                            Belum ada laporan pengaduan publik.
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- SCRIPT VALIDASI FORM ADUAN DENGAN ALERT KUSTOM -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const aduanForm = document.querySelector('form[action="/pengaduan/kirim"]');
+        if (aduanForm) {
+            aduanForm.addEventListener('submit', function(e) {
+                const mathAns = this.querySelector('input[name="math_answer"]');
+                const mathReal = this.querySelector('input[name="math_real"]');
+                if (mathAns && mathReal) {
+                    if (!mathAns.value.trim()) {
+                        e.preventDefault();
+                        window.showCustomAlert({
+                            title: 'Verifikasi Anti-Spam Belum Diisi',
+                            message: 'Harap hitung dan masukkan jawaban penjumlahan anti-spam terlebih dahulu.',
+                            icon: 'warning',
+                            targetInput: mathAns
+                        });
+                        return;
+                    }
+                    if (parseInt(mathAns.value.trim()) !== parseInt(mathReal.value.trim())) {
+                        e.preventDefault();
+                        window.showCustomAlert({
+                            title: 'Jawaban Anti-Spam Belum Benar',
+                            message: 'Hasil hitungan penjumlahan anti-spam tidak cocok. Silakan coba kembali.',
+                            icon: 'error',
+                            targetInput: mathAns
+                        });
+                        return;
+                    }
+                }
+            });
+        }
+    });
+</script>

@@ -1,0 +1,140 @@
+<!-- BANNER HEADER RINGAN -->
+<section class="hero-mesh text-white py-5">
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb small mb-2">
+                        <li class="breadcrumb-item"><a href="/" class="text-white opacity-75 text-decoration-none">Beranda</a></li>
+                        <li class="breadcrumb-item active text-warning" style="color: var(--orange-primary) !important;">Kabar & Berita</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold mb-2">Kabar & Publikasi Terkini</h1>
+                <p class="lead text-light opacity-75 fs-6 mb-0">
+                    Informasi resmi, siaran pers, dan klarifikasi kabar seputar Kabupaten Bekasi.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill" style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; backdrop-filter: blur(6px); cursor: default; user-select: none;">
+                    <i class="bi bi-patch-check-fill text-warning" style="color: var(--orange-primary) !important;"></i>
+                    <span class="small fw-semibold">Rilis Resmi Diskominfo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+
+    <!-- PENCARIAN & KATEGORI CEPAT -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4 pb-3 border-bottom">
+        <!-- Filter Kategori Tabs -->
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="/berita" class="category-filter-chip <%= !selectedKategori ? 'active' : '' %>">
+                Semua
+            </a>
+            <% if (typeof kategoriList !== 'undefined') { %>
+                <% kategoriList.forEach(kat => { %>
+                    <a href="/berita?kategori=<%= kat.slug %>" class="category-filter-chip <%= selectedKategori === kat.slug ? 'active' : '' %>">
+                        <%= kat.nama_kategori %>
+                    </a>
+                <% }) %>
+            <% } %>
+        </div>
+
+        <!-- Search Bar Minimalis Sejajar -->
+        <form action="/berita" method="GET" class="d-flex align-items-center" style="max-width: 320px; width: 100%;">
+            <% if (selectedKategori) { %>
+                <input type="hidden" name="kategori" value="<%= selectedKategori %>">
+            <% } %>
+            <div class="input-group">
+                <input type="text" name="cari" class="form-control form-control-sm rounded-start-pill px-3" placeholder="Cari berita di sini..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" style="height: 38px; font-size: 0.86rem; letter-spacing: 0.2px;">
+                <button type="submit" class="btn btn-orange rounded-end-pill px-3.5 d-flex align-items-center justify-content-center shadow-xs" title="Cari Berita" style="height: 38px;">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- DAFTAR GRID BERITA -->
+    <div class="row g-4">
+        <% if (beritaList && beritaList.length > 0) { %>
+            <% beritaList.forEach(item => { %>
+                <% 
+                    const cleanText = (item.konten || '')
+                        .replace(/<[^>]*>?/gm, '')
+                        .replace(/&ndash;/g, '–')
+                        .replace(/&mdash;/g, '—')
+                        .replace(/&nbsp;/g, ' ')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&quot;/g, '"');
+                %>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 border-0 rounded-4 shadow-sm overflow-hidden transition-all hover-shadow bg-white">
+                        <!-- Foto Sampul -->
+                        <div class="position-relative" style="height: 200px; background-color: #f1f5f9;">
+                            <img src="<%= item.gambar || 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800' %>" class="w-100 h-100 object-fit-cover" alt="<%= item.judul %>">
+                            <span class="badge position-absolute top-0 start-0 m-3 px-3 py-1.5 rounded-pill shadow-sm badge-category-cover" style="font-size: 0.72rem;">
+                                <%= item.nama_kategori || 'Kabar' %>
+                            </span>
+                        </div>
+                        
+                        <!-- Konten Ringkas -->
+                        <div class="p-4 d-flex flex-column flex-grow-1">
+                            <div class="text-muted small mb-2 d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
+                                <span><i class="bi bi-calendar-event me-1"></i> <%= new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                                <% if (item.penulis) { %>
+                                    <span><i class="bi bi-person me-1"></i> <%= item.penulis %></span>
+                                <% } %>
+                            </div>
+                            
+                            <h5 class="fw-bold mb-2 fs-6 lh-base">
+                                <a href="/berita/<%= item.slug %>" class="text-dark text-decoration-none hover-orange">
+                                    <%= item.judul %>
+                                </a>
+                            </h5>
+                            
+                            <p class="text-muted small flex-grow-1 lh-sm mb-3">
+                                <%= cleanText.substring(0, 95) %>...
+                            </p>
+                            
+                            <div class="pt-3 border-top d-flex align-items-center justify-content-end mt-auto">
+                                <a href="/berita/<%= item.slug %>" class="small fw-bold text-decoration-none" style="color: var(--orange-primary);">
+                                    Baca Artikel →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="col-12 text-center py-5">
+                <div class="p-5 bg-light rounded-4 text-muted border">
+                    <i class="bi bi-newspaper fs-1 d-block mb-2 opacity-50"></i>
+                    <h6 class="fw-bold text-dark">Belum Ada Berita</h6>
+                    <p class="small mb-0">Tidak ditemukan berita untuk kategori atau kata kunci tersebut.</p>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- PAGINASI (PAGINATION) -->
+    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+        <nav class="mt-5 d-flex justify-content-center">
+            <ul class="pagination shadow-sm">
+                <li class="page-item <%= currentPageNum === 1 ? 'disabled' : '' %>">
+                    <a class="page-link" href="/berita?page=<%= currentPageNum - 1 %><%= selectedKategori ? '&kategori='+selectedKategori : '' %><%= searchQuery ? '&cari='+searchQuery : '' %>">Sebelumnya</a>
+                </li>
+                <% for(let i=1; i<=totalPages; i++) { %>
+                    <li class="page-item <%= currentPageNum === i ? 'active' : '' %>">
+                        <a class="page-link" href="/berita?page=<%= i %><%= selectedKategori ? '&kategori='+selectedKategori : '' %><%= searchQuery ? '&cari='+searchQuery : '' %>"><%= i %></a>
+                    </li>
+                <% } %>
+                <li class="page-item <%= currentPageNum === totalPages ? 'disabled' : '' %>">
+                    <a class="page-link" href="/berita?page=<%= currentPageNum + 1 %><%= selectedKategori ? '&kategori='+selectedKategori : '' %><%= searchQuery ? '&cari='+searchQuery : '' %>">Berikutnya</a>
+                </li>
+            </ul>
+        </nav>
+    <% } %>
+
+</div>

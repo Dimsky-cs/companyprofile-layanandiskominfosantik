@@ -1,0 +1,63 @@
+<footer class="footer-gov pt-5 pb-3">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Info Instansi -->
+            <div class="col-lg-4 col-md-6">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <img src="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.logo_url) ? siteSettings.logo_url : '/images/logo.png' %>" alt="Logo" height="36" class="rounded shadow-xs">
+                    <h5 class="text-white fw-bold mb-0"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.nama_instansi) ? siteSettings.nama_instansi : 'DISKOMINFOSANTIK' %></h5>
+                </div>
+                <p class="small text-light opacity-75 lh-base">
+                    <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.deskripsi_singkat) ? siteSettings.deskripsi_singkat : 'Dinas Komunikasi, Informatika, Persandian dan Statistik Kabupaten Bekasi menyelenggarakan tata kelola pemerintahan berbasis digital, keamanan persandian, dan keterbukaan informasi publik.' %>
+                </p>
+                <div class="d-flex gap-2 pt-1">
+                    <a href="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.sosmed_facebook) ? siteSettings.sosmed_facebook : '#' %>" target="_blank" class="btn btn-sm text-white rounded-circle d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.1); width: 34px; height: 34px;"><i class="bi bi-facebook"></i></a>
+                    <a href="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.sosmed_instagram) ? siteSettings.sosmed_instagram : '#' %>" target="_blank" class="btn btn-sm text-white rounded-circle d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.1); width: 34px; height: 34px;"><i class="bi bi-instagram"></i></a>
+                    <a href="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.sosmed_youtube) ? siteSettings.sosmed_youtube : '#' %>" target="_blank" class="btn btn-sm text-white rounded-circle d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.1); width: 34px; height: 34px;"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+
+            <!-- Tautan Cepat -->
+            <div class="col-lg-3 col-md-6">
+                <h6 class="mb-3">Layanan Utama</h6>
+                <ul class="list-unstyled small d-flex flex-column gap-2">
+                    <li><a href="/surat"><i class="bi bi-chevron-right me-1 text-warning" style="color: var(--orange-primary) !important;"></i> Pelayanan Persuratan</a></li>
+                    <li><a href="/pengaduan"><i class="bi bi-chevron-right me-1 text-warning" style="color: var(--orange-primary) !important;"></i> Pengaduan Masyarakat</a></li>
+                    <li><a href="/statistik"><i class="bi bi-chevron-right me-1 text-warning" style="color: var(--orange-primary) !important;"></i> Statistik Kependudukan</a></li>
+                    <li><a href="/berita"><i class="bi bi-chevron-right me-1 text-warning" style="color: var(--orange-primary) !important;"></i> Warta & Pengumuman</a></li>
+                    <li><a href="/galeri"><i class="bi bi-chevron-right me-1 text-warning" style="color: var(--orange-primary) !important;"></i> Galeri Kegiatan</a></li>
+                </ul>
+            </div>
+
+            <!-- Kontak Resmi -->
+            <div class="col-lg-5 col-md-12">
+                <h6 class="mb-3">Kontak & Lokasi</h6>
+                <div class="d-flex flex-column gap-2 small text-light opacity-75">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-geo-alt-fill text-warning mt-1" style="color: var(--orange-primary) !important;"></i>
+                        <span><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.alamat) ? siteSettings.alamat : 'Komplek Perkantoran Pemkab Bekasi, Desa Sukamahi, Kec. Cikarang Pusat, Jawa Barat 17530' %></span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-envelope-fill text-warning" style="color: var(--orange-primary) !important;"></i>
+                        <span><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.email) ? siteSettings.email : 'diskominfo@bekasikab.go.id' %></span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-telephone-fill text-warning" style="color: var(--orange-primary) !important;"></i>
+                        <span><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.telepon) ? siteSettings.telepon : '(021) 89970000 / Call Center 112' %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4 border-secondary opacity-25">
+
+        <div class="row align-items-center small text-light opacity-75">
+            <div class="col-md-6 text-center text-md-start">
+                &copy; 2026 <strong><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.nama_instansi) ? siteSettings.nama_instansi : 'DISKOMINFOSANTIK' %> <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.sub_instansi) ? siteSettings.sub_instansi : 'Kabupaten Bekasi' %></strong>. Hak Cipta Dilindungi.
+            </div>
+            <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
+                <span class="badge" style="background-color: var(--orange-primary); color: white;"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.tagline) ? siteSettings.tagline : 'Bekasi Makin Berani' %></span>
+            </div>
+        </div>
+    </div>
+</footer>
